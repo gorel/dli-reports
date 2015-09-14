@@ -29,6 +29,11 @@ from dli_app import db
 mod_wiki = Blueprint('wiki', __name__, url_prefix='/wiki')
 
 # Set all routing for the module
+@mod_wiki.route('/', methods=['GET'])
 @mod_wiki.route('/home', methods=['GET'])
 def home():
+    pass
+
+@mod_wiki.route('/<page_name>', methods=['GET', 'POST'])
+def view_page(page_name):
     pass
