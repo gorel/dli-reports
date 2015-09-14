@@ -15,20 +15,20 @@ from werkzeug import (
 )
 
 # Import main DB for app
-from app import db
+from dli_app import db
 
 # Import forms
-#from app.mod_auth.forms import (
+#from dli_app.mod_wiki.forms import (
 #)
 
 # Import models
-#from app.mod_auth.models import (
+#from dli_app.mod_wiki.models import (
 #)
 
 # Create a blueprint for this module
-mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
+mod_wiki = Blueprint('wiki', __name__, url_prefix='/wiki')
 
 # Set all routing for the module
-@mod_auth.route('/login/', methods=['GET', 'POST'])
-def login():
+@mod_wiki.route('/home', methods=['GET'])
+def home():
     pass

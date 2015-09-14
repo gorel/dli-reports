@@ -15,20 +15,20 @@ from werkzeug import (
 )
 
 # Import main DB for app
-from app import db
+from dli_app import db
 
 # Import forms
-#from app.mod_reports.forms import (
+#from dli_app.mod_auth.forms import (
 #)
 
 # Import models
-#from app.mod_reports.models import (
+#from dli_app.mod_auth.models import (
 #)
 
 # Create a blueprint for this module
-mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
+mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 
 # Set all routing for the module
-@mod_reports.route('/home', methods=['GET'])
-def home():
+@mod_auth.route('/login/', methods=['GET', 'POST'])
+def login():
     pass

@@ -15,14 +15,14 @@ from werkzeug import (
 )
 
 # Import main DB for app
-from app import db
+from dli_app import db
 
 # Import forms
-#from app.mod_account.forms import (
+#from dli_app.mod_account.forms import (
 #)
 
 # Import models
-#from app.mod_account.models import (
+#from dli_app.mod_account.models import (
 #)
 
 # Create a blueprint for this module
