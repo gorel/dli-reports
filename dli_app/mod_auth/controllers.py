@@ -32,3 +32,7 @@ mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 @mod_auth.route('/login/', methods=['GET', 'POST'])
 def login():
     pass
+
+@mod_auth.route('/logout/', methods=['POST'])
+def logout():
+    pass

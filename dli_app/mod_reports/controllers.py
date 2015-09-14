@@ -29,6 +29,22 @@ from dli_app import db
 mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 
 # Set all routing for the module
-@mod_reports.route('/home', methods=['GET'])
-def home():
+@mod_reports.route('/me', methods=['GET'])
+def my_reports():
+    pass
+
+@mod_reports.route('/all', methods=['GET'])
+def all_reports():
+    pass
+
+@mod_reports.route('/create', methods=['GET', 'POST'])
+def create_report():
+    pass
+
+@mod_reports.route('/data', methods=['GET', 'POST'])
+def submit_report_data():
+    pass
+
+@mod_reports.route('/view/<report_id>', methods=['GET'])
+def view_report(report_id):
     pass
