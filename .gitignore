@@ -55,3 +55,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Hide this file since it contains secret keys
+config.py
+
+# Database files
+*.db
