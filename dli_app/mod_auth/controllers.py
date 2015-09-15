@@ -1,21 +1,25 @@
 from flask import (
     Blueprint,
-    flash,
-    g,
     redirect,
     render_template,
     request,
-    session,
-    url_for
+    url_for,
+)
+
+from flask.ext.login import (
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
 )
 
 from werkzeug import (
     check_password_hash,
-    generate_password_hash
+    generate_password_hash,
 )
 
 # Import main DB for app
-from dli_app import db
+from dli_app import db, login_manager
 
 # Import forms
 #from dli_app.mod_auth.forms import (
@@ -31,8 +35,14 @@ mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 # Set all routing for the module
 @mod_auth.route('/login/', methods=['GET', 'POST'])
 def login():
-    pass
+    if request.method == 'GET':
+        return render_template('auth/login.html')
+    else:
+        # Login code here
+        return redirect('/')
 
 @mod_auth.route('/logout/', methods=['POST'])
+@login_required
 def logout():
-    pass
+    logout_user()
+    return redirect(url_for('/'))
