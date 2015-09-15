@@ -21,4 +21,4 @@ from dli_app import app
 @app.route('/home')
 @app.route('/index.html')
 def home():
-    return 'Hello World!'
+    return render_template('index.html')

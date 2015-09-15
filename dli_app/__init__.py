@@ -4,6 +4,12 @@ import sys
 # Flask imports
 from flask import Flask, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
+from flask.ext.login import (
+    LoginManager,
+    current_user,
+    login_user,
+    logout_user,
+)
 
 # Define the web app
 sys.stdout.write('Creating Flask app...')
@@ -18,6 +24,13 @@ sys.stdout.write('Done\n')
 # Define the database
 sys.stdout.write('Defining SQLAlchemy database...')
 db = SQLAlchemy(app)
+sys.stdout.write('Done\n')
+
+# Create the login manager
+sys.stdout.write('Creating login manager...')
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "/auth/login"
 sys.stdout.write('Done\n')
 
 # Register error handlers
