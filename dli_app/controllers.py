@@ -21,4 +21,5 @@ from dli_app import app
 @app.route('/home')
 @app.route('/index.html')
 def home():
+    # TODO: Check if user is logged in?
     return render_template('index.html')

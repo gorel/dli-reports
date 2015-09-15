@@ -18,7 +18,7 @@ from werkzeug import (
     generate_password_hash,
 )
 
-# Import main DB for app
+# Import main DB and Login Manager for app
 from dli_app import db, login_manager
 
 # Import forms
@@ -38,7 +38,7 @@ def login():
     if request.method == 'GET':
         return render_template('auth/login.html')
     else:
-        # Login code here
+        # TODO: Login code here
         return redirect('/')
 
 @mod_auth.route('/logout/', methods=['POST'])
