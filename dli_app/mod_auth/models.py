@@ -13,16 +13,20 @@ class User(db.Model):
     def __init__(self):
         # TODO: Initialize new user and add it to the database
         # (may need more parameters)
-        pass
 
-    # Any user that is logged in is automatically authenticated.
+        # Any user that is logged in is automatically authenticated.
+        self._is_authenticated = True
+        self._is_active = True
+
+    @property
     def is_authenticated(self):
-        return True
+        return self._is_authenticated
 
-    # All users are active. We don't have "deactivated" accounts.
+    @property
     def is_active(self):
-        return True
+        return self._is_active
 
+    @property
     def is_anonymous(self):
         return not self.is_authenticated()
 
