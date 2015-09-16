@@ -6,16 +6,11 @@ from flask import (
     render_template,
     request,
     session,
-    url_for
+    url_for,
 )
 
-from werkzeug import (
-    check_password_hash,
-    generate_password_hash
-)
-
-# Import main DB for app
-from dli_app import db
+# Import main DB and Login Manager for app
+from dli_app import db, login_manager
 
 # Import forms
 #from dli_app.mod_wiki.forms import (
@@ -29,6 +24,10 @@ from dli_app import db
 mod_wiki = Blueprint('wiki', __name__, url_prefix='/wiki')
 
 # Set all routing for the module
-@mod_wiki.route('/home', methods=['GET'])
+@mod_wiki.route('/', methods=['GET'])
 def home():
-    pass
+    return render_template('wiki/home.html')
+
+@mod_wiki.route('/<page_name>', methods=['GET', 'POST'])
+def view_page(page_name):
+    return render_template('wiki/view.html')
