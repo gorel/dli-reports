@@ -33,13 +33,24 @@ from dli_app import db, login_manager
 mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 
 # Set all routing for the module
+@mod_auth.route('/register/', methods=['GET', 'POST'])
+def register():
+    if request.method == 'GET':
+        return render_template('auth/register.html')
+    else:
+        # TODO: Register the new user and log them in
+        return redirect(request.args.get('next') or url_for('/'))
+
 @mod_auth.route('/login/', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
         return render_template('auth/login.html')
     else:
         # TODO: Login code here
-        return redirect('/')
+        # 1. Get form fields
+        # 2. Check password
+        # 3. Login
+        return redirect(request.args.get('next') or  url_for('/'))
 
 @mod_auth.route('/logout/', methods=['POST'])
 @login_required
