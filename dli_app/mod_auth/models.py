@@ -7,7 +7,8 @@ def user_loader(user_id):
 class User(db.Model):
     __tablename__ = 'auth_user'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String, index=True, unique=True)
+    email = db.Column(db.String(64), index=True, unique=True)
+    is_admin = db.Column(db.Boolean)
     # TODO: Add other columns
 
     def __init__(self):
@@ -34,7 +35,7 @@ class User(db.Model):
         return self.id
 
     def __repr__(self):
-        return '<User %s>' % self.email
+        return '<User %r>' % self.email
 
     @classmethod
     def get_by_email(cls, email):
