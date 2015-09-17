@@ -12,8 +12,6 @@ from flask import (
 from flask.ext.login import (
     current_user,
     login_required,
-    login_user,
-    logout_user,
 )
 
 # Import main DB and Login Manager for app
@@ -34,11 +32,13 @@ mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 @mod_reports.route('/me', methods=['GET'])
 @login_required
 def my_reports():
+    # TODO: Download reports that belong to the current user
     return render_template('reports/me.html')
 
 @mod_reports.route('/all', methods=['GET'])
 @login_required
 def all_reports():
+    # TODO: Download all reports
     return render_template('reports/all.html')
 
 @mod_reports.route('/create', methods=['GET', 'POST'])
