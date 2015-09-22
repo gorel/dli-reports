@@ -1,3 +1,12 @@
+from flask.ext.sqlalchemy import (
+    orm,
+)
+
+from werkzeug.security import (
+    check_password_hash,
+    generate_password_hash,
+)
+
 from dli_app import db, login_manager
 
 @login_manager.user_loader
@@ -13,11 +22,18 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean)
     location = db.Column(db.Integer, db.ForeignKey("location.id"))
 
-    def __init__(self):
-        # TODO: Initialize new user and add it to the database
-        # (may need more parameters)
+    def __init__(self, name, email, password, is_admin=False, location=None):
+        self.name = name
+        self.email = email
+        self.password = generate_password_hash(password)
+        self.is_admin = is_admin
+        self.location = location
 
-        # Any user that is logged in is automatically authenticated.
+        # Call the method to load local variables NOT stored in the db
+        self.init_on_load()
+
+    @orm.reconstructor
+    def init_on_load(self):
         self._is_authenticated = True
         self._is_active = True
 
@@ -50,3 +66,11 @@ class Location(db.Model):
 
     def __repr__(self):
         return '<Location %r>' % self.name
+
+class Department(db.Model):
+    __tablename__ = "department"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), index=True, unique=True)
+
+    def __repr__(self):
+        return '<Department %r>' % self.name
