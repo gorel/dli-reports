@@ -5,6 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <title>DLI Reports</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
@@ -13,9 +15,11 @@
 
   <body>
     {% include 'partials/_nav.html' %}
-    <div class="container">
-      {% block body %}{% endblock %}
-    </div>
+    {% block no_container %}
+      <div class="container">
+        {% block body %}{% endblock %}
+      </div>
+    {% endblock %}
   </body>
 </html>
 
