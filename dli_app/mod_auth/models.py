@@ -66,3 +66,11 @@ class Location(db.Model):
 
     def __repr__(self):
         return '<Location %r>' % self.name
+
+class Department(db.Model):
+    __tablename__ = "department"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), index=True, unique=True)
+
+    def __repr__(self):
+        return '<Department %r>' % self.name
