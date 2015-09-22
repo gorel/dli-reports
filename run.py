@@ -1,3 +1,4 @@
 from dli_app import app
 
-app.run(host='0.0.0.0', port=8000, debug=True)
+app.config.from_object('config')
+app.run(host=app.config['SERVER_HOST'], port=app.config['SERVER_PORT'], debug=True)
