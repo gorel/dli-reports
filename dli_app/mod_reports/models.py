@@ -34,11 +34,20 @@ class Report(db.Model):
 class Field(db.Model):
     __tablename__ = "field"
     id = db.Column(db.Integer, primary_key=True)
+    field_type = db.relationship('FieldType')
     # TODO: Fill out remaining fields
 
     def __repr__(self):
         # TODO: Find a way of describing this field
         return '<Field>'
+
+class FieldType(db.Model):
+    __tablename__ = "field_type"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), index=True)
+
+    def __repr__(self):
+        return '<Field Type %r>' % self.name
 
 class FieldData(db.Model):
     __tablename__ = "field_data"
