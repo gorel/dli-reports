@@ -67,6 +67,7 @@ def edit_locations():
 
     form = AddLocationForm(request.form)
     if form.validate_on_submit():
+        # TODO
         pass
     else:
         return render_template('admin/edit_locations.html', form=form)
@@ -84,7 +85,10 @@ def delete_location(loc_id):
     if loc_id.isdigit():
         db.session.delete(Location.get(int(loc_id)))
         db.session.commit()
-        # TODO: Flash success message
+        flash(
+            "Location deleted successfully.",
+            "alert-success",
+        )
 
     return redirect(url_for('admin.edit_locations'))
 
@@ -101,6 +105,7 @@ def edit_departments():
 
     form = AddDepartmentForm(request.form)
     if form.validate_on_submit():
+        # TODO
         pass
     else:
         return render_template('admin/edit_departments.html', form=form)
@@ -118,7 +123,10 @@ def delete_department(dep_id):
     if dep_id.isdigit():
         db.session.delete(Department.get(int(dep_id)))
         db.session.commit()
-        # TODO: Flash success message
+        flash(
+            "Department deleted successfully.",
+            "alert-success",
+        )
 
     return redirect(url_for('admin.edit_departments'))
 
@@ -134,6 +142,7 @@ def edit_fields():
 
     form = AddFieldForm(request.form)
     if form.validate_on_submit():
+        # TODO
         pass
     else:
         return render_template('admin/edit_fields.html', form=form)
@@ -151,7 +160,10 @@ def delete_field(field_id):
     if field_id.isdigit():
         db.session.delete(Field.get(int(field_id)))
         db.session.commit()
-        # TODO: Flash success message
+        flash(
+            "Field deleted successfully.",
+            "alert-success",
+        )
 
     return redirect(url_for('admin.edit_fields'))
 
@@ -167,8 +179,9 @@ def edit_users():
 
     form = AddUserForm(request.form)
     if form.validate_on_submit():
-        # TODO: Send user a registration link
-        pass
+        subject = "Invitation to DLI Reports"
+        body = None
+        # TODO: Send user a registration link to the email
     else:
         return render_template('admin/edit_users.html', form=form)
 
@@ -185,6 +198,9 @@ def delete_user(user_id):
     if user_id.isdigit():
         db.session.delete(Field.get(int(user_id)))
         db.session.commit()
-        # TODO: Flash success message
+        flash(
+            "User deleted successfully.",
+            "alert-success",
+        )
 
     return redirect(url_for('admin.edit_users'))

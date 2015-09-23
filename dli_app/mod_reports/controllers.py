@@ -18,12 +18,10 @@ from flask.ext.login import (
 from dli_app import db, login_manager
 
 # Import forms
-#from dli_app.mod_reports.forms import (
-#)
-
-# Import models
-#from dli_app.mod_reports.models import (
-#)
+from dli_app.mod_reports.forms import (
+    CreateReportForm,
+    SubmitReportDataForm,
+)
 
 # Create a blueprint for this module
 mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
@@ -33,31 +31,34 @@ mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 @login_required
 def my_reports():
     # TODO: Download reports that belong to the current user
-    return render_template('reports/me.html')
+    reports = None
+    return render_template('reports/me.html', reports=reports)
 
 @mod_reports.route('/all', methods=['GET'])
 @login_required
 def all_reports():
-    # TODO: Download all reports
-    return render_template('reports/all.html')
+    reports = Report.query.all()
+    return render_template('reports/all.html', reports=reports)
 
 @mod_reports.route('/create', methods=['GET', 'POST'])
 @login_required
 def create_report():
-    if request.method == 'GET':
-        return render_template('reports/create.html')
-    else:
-        # TODO: Submit new report creation
+    form = CreateReportForm(request.form)
+    if form.validate_on_submit():
+        # TODO
         pass
+    else:
+        return render_template('reports/create.html', form=form)
 
 @mod_reports.route('/data', methods=['GET', 'POST'])
 @login_required
 def submit_report_data():
-    if request.method == 'GET':
-        return render_template('reports/data.html')
-    else:
-        # TODO: Submit new report data
+    form = SubmitReportDataForm(request.form)
+    if form.validate_on_submit():
+        # TODO
         pass
+    else:
+        return render_template('reports/data.html', form=form)
 
 @mod_reports.route('/view/<report_id>', methods=['GET'])
 @login_required
