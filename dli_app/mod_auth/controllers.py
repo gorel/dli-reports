@@ -41,6 +41,9 @@ mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     form = RegistrationForm(request.form)
     if form.validate_on_submit():
+        db.session.add(self.user)
+        db.session.commit()
+
         # Log the user in and redirect to the homepage
         login_user(form.user, form.remember.data)
         return redirect(request.args.get('next') or url_for('default.home'))

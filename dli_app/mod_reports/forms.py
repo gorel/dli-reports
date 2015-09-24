@@ -10,8 +10,6 @@ from wtforms import (
     validators,
 )
 
-from dli_app import db
-
 from dli_app.mod_reports.models import (
     Field,
     FieldData,

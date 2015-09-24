@@ -67,8 +67,14 @@ def edit_locations():
 
     form = AddLocationForm(request.form)
     if form.validate_on_submit():
-        # TODO
-        pass
+        db.session.add(form.location)
+        db.session.commit()
+
+        flash(
+            "Location added successfully",
+            "alert-success",
+        )
+        return redirect(url_for('admin.edit_locations'))
     else:
         return render_template('admin/edit_locations.html', form=form)
 
@@ -85,6 +91,7 @@ def delete_location(loc_id):
     if loc_id.isdigit():
         db.session.delete(Location.get(int(loc_id)))
         db.session.commit()
+
         flash(
             "Location deleted successfully.",
             "alert-success",
@@ -105,8 +112,14 @@ def edit_departments():
 
     form = AddDepartmentForm(request.form)
     if form.validate_on_submit():
-        # TODO
-        pass
+        db.session.add(form.department)
+        db.session.commit()
+
+        flash(
+            "Department added successfully",
+            "alert-success",
+        )
+        return redirect(url_for('admin.edit_departments'))
     else:
         return render_template('admin/edit_departments.html', form=form)
 
@@ -123,6 +136,7 @@ def delete_department(dep_id):
     if dep_id.isdigit():
         db.session.delete(Department.get(int(dep_id)))
         db.session.commit()
+
         flash(
             "Department deleted successfully.",
             "alert-success",
@@ -142,8 +156,14 @@ def edit_fields():
 
     form = AddFieldForm(request.form)
     if form.validate_on_submit():
-        # TODO
-        pass
+        db.session.add(form.field)
+        db.session.commit()
+
+        flash(
+            "Field added successfully",
+            "alert-success",
+        )
+        return redirect(url_for('admin.edit_fields'))
     else:
         return render_template('admin/edit_fields.html', form=form)
 
@@ -160,6 +180,7 @@ def delete_field(field_id):
     if field_id.isdigit():
         db.session.delete(Field.get(int(field_id)))
         db.session.commit()
+
         flash(
             "Field deleted successfully.",
             "alert-success",
@@ -198,6 +219,7 @@ def delete_user(user_id):
     if user_id.isdigit():
         db.session.delete(Field.get(int(user_id)))
         db.session.commit()
+
         flash(
             "User deleted successfully.",
             "alert-success",
