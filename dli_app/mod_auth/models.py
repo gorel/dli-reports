@@ -13,8 +13,16 @@ from dli_app import db, login_manager
 def user_loader(user_id):
     return User.query.get(user_id)
 
+class RegisterCandidate(db.Model):
+    __tablename__ = 'register_candidate'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(64), index=True, unique=True)
+
+    def __repr__(self):
+        return '<Register Candidate %r>' % self.email
+
 class User(db.Model):
-    __tablename__ = 'auth_user'
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     email = db.Column(db.String(64), index=True, unique=True)
