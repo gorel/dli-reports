@@ -30,8 +30,8 @@ mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 @mod_reports.route('/me', methods=['GET'])
 @login_required
 def my_reports():
-    # TODO: Download reports that belong to the current user
-    reports = None
+    # Download reports that belong to the current user
+    reports = Report.query.filter_by(user_id=current_user.id).all()
     return render_template('reports/me.html', reports=reports)
 
 @mod_reports.route('/all', methods=['GET'])
@@ -45,8 +45,11 @@ def all_reports():
 def create_report():
     form = CreateReportForm(request.form)
     if form.validate_on_submit():
-        # TODO
-        pass
+        # Add the new report to the database
+        db.session.add(form.report)
+        db.session.commit()
+
+        return redirect(url_for('reports.my_reports'))
     else:
         return render_template('reports/create.html', form=form)
 
@@ -55,8 +58,13 @@ def create_report():
 def submit_report_data():
     form = SubmitReportDataForm(request.form)
     if form.validate_on_submit():
-        # TODO
-        pass
+        # TODO: Submit all of the form data
+
+        flash(
+            "Report data successfully submitted.",
+            "alert-success",
+        )
+        return redirect(url_for('reports.my_reports'))
     else:
         return render_template('reports/data.html', form=form)
 

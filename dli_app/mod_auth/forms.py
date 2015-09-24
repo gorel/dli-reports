@@ -10,8 +10,6 @@ from wtforms import (
     validators,
 )
 
-from dli_app import db
-
 from dli_app.mod_auth.models import (
     Location,
     RegisterCandidate,
@@ -49,16 +47,13 @@ class RegistrationForm(Form):
             self.location.errors.append('Location not supported')
             return False
 
-        # Create the new user account and add it to the db
+        # Create the new user account
         self.user = User(
             name=self.name.data,
             email=self.email.data,
             password=self.password.data,
             location=location,
         )
-
-        db.session.add(self.user)
-        db.session.commit()
 
         return True
 
