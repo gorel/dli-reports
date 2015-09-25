@@ -1,4 +1,10 @@
-from flask.ext.wtf import (
+"""Forms for the auth module
+
+Author: Logan Gore
+This file lists all forms to be filled out from within the auth module.
+"""
+
+from flask_wtf import (
     Form,
 )
 
@@ -16,12 +22,22 @@ from dli_app.mod_auth.models import (
     User,
 )
 
+
 class RegistrationForm(Form):
-    def __init__(self, *args, **kwargs):
+    """A form for registering a new user"""
+    def __init__(self, registration_key, *args, **kwargs):
+        """Inititalize the registration form"""
         Form.__init__(self, *args, **kwargs)
+        self.registration_key = registration_key
         self.user = None
 
     def validate(self):
+        """Validate the form
+
+        Perform validation by checking that all submitted values are within
+        acceptable ranges and the user is allowed to register an account.
+        """
+
         if not Form.validate(self):
             return False
 
@@ -34,6 +50,7 @@ class RegistrationForm(Form):
         # Check that email is "allowed" to register
         candidate = RegisterCandidate.query.filter_by(
             email=self.email.data,
+            registration_key=self.registration_key,
         ).first()
         if candidate is None:
             self.email.errors.append(
@@ -56,6 +73,15 @@ class RegistrationForm(Form):
         )
 
         return True
+
+    name = TextField(
+        'Full Name',
+        validators=[
+            validators.Required(
+                message='You must provide your full name.',
+            ),
+        ],
+    )
 
     email = TextField(
         'Email',
@@ -103,12 +129,21 @@ class RegistrationForm(Form):
         'Remember Me?',
     )
 
+
 class LoginForm(Form):
-    def __init__(Form, *args, **kwargs):
+    """A form for logging in a user"""
+    def __init__(self, *args, **kwargs):
+        """Inititalize the registration form"""
         Form.__init__(self, *args, **kwargs)
         self.user = None
 
     def validate(self):
+        """Validate the form
+
+        Perform validation by checking that the user account exists and the
+        password hashes match.
+        """
+
         if not Form.validate(self):
             return False
 
@@ -147,7 +182,9 @@ class LoginForm(Form):
         'Remember Me?',
     )
 
+
 class ForgotForm(Form):
+    """A form for recovering an account with a forgotten password"""
     email = TextField(
         'Email',
         validators=[
