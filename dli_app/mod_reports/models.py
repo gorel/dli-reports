@@ -4,8 +4,13 @@ Author: Logan Gore
 This file is responsible for defining models that belong in the reports module.
 """
 
+import os
+
+import xlsxwriter
+
 from dli_app import db
 
+EXCEL_FILE_DIR = "excel-files"
 
 report_fields = db.Table(
     'report_fields',
@@ -39,12 +44,33 @@ class Report(db.Model):
 
     def __init__(self):
         """Initialize a Report model"""
+        self.filename = EXCEL_FILE_DIR + self.name + ""
         pass
+
+    def generate_filename(self, ds):
+        return "{directory}/{filename}-{ds}".format(
+            directory=EXCEL_FILE_DIR,
+            filename=self.name,
+            ds=ds,
+        )
 
     def __repr__(self):
         """Return a descriptive representation of a Report"""
         # TODO: Find a way of describing this report
         return '<Report>'
+
+    def to_excel(self, ds):
+        filename = self.generate_filename(ds)
+        workbook = xlsxwriter.Workbook(filename)
+        worksheet = workbook.add_worksheet()
+        # TODO: For field in report:
+            # field_data = { dept: [(Field, FieldData), ] }
+        # Write all of the data to the worksheet
+        workbook.close()
+
+    def delete_excel_file(self, ds):
+        filename = self.generate_filename(ds)
+        os.remove(filename)
 
 
 class Field(db.Model):
