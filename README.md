@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/gorel/dli-reports.png?label=ready&title=Ready)](https://waffle.io/gorel/dli-reports)
 # dli-reports
 A repository for easier report generation for Discount Labels, Inc.
 
