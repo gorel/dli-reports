@@ -16,7 +16,7 @@ class Report(db.Model):
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, index=True)
-    rep_name = db.Column(db.String(64))
+    name = db.Column(db.String(64))
     fields = db.relationship(
         'Field',
         secondary=report_fields,
@@ -29,7 +29,7 @@ class Report(db.Model):
     )
 
     def __repr__(self):
-        return '<Report %r>' % self.rep_name
+        return '<Report %r>' % self.name
 
 class Field(db.Model):
     __tablename__ = "field"
@@ -38,13 +38,16 @@ class Field(db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
     name = db.Column(db.String(32))
     def __repr__(self):
-        return '<Field %r>' %r name
+        return '<Field %r>' %r self.name
 
 class FieldType(db.Model):
     __tablename__ = "field_type"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), index=True)
-
+    data_points = db.relationship(
+    'FieldData',
+    backref='field',
+    )
     def __repr__(self):
         return '<Field Type %r>' % self.name
 
@@ -57,7 +60,7 @@ class FieldData(db.Model):
     dvalue = db.Column(db.Double)
     svalue = db.Column(db.String(128))
     def __repr__(self):
-        return '<FieldData %r>' % svalue
+        return '<FieldData %r>' % self.svalue
 
 class Tag(db.Model):
     __tablename__ = "tag"
