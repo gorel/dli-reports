@@ -30,8 +30,9 @@ class Report(db.Model):
     """Model for a DLI Report"""
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
-    # TODO: Fill out remaining fields
-    fields = db.relationship(
+    user_id = db.Column(db.Integer, index=True)
+	rep_name = db.Column(db.String(64))
+	fields = db.relationship(
         'Field',
         secondary=report_fields,
         backref='reports',
@@ -56,8 +57,7 @@ class Report(db.Model):
 
     def __repr__(self):
         """Return a descriptive representation of a Report"""
-        # TODO: Find a way of describing this report
-        return '<Report>'
+        return '<Report %r>' % self.rep_name
 
     def to_excel(self, ds):
         filename = self.generate_filename(ds)
@@ -78,7 +78,8 @@ class Field(db.Model):
     __tablename__ = "field"
     id = db.Column(db.Integer, primary_key=True)
     field_type = db.relationship('FieldType')
-    # TODO: Fill out remaining fields
+	department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
+	name = db.Column(db.String(32))
 
     def __init__(self):
         """Initialize a Field model"""
@@ -86,8 +87,7 @@ class Field(db.Model):
 
     def __repr__(self):
         """Return a descriptive representation of a Field"""
-        # TODO: Find a way of describing this field
-        return '<Field>'
+        return '<Field %r>' %r name
 
 
 class FieldType(db.Model):
@@ -109,7 +109,11 @@ class FieldData(db.Model):
     """Model for the actual data stored in a Field"""
     __tablename__ = "field_data"
     id = db.Column(db.Integer, primary_key=True)
-    # TODO: Fill out remaining fields
+	date_stamp = db.Column(db.DateTime, primary_key=True)
+	field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
+	ivalue = db.Column(db.BigInteger)
+	dvalue = db.Column(db.Double)
+	svalue = db.Column(db.String(128))
 
     def __init__(self):
         """Initialize a FieldData model"""
@@ -117,8 +121,7 @@ class FieldData(db.Model):
 
     def __repr__(self):
         """Return a descriptive representation of a FieldData"""
-        # TODO: Find a way of describing this field data
-        return '<FieldData>'
+        return '<FieldData %r>' % svalue
 
 
 class Tag(db.Model):
