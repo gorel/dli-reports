@@ -15,8 +15,9 @@ report_tags = db.Table(
 class Report(db.Model):
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
-    # TODO: Fill out remaining fields
-    fields = db.relationship(
+    user_id = db.Column(db.Integer, index=True)
+	rep_name = db.Column(db.String(64))
+	fields = db.relationship(
         'Field',
         secondary=report_fields,
         backref='reports',
@@ -28,18 +29,16 @@ class Report(db.Model):
     )
 
     def __repr__(self):
-        # TODO: Find a way of describing this report
-        return '<Report>'
+        return '<Report %r>' % self.rep_name
 
 class Field(db.Model):
     __tablename__ = "field"
     id = db.Column(db.Integer, primary_key=True)
     field_type = db.relationship('FieldType')
-    # TODO: Fill out remaining fields
-
+	department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
+	name = db.Column(db.String(32))
     def __repr__(self):
-        # TODO: Find a way of describing this field
-        return '<Field>'
+        return '<Field %r>' %r name
 
 class FieldType(db.Model):
     __tablename__ = "field_type"
@@ -52,11 +51,13 @@ class FieldType(db.Model):
 class FieldData(db.Model):
     __tablename__ = "field_data"
     id = db.Column(db.Integer, primary_key=True)
-    # TODO: Fill out remaining fields
-
+	date_stamp = db.Column(db.DateTime, primary_key=True)
+	field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
+	ivalue = db.Column(db.BigInteger)
+	dvalue = db.Column(db.Double)
+	svalue = db.Column(db.String(128))
     def __repr__(self):
-        # TODO: Find a way of describing this field data
-        return '<FieldData>'
+        return '<FieldData %r>' % svalue
 
 class Tag(db.Model):
     __tablename__ = "tag"
