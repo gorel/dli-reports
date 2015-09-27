@@ -31,8 +31,8 @@ class Report(db.Model):
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, index=True)
-	rep_name = db.Column(db.String(64))
-	fields = db.relationship(
+    rep_name = db.Column(db.String(64))
+    fields = db.relationship(
         'Field',
         secondary=report_fields,
         backref='reports',
