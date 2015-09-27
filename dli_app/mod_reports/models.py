@@ -31,7 +31,7 @@ class Report(db.Model):
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, index=True)
-    rep_name = db.Column(db.String(64))
+    name = db.Column(db.String(64))
     fields = db.relationship(
         'Field',
         secondary=report_fields,
@@ -48,16 +48,16 @@ class Report(db.Model):
         self.filename = EXCEL_FILE_DIR + self.name + ""
         pass
 
+    def __repr__(self):
+        """Return a descriptive representation of a Report"""
+        return '<Report %r>' % self.name
+
     def generate_filename(self, ds):
         return "{directory}/{filename}-{ds}".format(
             directory=EXCEL_FILE_DIR,
             filename=self.name,
             ds=ds,
         )
-
-    def __repr__(self):
-        """Return a descriptive representation of a Report"""
-        return '<Report %r>' % self.rep_name
 
     def to_excel(self, ds):
         filename = self.generate_filename(ds)
@@ -87,7 +87,7 @@ class Field(db.Model):
 
     def __repr__(self):
         """Return a descriptive representation of a Field"""
-        return '<Field %r>' %r name
+        return '<Field %r>' %r self.name
 
 
 class FieldType(db.Model):
@@ -95,6 +95,10 @@ class FieldType(db.Model):
     __tablename__ = "field_type"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), index=True)
+    data_points = db.relationship(
+    'FieldData',
+    backref='field',
+    )
 
     def __init__(self):
         """Initialize a FieldType model"""
@@ -121,7 +125,7 @@ class FieldData(db.Model):
 
     def __repr__(self):
         """Return a descriptive representation of a FieldData"""
-        return '<FieldData %r>' % svalue
+        return '<FieldData of %r>' % self.field.name
 
 
 class Tag(db.Model):
