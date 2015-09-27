@@ -16,8 +16,8 @@ class Report(db.Model):
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, index=True)
-	rep_name = db.Column(db.String(64))
-	fields = db.relationship(
+    rep_name = db.Column(db.String(64))
+    fields = db.relationship(
         'Field',
         secondary=report_fields,
         backref='reports',
@@ -35,8 +35,8 @@ class Field(db.Model):
     __tablename__ = "field"
     id = db.Column(db.Integer, primary_key=True)
     field_type = db.relationship('FieldType')
-	department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
-	name = db.Column(db.String(32))
+    department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
+    name = db.Column(db.String(32))
     def __repr__(self):
         return '<Field %r>' %r name
 
@@ -51,11 +51,11 @@ class FieldType(db.Model):
 class FieldData(db.Model):
     __tablename__ = "field_data"
     id = db.Column(db.Integer, primary_key=True)
-	date_stamp = db.Column(db.DateTime, primary_key=True)
-	field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
-	ivalue = db.Column(db.BigInteger)
-	dvalue = db.Column(db.Double)
-	svalue = db.Column(db.String(128))
+    date_stamp = db.Column(db.DateTime, primary_key=True)
+    field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
+    ivalue = db.Column(db.BigInteger)
+    dvalue = db.Column(db.Double)
+    svalue = db.Column(db.String(128))
     def __repr__(self):
         return '<FieldData %r>' % svalue
 
