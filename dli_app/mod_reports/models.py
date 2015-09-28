@@ -96,8 +96,8 @@ class FieldType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), index=True)
     data_points = db.relationship(
-    'FieldData',
-    backref='field',
+        'FieldData',
+        backref='field',
     )
 
     def __init__(self):
