@@ -30,7 +30,8 @@ class Report(db.Model):
     """Model for a DLI Report"""
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
-    # TODO: Fill out remaining fields
+    user_id = db.Column(db.Integer, index=True)
+    name = db.Column(db.String(64))
     fields = db.relationship(
         'Field',
         secondary=report_fields,
@@ -47,17 +48,16 @@ class Report(db.Model):
         self.filename = EXCEL_FILE_DIR + self.name + ""
         pass
 
+    def __repr__(self):
+        """Return a descriptive representation of a Report"""
+        return '<Report %r>' % self.name
+
     def generate_filename(self, ds):
         return "{directory}/{filename}-{ds}".format(
             directory=EXCEL_FILE_DIR,
             filename=self.name,
             ds=ds,
         )
-
-    def __repr__(self):
-        """Return a descriptive representation of a Report"""
-        # TODO: Find a way of describing this report
-        return '<Report>'
 
     def to_excel(self, ds):
         filename = self.generate_filename(ds)
@@ -78,7 +78,8 @@ class Field(db.Model):
     __tablename__ = "field"
     id = db.Column(db.Integer, primary_key=True)
     field_type = db.relationship('FieldType')
-    # TODO: Fill out remaining fields
+	department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
+	name = db.Column(db.String(32))
 
     def __init__(self):
         """Initialize a Field model"""
@@ -86,15 +87,17 @@ class Field(db.Model):
 
     def __repr__(self):
         """Return a descriptive representation of a Field"""
-        # TODO: Find a way of describing this field
-        return '<Field>'
-
+        return '<Field %r>' %r self.name
 
 class FieldType(db.Model):
     """Model for the type of a Field"""
     __tablename__ = "field_type"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), index=True)
+    data_points = db.relationship(
+        'FieldData',
+        backref='field',
+    )
 
     def __init__(self):
         """Initialize a FieldType model"""
@@ -109,7 +112,11 @@ class FieldData(db.Model):
     """Model for the actual data stored in a Field"""
     __tablename__ = "field_data"
     id = db.Column(db.Integer, primary_key=True)
-    # TODO: Fill out remaining fields
+	date_stamp = db.Column(db.DateTime, primary_key=True)
+	field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
+	ivalue = db.Column(db.BigInteger)
+	dvalue = db.Column(db.Double)
+	svalue = db.Column(db.String(128))
 
     def __init__(self):
         """Initialize a FieldData model"""
@@ -117,8 +124,7 @@ class FieldData(db.Model):
 
     def __repr__(self):
         """Return a descriptive representation of a FieldData"""
-        # TODO: Find a way of describing this field data
-        return '<FieldData>'
+        return '<FieldData of %r>' % self.field.name
 
 
 class Tag(db.Model):
