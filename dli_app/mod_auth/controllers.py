@@ -1,25 +1,23 @@
+"""Controller for the auth module
+
+Author: Logan Gore
+This file is responsible for loading all site pages under /auth.
+"""
+
 from flask import (
     Blueprint,
+    flash,
     redirect,
     render_template,
     request,
     url_for,
 )
 
-from flask.ext.login import (
+from flask_login import (
     current_user,
-    login_required,
     login_user,
     logout_user,
 )
-
-from werkzeug import (
-    check_password_hash,
-    generate_password_hash,
-)
-
-# Import main DB and Login Manager for app
-from dli_app import login_manager
 
 # Import forms
 from dli_app.mod_auth.forms import (
@@ -30,18 +28,29 @@ from dli_app.mod_auth.forms import (
 # Import models
 from dli_app.mod_auth.models import (
     Location,
-    User,
 )
+
+from dli_app import db
 
 # Create a blueprint for this module
 mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 
+
 # Set all routing for the module
-@mod_auth.route('/register/', methods=['GET', 'POST'])
-def register():
-    form = RegistrationForm(request.form)
+@mod_auth.route('/register/<registration_key>/', methods=['GET', 'POST'])
+def register(registration_key):
+    """Register a new user
+
+    If the user successfully submitted the form, add the new user to the db,
+    commit the session, and login the user before redirecting to the home page.
+    Otherwise, render the template to show the user the registration page.
+    Arguments:
+    registration_key - the unique key for registering the user's account
+    """
+
+    form = RegistrationForm(request.form, registration_key=registration_key)
     if form.validate_on_submit():
-        db.session.add(self.user)
+        db.session.add(form.user)
         db.session.commit()
 
         # Log the user in and redirect to the homepage
@@ -53,8 +62,15 @@ def register():
         ]
         return render_template('auth/register.html', form=form)
 
+
 @mod_auth.route('/login/', methods=['GET', 'POST'])
 def login():
+    """Login the user
+
+    If the user successfully submitted the form, log them in. Otherwise,
+    render the login form for the user to input their information.
+    """
+
     form = LoginForm(request.form)
     if form.validate_on_submit():
         # User has authenticated. Log in.
@@ -63,11 +79,18 @@ def login():
     else:
         return render_template('auth/login.html', form=form)
 
+
 @mod_auth.route('/logout/', methods=['POST'])
 def logout():
-    # Don't set login required, because it will send the user to the login page
-    # before redirecting them to logout. It doesn't make much sense to the user.
+    """Log the user out of their account
+
+    As long as the current user is authenticated, log them out of thier
+    account then redirect to the site index. Don't set login required,
+    because it will send the user to the login page before redirecting them
+    to logout. It doesn't make much sense to the user.
+    """
+
     if current_user.is_authenticated:
         logout_user()
     flash('You have successfully logged out.', 'alert-success')
-    return redirect(url_for('/'))
+    return redirect(url_for('default.home'))

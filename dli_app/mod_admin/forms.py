@@ -1,33 +1,61 @@
-from flask.ext.wtf import (
+"""Forms for the admin module
+
+Author: Logan Gore
+This file lists all forms to be filled out from within the admin module.
+"""
+
+from flask_wtf import (
     Form,
 )
 
 from wtforms import (
-    PasswordField,
     SelectField,
     TextField,
     validators,
 )
 
+
 class AddLocationForm(Form):
+    """Form for adding a new location"""
+    def __init__(self, *args, **kwargs):
+        """Initialize an AddLocationForm"""
+        Form.__init__(self, args, kwargs)
+        self.location = None
+
     name = TextField(
         "Location Name",
         validators=[
             validators.Required(
                 message='You must provide the name of the location.',
+            ),
         ],
     )
 
+
 class AddDepartmentForm(Form):
+    """Form for adding a new department"""
+    def __init__(self, *args, **kwargs):
+        """Initialize an AddDepartmentForm"""
+        Form.__init__(self, args, kwargs)
+        self.department = None
+
     name = TextField(
         "Department Name",
         validators=[
             validators.Required(
                 message='You must provide the name of the department.',
+            ),
         ],
     )
 
+
 class AddFieldForm(Form):
+    """Form for adding a new field to a department"""
+    def __init__(self, *args, **kwargs):
+        """Initialize an AddFieldForm"""
+        Form.__init__(self, args, kwargs)
+        self.field = None
+
     name = TextField(
         "Field Name",
         validators=[
@@ -58,12 +86,15 @@ class AddFieldForm(Form):
         ],
     )
 
+
 class AddUserForm(Form):
+    """Form for inviting a new user to the site"""
     name = TextField(
         "Full Name",
         validators=[
             validators.Required(
                 message='You must provide the full name of the new user.',
+            ),
         ],
     )
 

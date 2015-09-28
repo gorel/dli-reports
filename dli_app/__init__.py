@@ -1,10 +1,16 @@
+"""Base module for the DLI Reports app.
+
+Author: Logan Gore
+This module creates the app and initializes all startup code.
+"""
+
 # System imports
 import sys
 
 # Flask imports
 from flask import Flask, render_template
-from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.login import (
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import (
     LoginManager,
     current_user,
     login_user,
@@ -37,10 +43,12 @@ sys.stdout.write('Done\n')
 sys.stdout.write('Registering error handlers...')
 @app.errorhandler(404)
 def not_found(error):
-    return render_template('404.html'), 404
+    """Render the default 404 template"""
+    return render_template('404.html', error=error), 404
 sys.stdout.write('Done\n')
 
 # Import all blueprints from controllers
+from dli_app.controllers import mod_default
 from dli_app.mod_account.controllers import mod_account
 from dli_app.mod_admin.controllers import mod_admin
 from dli_app.mod_auth.controllers import mod_auth
@@ -49,15 +57,13 @@ from dli_app.mod_wiki.controllers import mod_wiki
 
 # Register blueprints
 sys.stdout.write('Registering blueprint modules...')
+app.register_blueprint(mod_default)
 app.register_blueprint(mod_account)
 app.register_blueprint(mod_admin)
 app.register_blueprint(mod_auth)
 app.register_blueprint(mod_reports)
 app.register_blueprint(mod_wiki)
 sys.stdout.write('Done\n')
-
-# Import base controller
-import dli_app.controllers
 
 # Build database with SQLAlchemy
 sys.stdout.write('Building database with SQLAlchemy...')
