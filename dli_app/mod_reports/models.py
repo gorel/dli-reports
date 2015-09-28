@@ -89,7 +89,6 @@ class Field(db.Model):
         """Return a descriptive representation of a Field"""
         return '<Field %r>' %r self.name
 
-
 class FieldType(db.Model):
     """Model for the type of a Field"""
     __tablename__ = "field_type"
