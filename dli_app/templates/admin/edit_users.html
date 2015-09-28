@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <div class="page-header">
+    <h1>Users</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Is Admin?</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td>{{ user.id }}</td>
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
+              <td>{{ user.location.name }}</td>
+              <td>
+                <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
+                  <button class="btn btn-xs btn-danger">Delete</button>
+                </form>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-md-4">
+      <h3>Add a new User</h3>
+      <p>Use the <a href="{{ url_for('auth.register') }}">sign-up</a> form for now.</p>
+    </div>
+  </div>
+{% endblock %}

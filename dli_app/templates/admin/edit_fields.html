@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <div class="page-header">
+    <h1>Fields</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Type</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for field in fields %}
+            <tr>
+              <td>{{ field.id }}</td>
+              <td>{{ field.name }}</td>
+              <td>{{ field.department.name }}</td>
+              <td>{{ field.field_type.name }}</td>
+              <td>
+                <form action="{{ url_for('admin.delete_field', field_id=field.id) }}" method="POST">
+                  <button class="btn btn-xs btn-danger">Delete</button>
+                </form>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-md-4">
+      <h3>Add a new Field</h3>
+      <form method="POST" action="{{ url_for('admin.edit_fields', next='/') }}">
+        {{ form.csrf_token }}
+
+        {{ form.name.label }}
+        {{ form.name(class='form-control') }}
+
+        {{ form.department.label }}
+        {{ form.department(class='form-control') }}
+
+        {{ form.field_type.label }}
+        {{ form.field_type(class='form-control') }}
+
+        <button type="submit" class="btn btn-primary">Create</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,6 +1,13 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <h1>An Eventual Admin Page</h1>
+    <h1>Management</h1>
   </div>
+
+  <ul>
+    <li><a href="{{ url_for('admin.edit_departments') }}">Edit Departments</a></li>
+    <li><a href="{{ url_for('admin.edit_fields') }}">Edit Fields</a></li>
+    <li><a href="{{ url_for('admin.edit_locations') }}">Edit Locations</a></li>
+    <li><a href="{{ url_for('admin.edit_users') }}">Edit Users</a></li>
+  </ul>
 {% endblock %}

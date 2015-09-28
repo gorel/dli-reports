@@ -1,0 +1,47 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <div class="page-header">
+    <h1>Departments</h1>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for department in departments %}
+            <tr>
+              <td>{{ department.id }}</td>
+              <td>{{ department.name }}</td>
+              <td>
+                <form action="{{ url_for('admin.delete_department', dep_id=department.id) }}" method="POST">
+                  <button class="btn btn-xs btn-danger">Delete</button>
+                </form>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-md-4">
+      <h3>Add a new Department</h3>
+      <form method="POST" action="{{ url_for('admin.edit_departments', next='/') }}">
+        {{ form.csrf_token }}
+        {{ form.name.label }}
+        <div class="input-group">
+          {{ form.name(class='form-control') }}
+          <span class="input-group-btn">
+            <button type="submit" class="btn btn-primary">Create</button>
+          </span>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}
