@@ -1,0 +1,7 @@
+#!/home/jegeland/sites/cs490/dli-reports/venv/bin/python
+import sys
+try:
+    from pylint import gui 
+    gui.Run(sys.argv[1:])
+except ImportError:
+    sys.exit('tkinter is not available')

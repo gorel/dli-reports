@@ -1,0 +1,4 @@
+#!/home/jegeland/sites/cs490/dli-reports/venv/bin/python
+import sys
+from pylint import lint
+lint.Run(sys.argv[1:])

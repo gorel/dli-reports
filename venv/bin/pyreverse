@@ -1,0 +1,4 @@
+#!/home/jegeland/sites/cs490/dli-reports/venv/bin/python
+import sys
+from pylint.pyreverse import main
+main.Run(sys.argv[1:])

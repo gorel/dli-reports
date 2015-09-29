@@ -1,0 +1,3 @@
+#!/home/jegeland/sites/cs490/dli-reports/venv/bin/python
+from pylint.checkers import similar
+similar.run()
