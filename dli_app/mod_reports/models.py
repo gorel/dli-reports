@@ -77,9 +77,15 @@ class Field(db.Model):
     """Model for a Field within a Report"""
     __tablename__ = "field"
     id = db.Column(db.Integer, primary_key=True)
-    field_type = db.relationship('FieldType')
-	department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
-	name = db.Column(db.String(32))
+    ftype_id = db.Column(db.Integer, db.ForeignKey("field_type.id"))
+    ftype = db.relationship("FieldType")
+    department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
+    name = db.Column(db.String(32))
+
+    data_points = db.relationship(
+        'FieldData',
+        backref='field',
+    )
 
     def __init__(self):
         """Initialize a Field model"""
@@ -87,17 +93,13 @@ class Field(db.Model):
 
     def __repr__(self):
         """Return a descriptive representation of a Field"""
-        return '<Field %r>' %r self.name
+        return '<Field %r>' % self.name
 
 class FieldType(db.Model):
     """Model for the type of a Field"""
     __tablename__ = "field_type"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), index=True)
-    data_points = db.relationship(
-        'FieldData',
-        backref='field',
-    )
 
     def __init__(self):
         """Initialize a FieldType model"""
@@ -112,11 +114,11 @@ class FieldData(db.Model):
     """Model for the actual data stored in a Field"""
     __tablename__ = "field_data"
     id = db.Column(db.Integer, primary_key=True)
-	date_stamp = db.Column(db.DateTime, primary_key=True)
-	field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
-	ivalue = db.Column(db.BigInteger)
-	dvalue = db.Column(db.Double)
-	svalue = db.Column(db.String(128))
+    date_stamp = db.Column(db.DateTime, primary_key=True)
+    field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
+    ivalue = db.Column(db.BigInteger)
+    dvalue = db.Column(db.Float)
+    svalue = db.Column(db.String(128))
 
     def __init__(self):
         """Initialize a FieldData model"""

@@ -14,6 +14,9 @@ from werkzeug.security import (
 
 from dli_app import db, login_manager
 
+from dli_app.mod_reports.models import (
+    Field,
+)
 
 @login_manager.user_loader
 def user_loader(user_id):
@@ -46,7 +49,7 @@ class User(db.Model):
     email = db.Column(db.String(64), index=True, unique=True)
     password = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean)
-    location = db.Column(db.Integer, db.ForeignKey("location.id"))
+    location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
 
     def __init__(self, name, email, password, location):
         """Initialize a User model"""
@@ -102,6 +105,10 @@ class Location(db.Model):
     __tablename__ = "location"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
+    users = db.relationship(
+        "User",
+        backref="location",
+    )
 
     def __init__(self, name):
         """Initialize a Location model"""
@@ -117,6 +124,10 @@ class Department(db.Model):
     __tablename__ = "department"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
+    fields = db.relationship(
+        "Field",
+        backref="department",
+    )
 
     def __init__(self, name):
         """Initialize a Department model"""
