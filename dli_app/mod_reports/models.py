@@ -8,10 +8,6 @@ import os
 
 import xlsxwriter
 
-from flask_sqlalchemy import (
-    orm,
-)
-
 from dli_app import db
 
 EXCEL_FILE_DIR = "excel-files"
@@ -54,23 +50,17 @@ class Report(db.Model):
         self.fields = fields
         self.tags = tags
 
-        # Call the method to load local variables NOT stored in the db
-        self.init_on_load()
-
-    @orm.reconstructor
-    def init_on_load(self):
-        """Load code that isn't stored in the db model"""
-        self.filename = EXCEL_FILE_DIR + self.name + ""
-
     def __repr__(self):
         """Return a descriptive representation of a Report"""
         return '<Report %r>' % self.name
 
     @property
     def tagnames(self):
+        """Helper function to get the names of the Report's tags"""
         return [tag.name for tag in self.tags]
 
     def generate_filename(self, ds):
+        """Generate the filename for the Excel sheet for downloads"""
         return "{directory}/{filename}-{ds}".format(
             directory=EXCEL_FILE_DIR,
             filename=self.name,
@@ -78,6 +68,11 @@ class Report(db.Model):
         )
 
     def to_excel(self, ds):
+        """Generate an Excel sheet with this Report's data
+
+        Arguments:
+        ds - Date stamp for which day of Report data to generate
+        """
         filename = self.generate_filename(ds)
         workbook = xlsxwriter.Workbook(filename)
         worksheet = workbook.add_worksheet()
@@ -87,6 +82,7 @@ class Report(db.Model):
         workbook.close()
 
     def delete_excel_file(self, ds):
+        """Delete the Excel file generated previously for downloading"""
         filename = self.generate_filename(ds)
         os.remove(filename)
 
@@ -140,7 +136,7 @@ class FieldData(db.Model):
 
     def __init__(self):
         """Initialize a FieldData model"""
-        pass
+        self.field = None
 
     def __repr__(self):
         """Return a descriptive representation of a FieldData"""

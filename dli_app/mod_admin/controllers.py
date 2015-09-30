@@ -20,8 +20,11 @@ from flask_login import (
     login_required,
 )
 
-# Import main db for app
-from dli_app import db
+# Import main db and form error handler for app
+from dli_app import (
+    db,
+    flash_form_errors,
+)
 
 # Import forms
 from dli_app.mod_admin.forms import (
@@ -98,6 +101,8 @@ def edit_locations():
     else:
         # Get a list of all locations
         locations = Location.query.all()
+
+        flash_form_errors(form)
         return render_template(
             'admin/edit_locations.html',
             form=form,
@@ -168,6 +173,8 @@ def edit_departments():
     else:
         # Get a list of all departments
         departments = Department.query.all()
+
+        flash_form_errors(form)
         return render_template(
             'admin/edit_departments.html',
             form=form,
@@ -240,6 +247,8 @@ def edit_fields():
         dept_fields = collections.defaultdict(list)
         for field in Field.query.all():
             dept_fields[field.department].append(field)
+
+        flash_form_errors(form)
         return render_template(
             'admin/edit_fields.html',
             form=form,
@@ -303,6 +312,8 @@ def edit_users():
     else:
         # Get a list of users
         users = User.query.all()
+
+        flash_form_errors(form)
         return render_template(
             'admin/edit_users.html',
             form=form,

@@ -8,7 +8,11 @@ This module creates the app and initializes all startup code.
 import sys
 
 # Flask imports
-from flask import Flask, render_template
+from flask import (
+    Flask,
+    flash,
+    render_template,
+)
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager,
@@ -47,6 +51,18 @@ def not_found(error):
     return render_template('404.html', error=error), 404
 sys.stdout.write('Done\n')
 
+# Define form error handler
+sys.stdout.write('Creating form error handler...')
+def flash_form_errors(form):
+    """Flash form errors to the user"""
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(
+                "%s: %s" % (getattr(form, field).label.text, error),
+                "alert-danger",
+            )
+sys.stdout.write('Done\n')
+
 # Import all blueprints from controllers
 from dli_app.controllers import mod_default
 from dli_app.mod_account.controllers import mod_account
@@ -63,11 +79,6 @@ app.register_blueprint(mod_admin)
 app.register_blueprint(mod_auth)
 app.register_blueprint(mod_reports)
 app.register_blueprint(mod_wiki)
-sys.stdout.write('Done\n')
-
-# Build database with SQLAlchemy
-sys.stdout.write('Building database with SQLAlchemy...')
-db.create_all()
 sys.stdout.write('Done\n')
 
 sys.stdout.write('\nApp done loading.\n')
