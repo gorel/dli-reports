@@ -96,14 +96,14 @@ def submit_report_data():
         )
         return redirect(url_for('reports.my_reports'))
     else:
-        return render_template('reports/data.html', form=form)
+        return render_template('reports/submit_data.html', form=form)
 
 
 @mod_reports.route('/view/<int:report_id>', methods=['GET'])
 @login_required
 def view_report(report_id):
     """Show the user a specific report"""
-    report = Report.get(report_id)
+    report = Report.query.get(report_id)
     if report is None:
         flash(
             "Report not found!",

@@ -77,6 +77,9 @@ def login():
         login_user(form.user, remember=form.remember.data)
         return redirect(request.args.get('next') or url_for('default.home'))
     else:
+        for field, errors in form.errors.iteritems():
+            for err in errors:
+                print('%r: %r' % (field, err))
         return render_template('auth/login.html', form=form)
 
 

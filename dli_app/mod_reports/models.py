@@ -8,6 +8,10 @@ import os
 
 import xlsxwriter
 
+from flask_sqlalchemy import (
+    orm,
+)
+
 from dli_app import db
 
 EXCEL_FILE_DIR = "excel-files"
@@ -30,7 +34,7 @@ class Report(db.Model):
     """Model for a DLI Report"""
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     name = db.Column(db.String(64))
     fields = db.relationship(
         'Field',
@@ -43,14 +47,28 @@ class Report(db.Model):
         backref='reports',
     )
 
-    def __init__(self):
+    def __init__(self, user_id, name, fields, tags):
         """Initialize a Report model"""
+        self.user_id = user_id
+        self.name = name
+        self.fields = fields
+        self.tags = tags
+
+        # Call the method to load local variables NOT stored in the db
+        self.init_on_load()
+
+    @orm.reconstructor
+    def init_on_load(self):
+        """Load code that isn't stored in the db model"""
         self.filename = EXCEL_FILE_DIR + self.name + ""
-        pass
 
     def __repr__(self):
         """Return a descriptive representation of a Report"""
         return '<Report %r>' % self.name
+
+    @property
+    def tagnames(self):
+        return [tag.name for tag in self.tags]
 
     def generate_filename(self, ds):
         return "{directory}/{filename}-{ds}".format(
@@ -135,9 +153,9 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
 
-    def __init__(self):
+    def __init__(self, name):
         """Initialize a Tag model"""
-        pass
+        self.name = name
 
     def __repr__(self):
         """Return a descriptive representation of a Tag"""

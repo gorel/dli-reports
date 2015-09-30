@@ -4,9 +4,29 @@ Author: Logan Gore
 This file lists all forms to be filled out from within the reports module.
 """
 
-from wtforms import (
+from flask_wtf import (
     Form,
 )
+
+from wtforms import (
+    FieldList,
+    FormField,
+    HiddenField,
+    TextField,
+    validators,
+)
+
+
+class ReportFieldForm(Form):
+    """A form defining a specific field to add to a report"""
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+        # TODO: Additional validation
 
 
 class CreateReportForm(Form):
@@ -21,6 +41,21 @@ class CreateReportForm(Form):
         if not Form.validate(self):
             return False
         # TODO: Additional validation
+
+    user_id = HiddenField()
+
+    name = TextField(
+        "Report name",
+        validators=[
+            validators.Required(
+                message="Please give this report a name.",
+            ),
+        ],
+    )
+
+    fields = FieldList(FormField(ReportFieldForm))
+
+    tags = FieldList(TextField('Tag'))
 
 
 class SubmitReportDataForm(Form):

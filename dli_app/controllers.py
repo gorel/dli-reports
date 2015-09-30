@@ -11,7 +11,7 @@ from flask import (
 
 
 # Create a blueprint for this module
-mod_default = Blueprint('default', __name__, url_prefix='/')
+mod_default = Blueprint('default', __name__)
 
 
 # Set all routing for the default app (not within modules)
