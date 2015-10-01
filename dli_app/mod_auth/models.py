@@ -9,6 +9,7 @@ from flask_sqlalchemy import (
 )
 
 from werkzeug.security import (
+    check_password_hash,
     generate_password_hash,
 )
 
@@ -16,6 +17,7 @@ from dli_app import db, login_manager
 
 from dli_app.mod_reports.models import (
     Field,
+    Report,
 )
 
 @login_manager.user_loader
@@ -50,6 +52,10 @@ class User(db.Model):
     password = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean)
     location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
+    reports = db.relationship(
+        "Report",
+        backref="user",
+    )
 
     def __init__(self, name, email, password, location):
         """Initialize a User model"""
@@ -89,6 +95,14 @@ class User(db.Model):
     def get_id(self):
         """Return a unique identifier for the user"""
         return self.id
+
+    def set_password(self, new_password):
+        """Change the user's password to the new password"""
+        self.password = generate_password_hash(new_password)
+
+    def check_password(self, password):
+        """Check the user's password against the given value"""
+        return check_password_hash(self.password, password)
 
     def __repr__(self):
         """Return a descriptive representation of a User"""

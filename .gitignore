@@ -61,3 +61,6 @@ config.py
 
 # Database files
 *.db
+
+# Swap files while editing in vim
+*.swp

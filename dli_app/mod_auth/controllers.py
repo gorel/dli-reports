@@ -30,7 +30,10 @@ from dli_app.mod_auth.models import (
     Location,
 )
 
-from dli_app import db
+from dli_app import (
+    db,
+    flash_form_errors,
+)
 
 # Create a blueprint for this module
 mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
@@ -48,18 +51,22 @@ def register(registration_key):
     registration_key - the unique key for registering the user's account
     """
 
-    form = RegistrationForm(request.form, registration_key=registration_key)
+    form = RegistrationForm()
     if form.validate_on_submit():
         db.session.add(form.user)
         db.session.commit()
 
         # Log the user in and redirect to the homepage
         login_user(form.user, form.remember.data)
+        flash("You have created a new account at DLI-Reports", "alert-success")
         return redirect(request.args.get('next') or url_for('default.home'))
     else:
+        form.registration_key.data = registration_key
         form.location.choices = [
             (location.id, location.name) for location in Location.query.all()
         ]
+
+        flash_form_errors(form)
         return render_template('auth/register.html', form=form)
 
 
@@ -75,8 +82,10 @@ def login():
     if form.validate_on_submit():
         # User has authenticated. Log in.
         login_user(form.user, remember=form.remember.data)
+        flash("You are now logged into DLI-Reports", "alert-success")
         return redirect(request.args.get('next') or url_for('default.home'))
     else:
+        flash_form_errors(form)
         return render_template('auth/login.html', form=form)
 
 

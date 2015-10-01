@@ -30,7 +30,7 @@ class Report(db.Model):
     """Model for a DLI Report"""
     __tablename__ = "report"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     name = db.Column(db.String(64))
     fields = db.relationship(
         'Field',
@@ -43,16 +43,24 @@ class Report(db.Model):
         backref='reports',
     )
 
-    def __init__(self):
+    def __init__(self, user_id, name, fields, tags):
         """Initialize a Report model"""
-        self.filename = EXCEL_FILE_DIR + self.name + ""
-        pass
+        self.user_id = user_id
+        self.name = name
+        self.fields = fields
+        self.tags = tags
 
     def __repr__(self):
         """Return a descriptive representation of a Report"""
         return '<Report %r>' % self.name
 
+    @property
+    def tagnames(self):
+        """Helper function to get the names of the Report's tags"""
+        return [tag.name for tag in self.tags]
+
     def generate_filename(self, ds):
+        """Generate the filename for the Excel sheet for downloads"""
         return "{directory}/{filename}-{ds}".format(
             directory=EXCEL_FILE_DIR,
             filename=self.name,
@@ -60,6 +68,11 @@ class Report(db.Model):
         )
 
     def to_excel(self, ds):
+        """Generate an Excel sheet with this Report's data
+
+        Arguments:
+        ds - Date stamp for which day of Report data to generate
+        """
         filename = self.generate_filename(ds)
         workbook = xlsxwriter.Workbook(filename)
         worksheet = workbook.add_worksheet()
@@ -69,6 +82,7 @@ class Report(db.Model):
         workbook.close()
 
     def delete_excel_file(self, ds):
+        """Delete the Excel file generated previously for downloading"""
         filename = self.generate_filename(ds)
         os.remove(filename)
 
@@ -122,7 +136,7 @@ class FieldData(db.Model):
 
     def __init__(self):
         """Initialize a FieldData model"""
-        pass
+        self.field = None
 
     def __repr__(self):
         """Return a descriptive representation of a FieldData"""
@@ -135,9 +149,9 @@ class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True)
 
-    def __init__(self):
+    def __init__(self, name):
         """Initialize a Tag model"""
-        pass
+        self.name = name
 
     def __repr__(self):
         """Return a descriptive representation of a Tag"""

@@ -11,12 +11,13 @@
 
     <div class="collapse navbar-collapse" id="main_nav_collapse">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="#">Reports</a></li>
-        <li><a href="#">Wiki</a></li>
+      {% if current_user.is_active %}
+        <li class="active"><a href="{{ url_for('reports.all_reports') }}">Reports</a></li>
+      {% endif %}
+        <li><a href="{{ url_for('wiki.home') }}">Wiki</a></li>
       </ul>
 
       {% if current_user.is_active %}
-        {{ current_user.name }}
         <form method="POST" action="{{ url_for('auth.logout') }}" class="navbar-form navbar-right">
           <button class="btn btn-link" type="submit">Log Out</button>
         </form>

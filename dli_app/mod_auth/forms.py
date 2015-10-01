@@ -25,10 +25,9 @@ from dli_app.mod_auth.models import (
 
 class RegistrationForm(Form):
     """A form for registering a new user"""
-    def __init__(self, registration_key, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Inititalize the registration form"""
         Form.__init__(self, *args, **kwargs)
-        self.registration_key = registration_key
         self.user = None
 
     def validate(self):
@@ -50,7 +49,7 @@ class RegistrationForm(Form):
         # Check that email is "allowed" to register
         candidate = RegisterCandidate.query.filter_by(
             email=self.email.data,
-            registration_key=self.registration_key,
+            registration_key=self.registration_key.data,
         ).first()
         if candidate is None:
             self.email.errors.append(
@@ -73,6 +72,8 @@ class RegistrationForm(Form):
         )
 
         return True
+
+    registration_key = HiddenField()
 
     name = TextField(
         'Full Name',

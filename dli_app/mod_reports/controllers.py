@@ -18,8 +18,11 @@ from flask_login import (
     login_required,
 )
 
-# Import main db for app
-from dli_app import db
+# Import main db and form error handler for app
+from dli_app import (
+    db,
+    flash_form_errors,
+)
 
 # Import models
 from dli_app.mod_reports.models import (
@@ -72,6 +75,7 @@ def create_report():
 
         return redirect(url_for('reports.my_reports'))
     else:
+        flash_form_errors(form)
         return render_template('reports/create.html', form=form)
 
 
@@ -96,14 +100,15 @@ def submit_report_data():
         )
         return redirect(url_for('reports.my_reports'))
     else:
-        return render_template('reports/data.html', form=form)
+        flash_form_errors(form)
+        return render_template('reports/submit_data.html', form=form)
 
 
 @mod_reports.route('/view/<int:report_id>', methods=['GET'])
 @login_required
 def view_report(report_id):
     """Show the user a specific report"""
-    report = Report.get(report_id)
+    report = Report.query.get(report_id)
     if report is None:
         flash(
             "Report not found!",

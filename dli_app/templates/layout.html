@@ -10,11 +10,27 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
+    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   </head>
 
   <body>
     {% include 'partials/_nav.html' %}
+
+    {% with messages =  get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        <div class="container">
+            {% for category, message in messages %}
+              <div class="alert {{ category }} fade in">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <span class="glyphicon glyphicon-exclamantion-sign"></span>
+                {{ message }}
+              </div>
+            {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     {% block no_container %}
       <div class="container">
         {% block body %}{% endblock %}
