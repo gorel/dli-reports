@@ -117,3 +117,27 @@ def view_report(report_id):
         return redirect(url_for('reports.my_reports'))
 
     return render_template('reports/view.html', report=report)
+
+
+@mod_reports.route('/delete/<int:report_id>', methods=['POST'])
+@login_required
+def delete_report(report_id):
+    """Delete the specified report"""
+    report = Report.query.get(report_id)
+    if report is None:
+        flash(
+            "Report not found!",
+            "alert-warning",
+        )
+    elif not current_user.is_admin and not report.user.id == current_user.id:
+        flash(
+            "You don't have permission to delete that.",
+            "alert-warning",
+        )
+    else:
+        db.session.delete(report)
+        flash(
+            "Report deleted",
+            "alert-success",
+        )
+    return redirect(url_for('reports.my_reports'))
