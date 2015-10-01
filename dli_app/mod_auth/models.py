@@ -17,6 +17,7 @@ from dli_app import db, login_manager
 
 from dli_app.mod_reports.models import (
     Field,
+    Report,
 )
 
 @login_manager.user_loader
@@ -51,6 +52,10 @@ class User(db.Model):
     password = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean)
     location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
+    reports = db.relationship(
+        "Report",
+        backref="user",
+    )
 
     def __init__(self, name, email, password, location):
         """Initialize a User model"""
