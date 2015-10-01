@@ -129,6 +129,11 @@ def delete_report(report_id):
             "Report not found!",
             "alert-warning",
         )
+    elif not current_user.is_admin and not report.user.id == current_user.id:
+        flash(
+            "You don't have permission to delete that.",
+            "alert-warning",
+        )
     else:
         db.session.delete(report)
         flash(
