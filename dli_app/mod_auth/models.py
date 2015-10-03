@@ -52,17 +52,19 @@ class User(db.Model):
     password = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean)
     location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
+    dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
     reports = db.relationship(
         "Report",
         backref="user",
     )
 
-    def __init__(self, name, email, password, location):
+    def __init__(self, name, email, password, location, department):
         """Initialize a User model"""
         self.name = name
         self.email = email
         self.password = generate_password_hash(password)
         self.location = location
+        self.department = department
         self.is_admin = False
 
         self._is_authenticated = None
@@ -138,6 +140,11 @@ class Department(db.Model):
     __tablename__ = "department"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
+    users = db.relationship(
+        "User",
+        backref="department",
+        lazy="dynamic",
+    )
     fields = db.relationship(
         "Field",
         backref="department",

@@ -4,6 +4,7 @@ Author: Logan Gore
 This file is responsible for defining models that belong in the reports module.
 """
 
+import collections
 import os
 
 import xlsxwriter
@@ -43,12 +44,13 @@ class Report(db.Model):
         backref='reports',
     )
 
-    def __init__(self, user_id, name, fields, tags):
+    def __init__(self, user, name, fields, tags):
         """Initialize a Report model"""
-        self.user_id = user_id
+        self.user = user
         self.name = name
         self.fields = fields
         self.tags = tags
+        self.excel_helper = None
 
     def __repr__(self):
         """Return a descriptive representation of a Report"""
@@ -73,41 +75,52 @@ class Report(db.Model):
         Arguments:
         ds - Date stamp for which day of Report data to generate
         """
-        filename = self.generate_filename(ds)
-        workbook = xlsxwriter.Workbook(filename)
-        worksheet = workbook.add_worksheet()
-        # TODO: For field in report:
-            # field_data = { dept: [(Field, FieldData), ] }
-        # Write all of the data to the worksheet
-        workbook.close()
+        self.excel_helper = ExcelSheetHelper(self.generate_filename(ds))
+        self.excel_helper.write(self.collect_dept_data(ds))
+
+    def collect_dept_data(self, ds):
+        """Collect all of the department data for this Report"""
+        dept_data = collections.defaultdict(list)
+        for field in self.fields:
+            dept_data[field.department.name].append(
+                field.get_data_for_date(ds)
+            )
+        return dept_data
 
     def delete_excel_file(self, ds):
         """Delete the Excel file generated previously for downloading"""
-        filename = self.generate_filename(ds)
-        os.remove(filename)
+        if self.excel_helper is not None:
+            self.excel_helper.delete_workbook()
+        self.excel_helper = None
 
 
 class Field(db.Model):
     """Model for a Field within a Report"""
     __tablename__ = "field"
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32))
     ftype_id = db.Column(db.Integer, db.ForeignKey("field_type.id"))
     ftype = db.relationship("FieldType")
     department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
-    name = db.Column(db.String(32))
-
     data_points = db.relationship(
         'FieldData',
         backref='field',
+        lazy='dynamic',
     )
 
-    def __init__(self):
+    def __init__(self, name, ftype, department):
         """Initialize a Field model"""
-        pass
+        self.name = name
+        self.ftype = ftype
+        self.department = department
 
     def __repr__(self):
         """Return a descriptive representation of a Field"""
         return '<Field %r>' % self.name
+
+    def get_data_for_date(self, ds):
+        """Retrieve the FieldData instance for the given date stamp"""
+        return self.data_points.filter_by(date_stamp=ds).first()
 
 class FieldType(db.Model):
     """Model for the type of a Field"""
@@ -115,32 +128,73 @@ class FieldType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), index=True)
 
-    def __init__(self):
+    def __init__(self, name):
         """Initialize a FieldType model"""
-        pass
+        self.name = name
 
     def __repr__(self):
         """Return a descriptive representation of a FieldType"""
         return '<Field Type %r>' % self.name
 
+    def __eq__(self, other):
+        """Determine if two FieldTypes are equal"""
+        return other is not None and self.id == other.id
 
 class FieldData(db.Model):
     """Model for the actual data stored in a Field"""
     __tablename__ = "field_data"
     id = db.Column(db.Integer, primary_key=True)
-    date_stamp = db.Column(db.DateTime, primary_key=True)
+    ds = db.Column(db.String(16))
     field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
     ivalue = db.Column(db.BigInteger)
     dvalue = db.Column(db.Float)
     svalue = db.Column(db.String(128))
 
-    def __init__(self):
+    def __init__(self, ds, field, value):
         """Initialize a FieldData model"""
-        self.field = None
+        self.ds = ds
+        self.field = field
+
+        # Type checking should have already been done from the form
+        if self.field.ftype == FieldTypeConstants.CURRENCY:
+            parts = value.replace(',', '').replace('$', '').split('.')
+            # Convert the value into cents to avoid any floating-point issues
+            self.ivalue = int(parts[0]) * 100
+            if len(parts) == 2:
+                self.ivalue += int(parts[1])
+        elif self.field.ftype == FieldTypeConstants.DOUBLE:
+            self.dvalue = value
+        elif self.field.ftype == FieldTypeConstants.INTEGER:
+            self.ivalue = value
+        elif self.field.ftype == FieldTypeConstants.STRING:
+            self.svalue = value
+        elif self.field.ftype == FieldTypeConstants.TIME:
+            # Convert the value into seconds for convenience
+            parts = value.split(':')
+            self.ivalue = int(parts[0]) * 60
+            if len(parts) == 2:
+                self.ivalue += int(parts[1])
 
     def __repr__(self):
         """Return a descriptive representation of a FieldData"""
         return '<FieldData of %r>' % self.field.name
+
+    @property
+    def value(self):
+        """Property to easily retrieve the FieldData's value"""
+        ftype = self.field.ftype
+        if ftype == FieldTypeConstants.CURRENCY:
+            return float(self.ivalue) / 100
+        elif ftype == FieldTypeConstants.DOUBLE:
+            return self.dvalue
+        elif ftype == FieldTypeConstants.INTEGER:
+            return self.ivalue
+        elif ftype == FieldTypeConstants.STRING:
+            return self.svalue
+        elif ftype == FieldTypeConstants.TIME:
+            return self.ivalue
+        else:
+            return "ERROR: Type %s not supported!" % ftype
 
 
 class Tag(db.Model):
@@ -156,3 +210,108 @@ class Tag(db.Model):
     def __repr__(self):
         """Return a descriptive representation of a Tag"""
         return '<Tag %r>' % self.name
+
+class ExcelSheetHelper():
+    """Helper class to write data to an Excel Sheet for DLI Reports
+
+    Provides functions that write all Report data to an Excel file.
+    Overloads the write method to write data while keeping track of the sheet's
+    row and column information.
+    """
+
+    def __init__(self, filename, report_name):
+        """Initialize an ExcelSheetHelper by creating an XLSX Workbook"""
+        self.filename = filename
+        self.report_name = report_name
+
+        self.workbook = xlsxwriter.Workbook(self.filename)
+        self.worksheet = self.workbook.add_worksheet()
+        self.row = 0
+        self.col = 0
+
+        self.title_format = self.workbook.add_format(
+            {
+                'bold': True,
+                'font_size': 36,
+            }
+        )
+        self.report_name_format = self.workbook.add_format(
+            {
+                'bold': True,
+                'font_size': 28,
+            }
+        )
+        self.dept_title_format = self.workbook.add_format(
+            {
+                'bold': True,
+                'font_size': 20,
+            }
+        )
+
+        self.initialize_worksheet()
+
+    def initialize_worksheet(self):
+        """Write the DLI title and report name on the page"""
+        self.worksheet.write(
+            self.row,
+            self.col,
+            "DLI Auto-generated Reports",
+            cell_format=self.title_format,
+        )
+        self.row += 1
+
+        self.worksheet.write(
+            self.row,
+            self.col,
+            self.report_name,
+            cell_format=self.report_name_format,
+        )
+        self.row += 1
+
+    def write(self, dept_data):
+        """Write all of the department data for a Report"""
+        for dept in dept_data.keys():
+            self.write_dept_title(dept)
+            for field in dept_data[dept]:
+                self.write_field_data(field)
+
+    def write_dept_title(self, dept_name):
+        """Write a Department title within a Report"""
+        self.row += 1
+        self.worksheet.write(
+            self.row,
+            self.col,
+            dept_name,
+            cell_format=self.dept_title_format,
+        )
+        self.row += 1
+
+    def write_field_data(self, field):
+        """Write a Field within a Report"""
+        self.worksheet.write(
+            self.row,
+            self.col,
+            field.name,
+        )
+        self.col += 1
+
+        self.worksheet.write(
+            self.row,
+            self.col,
+            field.value,
+        )
+        self.row += 1
+        self.col = 0
+
+    def delete_workbook(self):
+        """Delete a Report from the filesystem"""
+        os.remove(self.filename)
+
+
+class FieldTypeConstants():
+    """Constant FieldTypes used for easy type-checking in other modules"""
+    CURRENCY = FieldType.query.filter_by(name="currency").first()
+    DOUBLE = FieldType.query.filter_by(name="double").first()
+    INTEGER = FieldType.query.filter_by(name="integer").first()
+    STRING = FieldType.query.filter_by(name="string").first()
+    TIME = FieldType.query.filter_by(name="time").first()
