@@ -11,7 +11,6 @@ from flask import (
     flash,
     redirect,
     render_template,
-    request,
     url_for,
 )
 
@@ -37,6 +36,7 @@ from dli_app.mod_reports.models import (
 
 # Import forms
 from dli_app.mod_reports.forms import (
+    ChangeDateAndDepartmentForm,
     CreateReportForm,
     SubmitReportDataForm,
 )
@@ -63,7 +63,7 @@ def all_reports():
     return render_template('reports/all.html', reports=reports)
 
 
-@mod_reports.route('/create', methods=['GET', 'POST'])
+@mod_reports.route('/create/', methods=['GET', 'POST'])
 @login_required
 def create_report():
     """Create a new report
@@ -73,7 +73,7 @@ def create_report():
     Otherwise, render the template to show the user the create report page.
     """
 
-    form = CreateReportForm(request.form)
+    form = CreateReportForm()
     if form.validate_on_submit():
         # Add the new report to the database
         db.session.add(form.report)
@@ -97,6 +97,21 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
     form.
     """
 
+    # Check to see if the user picked a different day or department
+    change_form = ChangeDateAndDepartmentForm()
+    if change_form.validate_on_submit() and change_form.department.data:
+        return redirect(
+            url_for(
+                'reports.submit_report_data',
+                ds=change_form.ds,
+                dept_id=change_form.dept_id,
+            )
+        )
+
+    # Set the change_form defaults
+    change_form.date.data = datetime.strptime(ds, "%Y-%m-%d")
+    change_form.department.default = dept_id or current_user.department.id
+
     # We must generate the dynamic form before loading it
     if dept_id is None:
         dept_id = current_user.department.id
@@ -116,7 +131,7 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
 
     # *Now* the form is properly initialized
     form = LocalSubmitReportDataForm()
-    if form.validate_on_submit():
+    if form.validate_on_submit() and form.ds.data:
         # Delete any old values that already existed
         for stale_value in form.stale_values:
             db.session.delete(stale_value)
@@ -131,6 +146,7 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
         )
         return redirect(url_for('reports.my_reports'))
     else:
+        flash_form_errors(change_form)
         flash_form_errors(form)
         form.ds.data = ds
 
@@ -140,10 +156,11 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
             if formfield.data is None:
                 existing_value = field.data_points.filter_by(ds=ds).first()
                 if existing_value is not None:
-                    formfield.data = existing_value
+                    formfield.data = existing_value.value
 
         return render_template(
             'reports/submit_data.html',
+            change_form=change_form,
             form=form,
             department=department,
             ds=ds,

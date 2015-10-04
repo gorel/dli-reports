@@ -78,7 +78,7 @@ def login():
     render the login form for the user to input their information.
     """
 
-    form = LoginForm(request.form)
+    form = LoginForm()
     if form.validate_on_submit():
         # User has authenticated. Log in.
         login_user(form.user, remember=form.remember.data)

@@ -4,8 +4,11 @@ Author: Logan Gore
 This file lists all forms to be filled out from within the reports module.
 """
 
+from datetime import datetime
+
 from flask_wtf import (
     Form,
+    html5,
 )
 
 from wtforms import (
@@ -13,9 +16,14 @@ from wtforms import (
     FieldList,
     HiddenField,
     IntegerField,
+    SelectField,
     TextField,
     ValidationError,
     validators,
+)
+
+from dli_app.mod_auth.models import (
+    Department,
 )
 
 from dli_app.mod_reports.models import (
@@ -60,19 +68,20 @@ class SplitNumValidator():
 
     def __call__(self, form, field):
         """Call the validation logic"""
-        translation_table = {ord(c): None for c in self.filter_chars}
-        data = field.data.translate(translation_table)
-        if data:
-            parts = data.split(self.split)
-            if len(parts) > self.max_parts:
-                raise ValidationError(self.parts_message)
-            for part in parts:
-                if not part.isdigit():
-                    raise ValidationError(
-                        self.num_message.format(
-                            part=part,
+        if field.data:
+            translation_table = {ord(c): None for c in self.filter_chars}
+            data = field.data.translate(translation_table)
+            if data:
+                parts = data.split(self.split)
+                if len(parts) > self.max_parts:
+                    raise ValidationError(self.parts_message)
+                for part in parts:
+                    if not part.isdigit():
+                        raise ValidationError(
+                            self.num_message.format(
+                                part=part,
+                            )
                         )
-                    )
 
 
 class ReportFieldForm(Form):
@@ -231,3 +240,37 @@ def generate_local_submit_report_data_form():
             setattr(cls, field.name, formfield)
 
     return LocalSubmitReportDataForm
+
+class ChangeDateAndDepartmentForm(Form):
+    """Form to change the date and/or department of a Report Form"""
+    def __init__(self, *args, **kwargs):
+        """Initialize the ChangeDateAndDepartmentForm object"""
+        Form.__init__(self, *args, **kwargs)
+        self.ds = None
+        self.dept_id = None
+        self.department.choices = [
+            (dept.id, dept.name) for dept in Department.query.all()
+        ]
+
+    def validate(self):
+        """Ensure the given date is within reasonable bounds"""
+        if not Form.validate(self):
+            return False
+
+        if self.date.data > datetime.now().date():
+            self.date.errors.append("Error: date is in the future")
+            return False
+
+        self.ds = self.date.data.strftime("%Y-%m-%d")
+        self.dept_id = self.department.data
+        return True
+
+    date = html5.DateField(
+        "Date",
+        format="%Y-%m-%d",
+    )
+
+    department = SelectField(
+        "Department",
+        coerce=int,
+    )
