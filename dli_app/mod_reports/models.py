@@ -44,9 +44,9 @@ class Report(db.Model):
         backref='reports',
     )
 
-    def __init__(self, user, name, fields, tags):
+    def __init__(self, user_id, name, fields, tags):
         """Initialize a Report model"""
-        self.user = user
+        self.user_id = user_id
         self.name = name
         self.fields = fields
         self.tags = tags
@@ -68,6 +68,23 @@ class Report(db.Model):
             filename=self.name,
             ds=ds,
         )
+
+    def collect_dept_data_for_template(self, ds):
+        """Collect all of the department data for this Report
+
+        Collect department data for this Report on a given day in a format
+        that is easy to template for render_template functions in Jinja2
+        """
+
+        dept_data = collections.defaultdict(list)
+        for field in self.fields:
+            dept_data[field.department.name].append(
+                {
+                    'name': field.name,
+                    'value': field.get_data_for_date(ds, pretty=True),
+                }
+            )
+        return dept_data
 
     def to_excel(self, ds):
         """Generate an Excel sheet with this Report's data
@@ -118,9 +135,16 @@ class Field(db.Model):
         """Return a descriptive representation of a Field"""
         return '<Field %r>' % self.name
 
-    def get_data_for_date(self, ds):
+    def get_data_for_date(self, ds, pretty=False):
         """Retrieve the FieldData instance for the given date stamp"""
-        return self.data_points.filter_by(date_stamp=ds).first()
+        data_point = self.data_points.filter_by(ds=ds).first()
+        if pretty:
+            if data_point is not None:
+                data_point = data_point.pretty_value
+            else:
+                data_point = "No data submitted."
+        return data_point
+
 
 class FieldType(db.Model):
     """Model for the type of a Field"""
@@ -139,6 +163,7 @@ class FieldType(db.Model):
     def __eq__(self, other):
         """Determine if two FieldTypes are equal"""
         return other is not None and self.id == other.id
+
 
 class FieldData(db.Model):
     """Model for the actual data stored in a Field"""
@@ -196,12 +221,33 @@ class FieldData(db.Model):
         else:
             return "ERROR: Type %s not supported!" % ftype
 
+    @property
+    def pretty_value(self):
+        """Property to easily retrieve a human-readable FieldData model"""
+        ftype = self.field.ftype
+        if ftype == FieldTypeConstants.CURRENCY:
+            dollars = self.ivalue / 100
+            cents = self.ivalue % 100
+            return "${dollars}.{cents}".format(dollars=dollars, cents=cents)
+        elif ftype == FieldTypeConstants.DOUBLE:
+            return str(self.dvalue)
+        elif ftype == FieldTypeConstants.INTEGER:
+            return str(self.ivalue)
+        elif ftype == FieldTypeConstants.STRING:
+            return self.svalue
+        elif ftype == FieldTypeConstants.TIME:
+            mins = self.ivalue / 60
+            secs = self.ivalue % 60
+            return "{mins}:{secs}".format(mins=mins, secs=secs)
+        else:
+            return "ERROR: Type %s not supported!" % ftype
+
 
 class Tag(db.Model):
     """Model for a Tag associated with a Report"""
     __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True)
+    name = db.Column(db.String(64), index=True, unique=True)
 
     def __init__(self, name):
         """Initialize a Tag model"""
@@ -210,6 +256,17 @@ class Tag(db.Model):
     def __repr__(self):
         """Return a descriptive representation of a Tag"""
         return '<Tag %r>' % self.name
+
+    @classmethod
+    def get_or_create(cls, name):
+        """Either retrieve a tag or create it if it doesn't exist"""
+        tag = Tag.query.filter_by(name=name).first()
+        if tag is None:
+            tag = Tag(name)
+            db.session.add(tag)
+            db.session.commit()
+        return tag
+
 
 class ExcelSheetHelper():
     """Helper class to write data to an Excel Sheet for DLI Reports

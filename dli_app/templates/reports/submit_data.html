@@ -4,7 +4,6 @@
     <h1>Submit Report Data ({{ department.name }}, {{ ds }})</h1>
   </div>
 
-  <!-- TODO: Allow user to select a different date -->
   <div class="col-md-10">
     <form method="POST" action="" url_for('reports.submit_report_data') }} class="form-horizontal">
       {{ change_form.csrf_token }}

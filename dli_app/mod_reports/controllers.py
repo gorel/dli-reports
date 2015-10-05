@@ -36,6 +36,7 @@ from dli_app.mod_reports.models import (
 
 # Import forms
 from dli_app.mod_reports.forms import (
+    ChangeDateForm,
     ChangeDateAndDepartmentForm,
     CreateReportForm,
     SubmitReportDataForm,
@@ -73,7 +74,12 @@ def create_report():
     Otherwise, render the template to show the user the create report page.
     """
 
-    form = CreateReportForm()
+    LocalCreateReportForm = CreateReportForm.get_instance()
+    for department in Department.query.all():
+        LocalCreateReportForm.add_department(department)
+
+    form = LocalCreateReportForm()
+    form.user_id.data = current_user.id
     if form.validate_on_submit():
         # Add the new report to the database
         db.session.add(form.report)
@@ -167,10 +173,18 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
         )
 
 
-@mod_reports.route('/view/<int:report_id>', methods=['GET'])
+@mod_reports.route('/view/<int:report_id>/', methods=['GET', 'POST'])
+@mod_reports.route('/view/<int:report_id>/<ds>/', methods=['GET', 'POST'])
 @login_required
-def view_report(report_id):
+def view_report(report_id, ds=datetime.now().strftime('%Y-%m-%d')):
     """Show the user a specific report"""
+
+    form = ChangeDateForm()
+    if form.validate_on_submit():
+        return redirect(
+            url_for('reports.view_report', report_id=report_id, ds=form.ds)
+        )
+
     report = Report.query.get(report_id)
     if report is None:
         flash(
@@ -179,7 +193,14 @@ def view_report(report_id):
         )
         return redirect(url_for('reports.my_reports'))
 
-    return render_template('reports/view.html', report=report)
+    dept_data = report.collect_dept_data_for_template(ds)
+    return render_template(
+        'reports/view.html',
+        form=form,
+        report=report,
+        dept_data=dept_data,
+        ds=ds,
+    )
 
 
 @mod_reports.route('/delete/<int:report_id>', methods=['POST'])

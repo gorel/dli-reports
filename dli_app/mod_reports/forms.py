@@ -17,9 +17,11 @@ from wtforms import (
     HiddenField,
     IntegerField,
     SelectField,
+    SelectMultipleField,
     TextField,
     ValidationError,
     validators,
+    widgets,
 )
 
 from dli_app.mod_auth.models import (
@@ -27,8 +29,11 @@ from dli_app.mod_auth.models import (
 )
 
 from dli_app.mod_reports.models import (
+    Field,
     FieldData,
     FieldTypeConstants,
+    Report,
+    Tag,
 )
 
 
@@ -84,31 +89,42 @@ class SplitNumValidator():
                         )
 
 
-class ReportFieldForm(Form):
-    """A form defining a specific field to add to a report"""
-    def __init__(self, *args, **kwargs):
-        Form.__init__(self, *args, **kwargs)
-
-    def validate(self):
-        """Validate the form"""
-        if not Form.validate(self):
-            return False
-        # TODO: Additional validation
-
-
 class CreateReportForm(Form):
     """A form for creating a new report"""
+
+    departments = []
     def __init__(self, *args, **kwargs):
         """Initialize the create report form"""
         Form.__init__(self, *args, **kwargs)
-        self.fields = []
         self.report = None
+        self.departments = [dept for dept in CreateReportForm.departments]
+        CreateReportForm.departments = []
 
     def validate(self):
         """Validate the form"""
         if not Form.validate(self):
             return False
-        # TODO: Additional validation
+
+        report_fields = []
+        for department in self.departments:
+            multiselect = getattr(self, department.name)
+            for field_id in multiselect.data:
+                report_fields.append(Field.query.get(field_id))
+
+        tags = [
+            Tag.get_or_create(tag) for tag in self.tags.data
+            if tag and tag.strip() != ''
+        ]
+
+        self.report = Report(
+            user_id=self.user_id.data,
+            name=self.name.data,
+            fields=report_fields,
+            tags=tags,
+        )
+
+        return True
+
 
     user_id = HiddenField()
 
@@ -121,11 +137,57 @@ class CreateReportForm(Form):
         ],
     )
 
-    tags = FieldList(TextField('Tag'))
+    tags = FieldList(
+        TextField(
+            'Tag',
+            filters=[lambda x: x or None],
+        ),
+        min_entries=5,
+    )
+
+    @classmethod
+    def get_instance(cls):
+        """Return a new class instance of a LocalCreateReportForm"""
+        return cls.generate_local_create_report_form()
+
+    @classmethod
+    def generate_local_create_report_form(cls):
+        """Dynamically generate a class for the SubmitReportDataForm"""
+        class LocalCreateReportForm(CreateReportForm):
+            """Local copy of a CreateReportForm
+
+            This class represents a dynamic CreateReportForm since we don't
+            know what fields are available until runtime. Form more info,
+            see LocalSubmitReportDataForm below.
+            """
+
+            def __init__(self, *args, **kwargs):
+                """Initialize the local form"""
+                CreateReportForm.__init__(self, *args, **kwargs)
+
+            @classmethod
+            def add_department(cls, department):
+                """Add the given department to this form dynamically"""
+                cls.departments.append(department)
+                formfield = SelectMultipleField(
+                    department.name,
+                    choices=[
+                        (field.id, field.name) for field in department.fields
+                    ],
+                    coerce=int,
+                    option_widget=widgets.CheckboxInput(),
+                    widget=widgets.ListWidget(prefix_label=False),
+                )
+
+                setattr(cls, department.name, formfield)
+
+        return LocalCreateReportForm
 
 
 class SubmitReportDataForm(Form):
     """A form for submitting new report data"""
+
+    ds = HiddenField()
 
     fields = []
     def __init__(self, *args, **kwargs):
@@ -133,7 +195,7 @@ class SubmitReportDataForm(Form):
         Form.__init__(self, *args, **kwargs)
         self.data_points = []
         self.stale_values = []
-        self.instance_fields = []
+        self.instance_fields = [field for field in SubmitReportDataForm.fields]
         for field in SubmitReportDataForm.fields:
             self.instance_fields.append(field)
         SubmitReportDataForm.fields = []
@@ -166,80 +228,107 @@ class SubmitReportDataForm(Form):
     @classmethod
     def get_instance(cls):
         """Return a new class instance of a LocalSubmitReportDataForm"""
-        return generate_local_submit_report_data_form()
+        return cls.generate_local_submit_report_data_form()
 
-    ds = HiddenField()
+    @classmethod
+    def generate_local_submit_report_data_form(cls):
+        """Dynamically generate a class for the SubmitReportDataForm"""
+        class LocalSubmitReportDataForm(SubmitReportDataForm):
+            """Local copy of a SubmitReportDataForm
 
-def generate_local_submit_report_data_form():
-    """Dynamically generate a specific class for the SubmitReportDataForm"""
-    class LocalSubmitReportDataForm(SubmitReportDataForm):
-        """Local copy of a SubmitReportDataForm
+            Class that represents a specific SubmitReportDataForm
+            This is needed because a SubmitReportDataForm only needs fields
+            for the user's specific department. It is a massive waste of
+            resources to generate each and every field when we know the user
+            will only submit the ones related to his or her department. This
+            allows us to dynamically load the fields needed for submission
+            DURING run-time.
+            """
 
-        Class that represents a specific SubmitReportDataForm
-        This is needed because a SubmitReportDataForm only needs fields
-        for the user's specific department. It is a massive waste of resources
-        to generate each and every field when we know the user will only
-        submit the ones related to his or her department. This allows us to
-        dynamically load the fields needed for submission DURING run-time.
-        """
+            def __init__(self, *args, **kwargs):
+                """Initialize the local form"""
+                SubmitReportDataForm.__init__(self, *args, **kwargs)
 
-        def __init__(self, *args, **kwargs):
-            """Initialize the local form"""
-            SubmitReportDataForm.__init__(self, *args, **kwargs)
-
-        @classmethod
-        def add_field(cls, field):
-            """Add the given field to this form dynamically"""
-            cls.fields.append(field)
-            formfield = None
-            if field.ftype == FieldTypeConstants.CURRENCY:
-                formfield = TextField(
-                    field.name,
-                    validators=[
-                        SplitNumValidator(
-                            split='.',
-                            filter_chars="$,",
-                            max_parts=2,
-                            parts_message=(
-                                "Currency must be in the format 'dollars.cents'"
+            @classmethod
+            def add_field(cls, field):
+                """Add the given field to this form dynamically"""
+                cls.fields.append(field)
+                formfield = None
+                if field.ftype == FieldTypeConstants.CURRENCY:
+                    formfield = TextField(
+                        field.name,
+                        validators=[
+                            SplitNumValidator(
+                                split='.',
+                                filter_chars="$,",
+                                max_parts=2,
+                                parts_message=(
+                                    "Currency must be in the format "
+                                    "'dollars.cents'"
+                                ),
                             ),
-                        ),
-                    ],
-                    filters=[lambda x: x or None],
-                )
-            elif field.ftype == FieldTypeConstants.DOUBLE:
-                formfield = DecimalField(
-                    field.name,
-                    filters=[lambda x: x or None],
-                )
-            elif field.ftype == FieldTypeConstants.INTEGER:
-                formfield = IntegerField(
-                    field.name,
-                    filters=[lambda x: x or None],
-                )
-            elif field.ftype == FieldTypeConstants.STRING:
-                formfield = TextField(
-                    field.name,
-                    filters=[lambda x: x or None],
-                )
-            elif field.ftype == FieldTypeConstants.TIME:
-                formfield = TextField(
-                    field.name,
-                    validators=[
-                        SplitNumValidator(
-                            split=':',
-                            filter_chars="ms",
-                            max_parts=2,
-                            parts_message=(
-                                "Time must be in the format 'min:sec'"
+                        ],
+                        filters=[lambda x: x or None],
+                    )
+                elif field.ftype == FieldTypeConstants.DOUBLE:
+                    formfield = DecimalField(
+                        field.name,
+                        filters=[lambda x: x or None],
+                    )
+                elif field.ftype == FieldTypeConstants.INTEGER:
+                    formfield = IntegerField(
+                        field.name,
+                        filters=[lambda x: x or None],
+                    )
+                elif field.ftype == FieldTypeConstants.STRING:
+                    formfield = TextField(
+                        field.name,
+                        filters=[lambda x: x or None],
+                    )
+                elif field.ftype == FieldTypeConstants.TIME:
+                    formfield = TextField(
+                        field.name,
+                        validators=[
+                            SplitNumValidator(
+                                split=':',
+                                filter_chars="ms",
+                                max_parts=2,
+                                parts_message=(
+                                    "Time must be in the format 'min:sec'"
+                                ),
                             ),
-                        ),
-                    ],
-                    filters=[lambda x: x or None],
-                )
-            setattr(cls, field.name, formfield)
+                        ],
+                        filters=[lambda x: x or None],
+                    )
+                setattr(cls, field.name, formfield)
 
-    return LocalSubmitReportDataForm
+        return LocalSubmitReportDataForm
+
+
+class ChangeDateForm(Form):
+    """Form to change the date when viewing a specific Report"""
+    def __init__(self, *args, **kwargs):
+        """Initialize the ChangeDateForm object"""
+        Form.__init__(self, *args, **kwargs)
+        self.ds = None
+
+    def validate(self):
+        """Ensure the given date is within reasonable bounds"""
+        if not Form.validate(self):
+            return False
+
+        if self.date.data > datetime.now().date():
+            self.date.errors.append("Error: date is in the future")
+            return False
+
+        self.ds = self.date.data.strftime("%Y-%m-%d")
+        return True
+
+    date = html5.DateField(
+        "Date",
+        format="%Y-%m-%d",
+    )
+
 
 class ChangeDateAndDepartmentForm(Form):
     """Form to change the date and/or department of a Report Form"""

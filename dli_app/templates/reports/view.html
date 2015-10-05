@@ -1,8 +1,46 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <h1>View Report Data</h1>
+    <h1>Report: {{report.name }}</h1>
   </div>
 
-  <p>Not yet defined</p>
+  <h2>Data for {{ ds }}</h2>
+  <div class="col-md-10">
+    <form method="POST" action="" url_for('reports.view_report') }} class="form-horizontal">
+      {{ form.csrf_token }}
+      <div class="form-group">
+        {{ form.date.label(class='control-label col-sm-2') }}
+        <div class="col-sm-10">
+          {{ form.date(class='form-control') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">Change Date</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <h3>Tags: {{ report.tagnames|join(', ') }}</h3>
+
+  {% for department in dept_data %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>{{ department }}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for field in dept_data[department] %}
+          <tr>
+            <td>{{ field['name'] }}</td>
+            <td>{{ field['value'] }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
 {% endblock %}
