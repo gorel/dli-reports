@@ -260,9 +260,23 @@ def delete_report(report_id):
             "alert-warning",
         )
     else:
-        db.session.delete(report)
-        flash(
-            "Report deleted",
-            "alert-success",
-        )
-    return redirect(url_for('reports.my_reports'))
+        # Before deleting the report, check to see if any other users have
+        # favorited this report. If so, simply transfer ownership to them
+        current_user.unfavorite(report)
+        if report.favorite_users:
+            user = report.favorite_users[0]
+            report.user = user
+            db.session.commit()
+            flash(
+                "Report ownership was transferred to {{ user.name }} since "
+                "the report was in that user's favorites list.",
+                "alert-success",
+            )
+        else:
+            db.session.delete(report)
+            db.session.commit()
+            flash(
+                "Report deleted",
+                "alert-success",
+            )
+    return redirect(request.args.get('next') or url_for('reports.my_reports'))
