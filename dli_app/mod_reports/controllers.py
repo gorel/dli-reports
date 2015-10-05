@@ -11,6 +11,7 @@ from flask import (
     flash,
     redirect,
     render_template,
+    request,
     url_for,
 )
 
@@ -47,7 +48,7 @@ mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 
 
 # Set all routing for the module
-@mod_reports.route('/me', methods=['GET'])
+@mod_reports.route('/me/', methods=['GET'])
 @login_required
 def my_reports():
     """Show the user all of their reports"""
@@ -56,12 +57,52 @@ def my_reports():
     return render_template('reports/me.html', reports=reports)
 
 
-@mod_reports.route('/all', methods=['GET'])
+@mod_reports.route('/all/', methods=['GET'])
 @login_required
 def all_reports():
     """Show the user all reports (made by anyone"""
     reports = Report.query.all()
     return render_template('reports/all.html', reports=reports)
+
+
+@mod_reports.route('/favorite/<int:report_id>/', methods=['POST'])
+@login_required
+def favorite_report(report_id):
+    """Add a report to the user's favorite reports"""
+    report = Report.query.get(report_id)
+    if report is None:
+        flash(
+            "No report with that report_id found!",
+            "alert-warning",
+        )
+    else:
+        current_user.favorite(report)
+        db.session.commit()
+        flash(
+            "Added Report: {name} to favorites list".format(name=report.name),
+            "alert-success",
+        )
+    return redirect(request.args.get('next') or url_for('reports.my_reports'))
+
+
+@mod_reports.route('/unfavorite/<int:report_id>/', methods=['POST'])
+@login_required
+def unfavorite_report(report_id):
+    """Remove a report from the user's favorite reports"""
+    report = Report.query.get(report_id)
+    if report is None:
+        flash(
+            "No report with that report_id found!",
+            "alert-warning",
+        )
+    else:
+        current_user.unfavorite(report)
+        db.session.commit()
+        flash(
+            "Added Report: {name} to favorites list".format(name=report.name),
+            "alert-success",
+        )
+    return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
 
 @mod_reports.route('/create/', methods=['GET', 'POST'])
