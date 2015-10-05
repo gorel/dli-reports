@@ -25,6 +25,8 @@
 
   <h3>Tags: {{ report.tagnames|join(', ') }}</h3>
 
+  <a href="{{ url_for('reports.download_report', report_id=report.id, ds=ds) }}" class="btn btn-info">Download as Excel</a>
+
   {% for department in dept_data %}
     <table class="table table-striped">
       <thead>
