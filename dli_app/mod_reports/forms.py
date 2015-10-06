@@ -92,39 +92,10 @@ class SplitNumValidator():
 class CreateReportForm(Form):
     """A form for creating a new report"""
 
-    departments = []
     def __init__(self, *args, **kwargs):
         """Initialize the create report form"""
         Form.__init__(self, *args, **kwargs)
         self.report = None
-        self.departments = [dept for dept in CreateReportForm.departments]
-        CreateReportForm.departments = []
-
-    def validate(self):
-        """Validate the form"""
-        if not Form.validate(self):
-            return False
-
-        report_fields = []
-        for department in self.departments:
-            multiselect = getattr(self, department.name)
-            for field_id in multiselect.data:
-                report_fields.append(Field.query.get(field_id))
-
-        tags = [
-            Tag.get_or_create(tag) for tag in self.tags.data
-            if tag and tag.strip() != ''
-        ]
-
-        self.report = Report(
-            user_id=self.user_id.data,
-            name=self.name.data,
-            fields=report_fields,
-            tags=tags,
-        )
-
-        return True
-
 
     user_id = HiddenField()
 
@@ -153,6 +124,7 @@ class CreateReportForm(Form):
     @classmethod
     def generate_local_create_report_form(cls):
         """Dynamically generate a class for the SubmitReportDataForm"""
+        departments = []
         class LocalCreateReportForm(CreateReportForm):
             """Local copy of a CreateReportForm
 
@@ -164,6 +136,35 @@ class CreateReportForm(Form):
             def __init__(self, *args, **kwargs):
                 """Initialize the local form"""
                 CreateReportForm.__init__(self, *args, **kwargs)
+                self.departments = [
+                    dept for dept in LocalCreateReportForm.departments
+                ]
+                LocalCreateReportForm.departments = []
+
+            def validate(self):
+                """Validate the form"""
+                if not Form.validate(self):
+                    return False
+
+                report_fields = []
+                for department in self.departments:
+                    multiselect = getattr(self, department.name)
+                    for field_id in multiselect.data:
+                        report_fields.append(Field.query.get(field_id))
+
+                tags = [
+                    Tag.get_or_create(tag) for tag in self.tags.data
+                    if tag and tag.strip() != ''
+                ]
+
+                self.report = Report(
+                    user_id=self.user_id.data,
+                    name=self.name.data,
+                    fields=report_fields,
+                    tags=tags,
+                )
+
+                return True
 
             @classmethod
             def add_department(cls, department):
@@ -189,41 +190,11 @@ class SubmitReportDataForm(Form):
 
     ds = HiddenField()
 
-    fields = []
     def __init__(self, *args, **kwargs):
         """Initialize the submit report data form"""
         Form.__init__(self, *args, **kwargs)
         self.data_points = []
         self.stale_values = []
-        self.instance_fields = [field for field in SubmitReportDataForm.fields]
-        for field in SubmitReportDataForm.fields:
-            self.instance_fields.append(field)
-        SubmitReportDataForm.fields = []
-
-    def validate(self):
-        """Validate the form"""
-        if not Form.validate(self):
-            return False
-
-        for field in self.instance_fields:
-            formfield = getattr(self, field.name)
-            if formfield.data is not None:
-                # Check for any old values that should now be deleted
-                stale_value = field.data_points.filter_by(
-                    ds=self.ds.data,
-                ).first()
-                if stale_value is not None:
-                    self.stale_values.append(stale_value)
-
-                # Create the new data point
-                data_point = FieldData(
-                    ds=self.ds.data,
-                    field=field,
-                    value=formfield.data,
-                )
-                self.data_points.append(data_point)
-
-        return True
 
     @classmethod
     def get_instance(cls):
@@ -245,9 +216,39 @@ class SubmitReportDataForm(Form):
             DURING run-time.
             """
 
+            fields = []
             def __init__(self, *args, **kwargs):
                 """Initialize the local form"""
                 SubmitReportDataForm.__init__(self, *args, **kwargs)
+                self.instance_fields = [
+                    field for field in LocalSubmitReportDataForm.fields
+                ]
+                LocalSubmitReportDataForm.fields = []
+
+            def validate(self):
+                """Validate the form"""
+                if not Form.validate(self):
+                    return False
+
+                for field in self.instance_fields:
+                    formfield = getattr(self, field.name)
+                    if formfield.data is not None:
+                        # Check for any old values that should now be deleted
+                        stale_value = field.data_points.filter_by(
+                            ds=self.ds.data,
+                        ).first()
+                        if stale_value is not None:
+                            self.stale_values.append(stale_value)
+
+                        # Create the new data point
+                        data_point = FieldData(
+                            ds=self.ds.data,
+                            field=field,
+                            value=formfield.data,
+                        )
+                        self.data_points.append(data_point)
+
+                return True
 
             @classmethod
             def add_field(cls, field):
