@@ -133,6 +133,7 @@ class CreateReportForm(Form):
             see LocalSubmitReportDataForm below.
             """
 
+            departments = []
             def __init__(self, *args, **kwargs):
                 """Initialize the local form"""
                 CreateReportForm.__init__(self, *args, **kwargs)
