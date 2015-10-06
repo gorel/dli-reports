@@ -1,8 +1,52 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <h1>Submit Report Data</h1>
+    <h1>Submit Report Data ({{ department.name }}, {{ ds }})</h1>
   </div>
 
-  <p>Not yet defined</p>
+  <div class="col-md-10">
+    <form method="POST" action="" url_for('reports.submit_report_data') }} class="form-horizontal">
+      {{ change_form.csrf_token }}
+      <div class="form-group">
+        {{ change_form.date.label(class='control-label col-sm-2') }}
+        <div class="col-sm-10">
+          {{ change_form.date(class='form-control') }}
+        </div>
+      </div>
+      <div class="form-group">
+        {{ change_form.department.label(class='control-label col-sm-2') }}
+        <div class="col-sm-10">
+          {{ change_form.department(class='form-control') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">Change Date/Department</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+
+  <div class="col-md-10">
+    <form method="POST" action="{{ url_for('reports.submit_report_data') }}" class="form-horizontal">
+      {{ form.csrf_token }}
+      {{ form.ds }}
+      {% for field in form.instance_fields %}
+      <div class="form-group">
+        {{ form[field.name].label(class='control-label col-sm-2') }}
+        <div class="col-sm-10">
+          {{ form[field.name](class='form-control') }}
+        </div>
+      </div>
+      {% endfor %}
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">Submit Data</button>
+        </div>
+      </div>
+    </form>
+  </div>
 {% endblock %}

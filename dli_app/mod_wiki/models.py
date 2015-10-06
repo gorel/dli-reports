@@ -17,7 +17,7 @@ class WikiPage(db.Model):
 
     def __init__(self):
         """Initiialize a WikiPage model"""
-        pass
+        pass #TODO
 
     def __repr__(self):
         """Return a descriptive representation of a WikiPage"""

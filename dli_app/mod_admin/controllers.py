@@ -4,14 +4,11 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /admin.
 """
 
-import collections
-
 from flask import (
     Blueprint,
     flash,
     redirect,
     render_template,
-    request,
     url_for,
 )
 
@@ -88,7 +85,7 @@ def edit_locations():
         )
         return redirect(url_for('default.home'))
 
-    form = AddLocationForm(request.form)
+    form = AddLocationForm()
     if form.validate_on_submit():
         db.session.add(form.location)
         db.session.commit()
@@ -160,7 +157,7 @@ def edit_departments():
         )
         return redirect(url_for('default.home'))
 
-    form = AddDepartmentForm(request.form)
+    form = AddDepartmentForm()
     if form.validate_on_submit():
         db.session.add(form.department)
         db.session.commit()
@@ -231,7 +228,7 @@ def edit_fields():
         )
         return redirect(url_for('default.home'))
 
-    form = AddFieldForm(request.form)
+    form = AddFieldForm()
     if form.validate_on_submit():
         db.session.add(form.field)
         db.session.commit()
@@ -242,17 +239,12 @@ def edit_fields():
         )
         return redirect(url_for('admin.edit_fields'))
     else:
-        # Get a list of all fields and return a dict of the form:
-        # {dept: [field1, field2, ...]} for easy templating
-        dept_fields = collections.defaultdict(list)
-        for field in Field.query.all():
-            dept_fields[field.department].append(field)
 
         flash_form_errors(form)
         return render_template(
             'admin/edit_fields.html',
             form=form,
-            dept_fields=dept_fields,
+            dept_fields=Department.get_dept_field_map(),
         )
 
 
@@ -305,7 +297,7 @@ def edit_users():
         )
         return redirect(url_for('default.home'))
 
-    form = AddUserForm(request.form)
+    form = AddUserForm()
     if form.validate_on_submit():
         # TODO: Send user a registration link to the email
         return redirect(url_for('admin.edit_users'))

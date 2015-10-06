@@ -10,6 +10,7 @@ from flask_wtf import (
 
 from wtforms import (
     BooleanField,
+    HiddenField,
     PasswordField,
     SelectField,
     TextField,

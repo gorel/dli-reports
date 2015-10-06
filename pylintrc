@@ -114,7 +114,7 @@ no-docstring-rgx=__.*__
 [SIMILARITIES]
 
 # Minimum lines number of a similarity.
-min-similarity-lines=4
+min-similarity-lines=6
 
 # Ignore comments when computing similarities.
 ignore-comments=yes
@@ -222,7 +222,7 @@ max-statements=50
 max-parents=7
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=10
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=0
