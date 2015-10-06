@@ -56,6 +56,8 @@ class EditAccountForm(Form):
         if self.password.data:
             user.set_password(self.password.data)
 
+        return True
+
 
     user_id = HiddenField()
 
@@ -64,6 +66,7 @@ class EditAccountForm(Form):
     password = PasswordField(
         'Password',
         validators=[
+            validators.Optional(),
             validators.EqualTo(
                 'confirm_password',
                 message='Passwords must match',
@@ -71,7 +74,12 @@ class EditAccountForm(Form):
         ],
     )
 
-    confirm_password = PasswordField('Confirm Password')
+    confirm_password = PasswordField(
+        'Confirm Password',
+        validators=[
+            validators.Optional(),
+        ],
+    )
 
     location = SelectField(
         "Location",

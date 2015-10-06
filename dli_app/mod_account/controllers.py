@@ -6,8 +6,11 @@ This file is responsible for loading all site pages under /account.
 
 from flask import (
     Blueprint,
+    flash,
+    redirect,
     render_template,
     request,
+    url_for,
 )
 
 from flask_login import (
@@ -47,6 +50,16 @@ def edit():
     """Edit the user's account settings"""
     form = EditAccountForm()
     form.user_id.data = current_user.id
+
+    # Dynamically load the location and department choices
+    form.location.choices = [
+        (location.id, location.name) for location in Location.query.all()
+    ]
+
+    form.department.choices = [
+        (dept.id, dept.name) for dept in Department.query.all()
+    ]
+
     if form.validate_on_submit():
         db.session.commit()
         flash(
@@ -59,15 +72,7 @@ def edit():
 
         # Set the form defaults
         form.name.data = current_user.name
-
-        form.location.choices = [
-            (location.id, location.name) for location in Location.query.all()
-        ]
         form.location.default = current_user.location.id
-
-        form.department.choices = [
-            (dept.id, dept.name) for dept in Department.query.all()
-        ]
         form.department.default = current_user.department.id
 
         return render_template('account/edit.html', form=form)
