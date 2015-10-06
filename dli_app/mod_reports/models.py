@@ -50,7 +50,6 @@ class Report(db.Model):
         self.name = name
         self.fields = fields
         self.tags = tags
-        self.excel_helper = None
 
     def __repr__(self):
         """Return a descriptive representation of a Report"""
@@ -63,8 +62,7 @@ class Report(db.Model):
 
     def generate_filename(self, ds):
         """Generate the filename for the Excel sheet for downloads"""
-        return "{directory}/{filename}-{ds}".format(
-            directory=EXCEL_FILE_DIR,
+        return "{filename}-{ds}.xlsx".format(
             filename=self.name,
             ds=ds,
         )
@@ -86,14 +84,36 @@ class Report(db.Model):
             )
         return dept_data
 
-    def to_excel(self, ds):
+    def excel_filepath_for_ds(self, ds):
+        """Return the absolute filepath for the Excel sheet on the given ds"""
+        return os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            EXCEL_FILE_DIR,
+            self.generate_filename(ds),
+        )
+
+    def excel_file_exists(self, ds):
+        """Determine whether or not an Excel file for this ds exists"""
+        return os.path.exists(self.excel_filepath_for_ds(ds))
+
+    def create_excel_file(self, ds):
         """Generate an Excel sheet with this Report's data
 
         Arguments:
         ds - Date stamp for which day of Report data to generate
         """
-        self.excel_helper = ExcelSheetHelper(self.generate_filename(ds))
-        self.excel_helper.write(self.collect_dept_data(ds))
+
+        excel_helper = ExcelSheetHelper(
+            filepath=self.excel_filepath_for_ds(ds),
+            report_name=self.name,
+            ds=ds,
+        )
+        excel_helper.write(self.collect_dept_data(ds))
+        excel_helper.finalize()
+
+    def remove_excel_file(self, ds):
+        """Delete the Excel file for the given ds"""
+        os.remove(self.excel_filepath_for_ds(ds))
 
     def collect_dept_data(self, ds):
         """Collect all of the department data for this Report"""
@@ -103,12 +123,6 @@ class Report(db.Model):
                 field.get_data_for_date(ds)
             )
         return dept_data
-
-    def delete_excel_file(self, ds):
-        """Delete the Excel file generated previously for downloading"""
-        if self.excel_helper is not None:
-            self.excel_helper.delete_workbook()
-        self.excel_helper = None
 
 
 class Field(db.Model):
@@ -228,7 +242,10 @@ class FieldData(db.Model):
         if ftype == FieldTypeConstants.CURRENCY:
             dollars = self.ivalue / 100
             cents = self.ivalue % 100
-            return "${dollars}.{cents}".format(dollars=dollars, cents=cents)
+            return "${dollars}.{cents:02d}".format(
+                dollars=dollars,
+                cents=cents,
+            )
         elif ftype == FieldTypeConstants.DOUBLE:
             return str(self.dvalue)
         elif ftype == FieldTypeConstants.INTEGER:
@@ -238,7 +255,10 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.TIME:
             mins = self.ivalue / 60
             secs = self.ivalue % 60
-            return "{mins}:{secs}".format(mins=mins, secs=secs)
+            return "{mins}:{secs:02d}".format(
+                mins=mins,
+                secs=secs,
+            )
         else:
             return "ERROR: Type %s not supported!" % ftype
 
@@ -276,33 +296,46 @@ class ExcelSheetHelper():
     row and column information.
     """
 
-    def __init__(self, filename, report_name):
+    def __init__(self, filepath, report_name, ds):
         """Initialize an ExcelSheetHelper by creating an XLSX Workbook"""
-        self.filename = filename
         self.report_name = report_name
+        self.ds = ds
 
-        self.workbook = xlsxwriter.Workbook(self.filename)
+        self.workbook = xlsxwriter.Workbook(filepath)
         self.worksheet = self.workbook.add_worksheet()
+        # Set default width of columns A and B a bit wider
+        self.worksheet.set_column('A:B', 20)
+        self.finalized = False
         self.row = 0
         self.col = 0
 
         self.title_format = self.workbook.add_format(
-            {
-                'bold': True,
-                'font_size': 36,
-            }
+            {'bold': True, 'font_size': 36}
         )
         self.report_name_format = self.workbook.add_format(
-            {
-                'bold': True,
-                'font_size': 28,
-            }
+            {'bold': True, 'font_size': 28}
+        )
+        self.ds_format = self.workbook.add_format(
+            {'font_size': 20}
         )
         self.dept_title_format = self.workbook.add_format(
-            {
-                'bold': True,
-                'font_size': 20,
-            }
+            {'bold': True, 'font_size': 20}
+        )
+        self.field_format = self.workbook.add_format({'bold': True})
+        self.currency_format = self.workbook.add_format(
+            {'num_format': '$#,##0.00;[Red]($#,##0.00)'}
+        )
+        self.double_format = self.workbook.add_format(
+            {'num_format': '0.000'}
+        )
+        self.integer_format = self.workbook.add_format(
+            {'num_format': '0'}
+        )
+        self.string_format = self.workbook.add_format(
+            # No special formatting needed
+        )
+        self.time_format = self.workbook.add_format(
+            {'num_format': 'h:mm'}
         )
 
         self.initialize_worksheet()
@@ -313,15 +346,23 @@ class ExcelSheetHelper():
             self.row,
             self.col,
             "DLI Auto-generated Reports",
-            cell_format=self.title_format,
+            self.title_format,
         )
         self.row += 1
 
         self.worksheet.write(
             self.row,
             self.col,
-            self.report_name,
-            cell_format=self.report_name_format,
+            "Report: {name}".format(name=self.report_name),
+            self.report_name_format,
+        )
+        self.row += 1
+
+        self.worksheet.write(
+            self.row,
+            self.col,
+            "Data for {ds}".format(ds=self.ds),
+            self.ds_format,
         )
         self.row += 1
 
@@ -339,30 +380,47 @@ class ExcelSheetHelper():
             self.row,
             self.col,
             dept_name,
-            cell_format=self.dept_title_format,
+            self.dept_title_format,
         )
         self.row += 1
 
-    def write_field_data(self, field):
+    def write_field_data(self, field_data):
         """Write a Field within a Report"""
         self.worksheet.write(
             self.row,
             self.col,
-            field.name,
+            field_data.field.name,
+            self.field_format,
         )
         self.col += 1
 
         self.worksheet.write(
             self.row,
             self.col,
-            field.value,
+            field_data.value,
+            self.get_format(field_data.field),
         )
         self.row += 1
         self.col = 0
 
-    def delete_workbook(self):
-        """Delete a Report from the filesystem"""
-        os.remove(self.filename)
+    def get_format(self, field):
+        """Get the format required for the specific field"""
+        if field.ftype == FieldTypeConstants.CURRENCY:
+            return self.currency_format
+        elif field.ftype == FieldTypeConstants.DOUBLE:
+            return self.double_format
+        elif field.ftype == FieldTypeConstants.INTEGER:
+            return self.integer_format
+        elif field.ftype == FieldTypeConstants.STRING:
+            return self.string_format
+        elif field.ftype == FieldTypeConstants.TIME:
+            return self.time_format
+
+    def finalize(self):
+        """Complete the workbook by closing it"""
+        if not self.finalized:
+            self.workbook.close()
+            self.finalized = True
 
 
 class FieldTypeConstants():

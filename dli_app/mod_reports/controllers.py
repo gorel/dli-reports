@@ -11,6 +11,7 @@ from flask import (
     flash,
     redirect,
     render_template,
+    send_file,
     url_for,
 )
 
@@ -142,6 +143,12 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
         for stale_value in form.stale_values:
             db.session.delete(stale_value)
 
+        # Also "invalidate" any existing Excel sheets that used this data
+        for data_point in form.data_points:
+            for report in data_point.field.reports:
+                if report.excel_file_exists(ds):
+                    report.remove_excel_file(ds)
+
         # Add all of the new data points
         db.session.add_all(form.data_points)
         db.session.commit()
@@ -201,6 +208,23 @@ def view_report(report_id, ds=datetime.now().strftime('%Y-%m-%d')):
         dept_data=dept_data,
         ds=ds,
     )
+
+@mod_reports.route('/download/<int:report_id>/<ds>/', methods=['GET'])
+@login_required
+def download_report(report_id, ds):
+    report = Report.query.get(report_id)
+    if report is None:
+        flash(
+            "Report not found!",
+            "alert-warning",
+        )
+    else:
+        if not report.excel_file_exists(ds):
+            report.create_excel_file(ds)
+        return send_file(
+            report.excel_filepath_for_ds(ds),
+            as_attachment=True,
+        )
 
 
 @mod_reports.route('/delete/<int:report_id>', methods=['POST'])
