@@ -20,6 +20,14 @@ from dli_app.mod_reports.models import (
     Report,
 )
 
+
+report_users = db.Table(
+    'report_users',
+    db.Column('report_id', db.Integer, db.ForeignKey('report.id')),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+)
+
+
 @login_manager.user_loader
 def user_loader(user_id):
     """Unique user loader for the login manager"""
@@ -56,6 +64,11 @@ class User(db.Model):
     reports = db.relationship(
         "Report",
         backref="user",
+    )
+    favorite_reports = db.relationship(
+        'Report',
+        secondary=report_users,
+        backref='favorite_users',
     )
 
     def __init__(self, name, email, password, location, department):
@@ -105,6 +118,16 @@ class User(db.Model):
     def check_password(self, password):
         """Check the user's password against the given value"""
         return check_password_hash(self.password, password)
+
+    def favorite(self, report):
+        """Add a report to the user's list of favorite reports"""
+        if report not in self.favorite_reports:
+            self.favorite_reports.append(report)
+
+    def unfavorite(self, report):
+        """Remove a report from the user's list of favorite reports"""
+        if report in self.favorite_reports:
+            self.favorite_reports.remove(report)
 
     def __repr__(self):
         """Return a descriptive representation of a User"""
