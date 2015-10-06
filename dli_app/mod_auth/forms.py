@@ -59,9 +59,14 @@ class RegistrationForm(Form):
             return False
 
         # Check that location is within list of approved locations
-        location = Location.get(self.location.data)
+        location = Location.query.get(self.location.data)
         if location is None:
             self.location.errors.append('Location not supported')
+            return False
+
+        department = Department.query.get(self.department.data)
+        if department is None:
+            self.department.errors.append('Department not found')
             return False
 
         # Create the new user account
@@ -70,6 +75,7 @@ class RegistrationForm(Form):
             email=self.email.data,
             password=self.password.data,
             location=location,
+            department=department,
         )
 
         return True
