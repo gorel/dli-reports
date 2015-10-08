@@ -23,7 +23,7 @@
     </form>
   </div>
 
-  <h3>Tags: {{ report.tagnames|join(', ') }}</h3>
+  <p>Tags: {{ report.tagnames|join(', ') }}</p>
 
   <a href="{{ url_for('reports.download_report', report_id=report.id, ds=ds) }}" class="btn btn-info">Download as Excel</a>
 
