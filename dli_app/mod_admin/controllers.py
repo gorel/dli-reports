@@ -36,6 +36,7 @@ from dli_app.mod_auth.models import (
     Department,
     Location,
     User,
+    RegisterCandidate,
 )
 
 from dli_app.mod_reports.models import (
@@ -125,7 +126,7 @@ def delete_location(loc_id):
         )
         return redirect(url_for('default.home'))
 
-    location = Location.get(int(loc_id))
+    location = Location.query.get(loc_id)
     if location is not None:
         db.session.delete(location)
         db.session.commit()
@@ -180,14 +181,14 @@ def edit_departments():
         )
 
 
-@mod_admin.route('/edit_departments/delete/<int:dep_id>/', methods=['POST'])
+@mod_admin.route('/edit_departments/delete/<int:dept_id>/', methods=['POST'])
 @login_required
-def delete_department(dep_id):
+def delete_department(dept_id):
     """Delete a department
 
     First, perform a check that the user is an admin.
     Arguments:
-    dep_id - The id of the department to be deleted, as defined in the db
+    dept_id - The id of the department to be deleted, as defined in the db
     """
 
     if not current_user.is_admin:
@@ -197,7 +198,7 @@ def delete_department(dep_id):
         )
         return redirect(url_for('default.home'))
 
-    department = Department.get(int(dep_id))
+    department = Department.query.get(dept_id)
     if department is not None:
         db.session.delete(department)
         db.session.commit()
@@ -276,7 +277,7 @@ def delete_field(field_id):
         )
         return redirect(url_for('default.home'))
 
-    field = Field.get(int(field_id))
+    field = Field.query.get(field_id)
     if field is not None:
         db.session.delete(field)
         db.session.commit()
@@ -311,16 +312,24 @@ def edit_users():
     form = AddUserForm()
     if form.validate_on_submit():
         # TODO: Send user a registration link to the email
+        db.session.add(form.user)
+        db.session.commit()
+        flash(
+            "Sent an invite link to {email}".format(email=form.user.email),
+            "alert-success",
+        )
         return redirect(url_for('admin.edit_users'))
     else:
         # Get a list of users
         users = User.query.all()
+        candidates = RegisterCandidate.query.all()
 
         flash_form_errors(form)
         return render_template(
             'admin/edit_users.html',
             form=form,
             users=users,
+            candidates=candidates,
         )
 
 
@@ -341,10 +350,50 @@ def delete_user(user_id):
         )
         return redirect(url_for('default.home'))
 
-    user = User.get(user_id)
+    if current_user.id == user_id:
+        flash(
+            "Now why would you try to delete your own account?",
+            "alert-danger",
+        )
+        return redirect(url_for('admin.home'))
+
+    user = User.query.get(user_id)
     if user is not None:
         db.session.delete(user)
         # TODO: Delete/move the user's reports, too
+        db.session.commit()
+
+        flash(
+            "User deleted successfully.",
+            "alert-success",
+        )
+
+    return redirect(url_for('admin.edit_users'))
+
+
+@mod_admin.route(
+    '/edit_users/delete_candidate/<int:candidate_id>/',
+    methods=['POST']
+)
+@login_required
+def delete_candidate(candidate_id):
+    """Delete a RegisterCandidate
+
+    First, perform a check that the user is an admin.
+    Arguments:
+    candidate_id - The id of the candidate to be deleted, as defined in the db
+    """
+
+    if not current_user.is_admin:
+        flash(
+            "Sorry! You don't have permission to access that page.",
+            "alert-warning",
+        )
+        return redirect(url_for('default.home'))
+
+    candidate = RegisterCandidate.query.get(candidate_id)
+    if candidate is not None:
+        db.session.delete(candidate)
         db.session.commit()
 
         flash(

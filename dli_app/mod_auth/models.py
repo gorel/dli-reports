@@ -4,6 +4,9 @@ Author: Logan Gore
 This file is responsible for defining models that belong in the auth module.
 """
 
+import random
+import string
+
 from flask_sqlalchemy import (
     orm,
 )
@@ -41,8 +44,14 @@ class RegisterCandidate(db.Model):
     email = db.Column(db.String(64), index=True, unique=True)
     registration_key = db.Column(db.String(64))
 
-    def __init__(self, email, registration_key):
+    def __init__(self, email, registration_key=None):
         """Initialize a RegisterCandidate model"""
+        if registration_key is None:
+            registration_key = ''.join(
+                random.choice(string.ascii_letters + string.digits)
+                for _ in range(60)
+            )
+
         self.email = email
         self.registration_key = registration_key
 

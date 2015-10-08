@@ -21,7 +21,7 @@
               <td>{{ department.id }}</td>
               <td>{{ department.name }}</td>
               <td>
-                <form action="{{ url_for('admin.delete_department', dep_id=department.id) }}" method="POST">
+                <form action="{{ url_for('admin.delete_department', dept_id=department.id) }}" method="POST">
                   <button class="btn btn-xs btn-danger">Delete</button>
                 </form>
             </tr>
@@ -44,7 +44,7 @@
 
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
-              <button type="submit" class="btn btn-primary">Add Location</button>
+              <button type="submit" class="btn btn-primary">Add Department</button>
             </div>
           </div>
         </form>

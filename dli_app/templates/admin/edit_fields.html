@@ -9,9 +9,8 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
             <th>Department</th>
+            <th>Name</th>
             <th>Type</th>
             <th></th>
           </tr>
@@ -21,9 +20,8 @@
           {% for dept in dept_fields %}
             {% for field in dept_fields[dept] %}
               <tr>
-                <td>{{ field.id }}</td>
-                <td>{{ field.name }}</td>
                 <td>{{ field.department.name }}</td>
+                <td>{{ field.name }}</td>
                 <td>{{ field.ftype.name|upper }}</td>
                 <td>
                   <form action="{{ url_for('admin.delete_field', field_id=field.id) }}" method="POST">

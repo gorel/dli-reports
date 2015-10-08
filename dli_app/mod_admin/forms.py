@@ -14,6 +14,17 @@ from wtforms import (
     validators,
 )
 
+from dli_app.mod_auth.models import (
+    Department,
+    Location,
+    RegisterCandidate,
+)
+
+from dli_app.mod_reports.models import (
+    Field,
+    FieldType,
+)
+
 
 class AddLocationForm(Form):
     """Form for adding a new location"""
@@ -26,6 +37,9 @@ class AddLocationForm(Form):
         """Validate the form"""
         if not Form.validate(self):
             return False
+
+        self.location = Location(self.name.data)
+        return True
 
     name = TextField(
         "Location Name",
@@ -49,6 +63,9 @@ class AddDepartmentForm(Form):
         if not Form.validate(self):
             return False
 
+        self.department = Department(self.name.data)
+        return True
+
     name = TextField(
         "Department Name",
         validators=[
@@ -71,6 +88,24 @@ class AddFieldForm(Form):
         if not Form.validate(self):
             return False
 
+        ftype = FieldType.query.get(self.field_type.data)
+        if ftype is None:
+            self.field_type.errors.append("Field type not found")
+            return False
+
+        department = Department.query.get(self.department.data)
+        if department is None:
+            self.department.errors.append("Department not found")
+            return False
+
+        self.field = Field(
+            name=self.name.data,
+            ftype=ftype,
+            department=department,
+        )
+
+        return True
+
     name = TextField(
         "Field Name",
         validators=[
@@ -87,6 +122,7 @@ class AddFieldForm(Form):
                 message='You must provide the type of the field.',
             ),
         ],
+        coerce=int,
     )
 
     department = SelectField(
@@ -99,28 +135,24 @@ class AddFieldForm(Form):
                 ),
             ),
         ],
+        coerce=int,
     )
 
 
 class AddUserForm(Form):
     """Form for inviting a new user to the site"""
     def __init__(self, *args, **kwargs):
-        """Initialize the AddUserForm"""
         Form.__init__(self, *args, **kwargs)
+        self.user = None
 
     def validate(self):
         """Validate the form"""
         if not Form.validate(self):
             return False
 
-    name = TextField(
-        "Full Name",
-        validators=[
-            validators.Required(
-                message='You must provide the full name of the new user.',
-            ),
-        ],
-    )
+        self.user = RegisterCandidate(email=self.email.data)
+
+        return True
 
     email = TextField(
         'Email',
