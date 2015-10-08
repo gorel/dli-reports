@@ -23,12 +23,3 @@ class WikiPage(db.Model):
     def __repr__(self):
         """Return a descriptive representation of a WikiPage"""
         return '<WikiPage %r>' % self.name
-
-    def with_toc(self):
-        """Return the page contents with a Table of Contents header"""
-        full_text = """
-        [TOC]
-
-        {content}
-        """.format(content=self.content)
-        return full_text

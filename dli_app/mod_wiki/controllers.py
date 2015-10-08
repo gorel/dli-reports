@@ -87,6 +87,8 @@ def edit_page(page_name=''):
 
     form = EditWikiPageForm()
     if form.validate_on_submit():
+        page = WikiPage.query.filter_by(name=form.name.data).first()
+
         # Update the WikiPage's information
         if page is not None:
             page.name = form.page.name
@@ -98,7 +100,7 @@ def edit_page(page_name=''):
             )
         # Create a new WikiPage
         else:
-            db.session.add(page)
+            db.session.add(form.page)
             flash(
                 "WikiPage added successfully",
                 "alert-success",
