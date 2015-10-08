@@ -9,22 +9,22 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
             <th>Is Admin?</th>
             <th>Location</th>
+            <th>Department</th>
           </tr>
         </thead>
 
         <tbody>
           {% for user in users %}
             <tr>
-              <td>{{ user.id }}</td>
               <td>{{ user.name }}</td>
               <td>{{ user.email }}</td>
               <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
               <td>{{ user.location.name }}</td>
+              <td>{{ user.department.name }}</td>
               <td>
                 <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
                   <button class="btn btn-xs btn-danger">Delete</button>
@@ -34,10 +34,60 @@
         </tbody>
       </table>
     </div>
+  </div>
 
-    <div class="col-md-4">
+  {% if candidates %}
+  <h2>Unregistered Users</h2>
+  <div class="row">
+    <div class="col-md-8">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Email</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for candidate in candidates %}
+            <tr>
+                <td>{{ candidate.email }}</td>
+              <td>
+                <form action="{{ url_for('admin.delete_candidate', candidate_id=candidate.id) }}" method="POST">
+                  <button class="btn btn-xs btn-danger">Delete</button>
+                </form>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+
+  <div class="row">
+    <div class="col-md-6">
       <h3>Add a new User</h3>
-      <p>Use the <a href="{{ url_for('auth.register') }}">sign-up</a> form for now.</p>
+      <form method="POST" action="{{ url_for('admin.edit_users') }}" class="form-horizontal">
+        {{ form.csrf_token }}
+        <div class="form-group">
+          {{ form.email.label(class='control-label col-sm-2') }}
+          <div class="col-sm-10">
+            {{ form.email(class='form-control') }}
+          </div>
+        </div>
+        <div class="form-group">
+          {{ form.confirm_email.label(class='control-label col-sm-2') }}
+          <div class="col-sm-10">
+            {{ form.confirm_email(class='form-control') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-primary">Send Invite</button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 {% endblock %}
