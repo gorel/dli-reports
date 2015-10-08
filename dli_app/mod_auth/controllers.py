@@ -23,6 +23,7 @@ from flask_login import (
 from dli_app.mod_auth.forms import (
     LoginForm,
     RegistrationForm,
+    ForgotForm,
 )
 
 # Import models
@@ -103,3 +104,25 @@ def logout():
         logout_user()
     flash('You have successfully logged out.', 'alert-success')
     return redirect(url_for('default.home'))
+
+@mod_auth.route('/resetpass/', methods=['GET', 'POST'])
+def resetpass():
+    """Reset the user's password
+
+    If the user successfully submitted the form, send a password 
+    reset email. Otherwise, render the reset form again.
+    """
+
+    form = ForgotForm()
+    if form.validate_on_submit():
+        # Email is authenticated and sent
+        email = form.email.data
+
+        #ADD EMAIL STUFF HERE
+
+        flash("Email sent!", "alert-success")
+        return redirect(url_for('default.home'))
+    else:
+        flash_form_errors(form)
+    return render_template('auth/resetpass.html', form=form)
+
