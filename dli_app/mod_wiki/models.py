@@ -15,10 +15,20 @@ class WikiPage(db.Model):
     content = db.Column(db.Text)
     # TODO: Add other necessary columns and bookkeeping information
 
-    def __init__(self):
+    def __init__(self, name, content):
         """Initiialize a WikiPage model"""
-        pass #TODO
+        self.name = name
+        self.content = content
 
     def __repr__(self):
         """Return a descriptive representation of a WikiPage"""
         return '<WikiPage %r>' % self.name
+
+    def with_toc(self):
+        """Return the page contents with a Table of Contents header"""
+        full_text = """
+        [TOC]
+
+        {content}
+        """.format(content=self.content)
+        return full_text

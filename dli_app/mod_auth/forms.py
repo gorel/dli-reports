@@ -18,6 +18,7 @@ from wtforms import (
 )
 
 from dli_app.mod_auth.models import (
+    Department,
     Location,
     RegisterCandidate,
     User,
@@ -119,6 +120,15 @@ class RegistrationForm(Form):
         validators=[
             validators.Required(
                 message='Please confirm your password.',
+            ),
+        ],
+    )
+
+    department = SelectField(
+        'Department',
+        validators=[
+            validators.Required(
+                message='Please select your default department.',
             ),
         ],
     )

@@ -253,6 +253,7 @@ def view_report(report_id, ds=datetime.now().strftime('%Y-%m-%d')):
 @mod_reports.route('/download/<int:report_id>/<ds>/', methods=['GET'])
 @login_required
 def download_report(report_id, ds):
+    """Download a report as an Excel file"""
     report = Report.query.get(report_id)
     if report is None:
         flash(

@@ -124,7 +124,6 @@ class CreateReportForm(Form):
     @classmethod
     def generate_local_create_report_form(cls):
         """Dynamically generate a class for the SubmitReportDataForm"""
-        departments = []
         class LocalCreateReportForm(CreateReportForm):
             """Local copy of a CreateReportForm
 
