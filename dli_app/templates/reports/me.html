@@ -55,19 +55,21 @@
             {% if report not in current_user.favorite_reports %}
               <form method="POST" action="{{ url_for('reports.favorite_report', report_id=report.id) }}">
                 <div class="btn-group">
-                  <a href="{{ url_for('reports.view_report', report_id=report.id) }}" class="btn btn-info btn-xs">View</a>
                   <button type="submit" class="btn btn-success btn-xs">
                     <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Favorite
                   </button>
+                  <a href="{{ url_for('reports.view_report', report_id=report.id) }}" class="btn btn-info btn-xs">View</a>
+                  <a href="{{ url_for('reports.delete_report', report_id=report.id) }}" class="btn btn-danger btn-xs">Delete</a>
                 </div>
               </form>
             {% else %}
               <form method="POST" action="{{ url_for('reports.unfavorite_report', report_id=report.id) }}">
                 <div class="btn-group">
-                  <a href="{{ url_for('reports.view_report', report_id=report.id) }}" class="btn btn-info btn-xs">View</a>
                   <button type="submit" class="btn btn-warning btn-xs">
                     <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Unfavorite
                   </button>
+                  <a href="{{ url_for('reports.view_report', report_id=report.id) }}" class="btn btn-info btn-xs">View</a>
+                  <a href="{{ url_for('reports.delete_report', report_id=report.id) }}" class="btn btn-danger btn-xs">Delete</a>
                 </div>
               </form>
             {% endif %}
