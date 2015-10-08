@@ -1,6 +1,10 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
+    <div class="btn-group btn-group-lg pull-right">
+      <a href="{{ url_for('reports.create_report') }}" class="btn btn-primary">Create Report</a>
+      <a href="{{ url_for('reports.my_reports') }}" class="btn btn-default">View My Reports</a>
+    </div>
     <h1>All Reports</h1>
   </div>
 
