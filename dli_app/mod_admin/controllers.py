@@ -40,6 +40,7 @@ from dli_app.mod_auth.models import (
 
 from dli_app.mod_reports.models import (
     Field,
+    FieldType,
 )
 
 # Create a blueprint for this module
@@ -47,7 +48,7 @@ mod_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 
 # Set all routing for the module
-@mod_admin.route('/home', methods=['GET'])
+@mod_admin.route('/home/', methods=['GET'])
 @login_required
 def home():
     """Render the home page for administrative tasks
@@ -229,6 +230,16 @@ def edit_fields():
         return redirect(url_for('default.home'))
 
     form = AddFieldForm()
+
+    # Dynamically load the department and type choices
+    form.department.choices = [
+        (dept.id, dept.name) for dept in Department.query.all()
+    ]
+
+    form.field_type.choices = [
+        (ftype.id, ftype.name.upper()) for ftype in FieldType.query.all()
+    ]
+
     if form.validate_on_submit():
         db.session.add(form.field)
         db.session.commit()

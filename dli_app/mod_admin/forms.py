@@ -19,8 +19,13 @@ class AddLocationForm(Form):
     """Form for adding a new location"""
     def __init__(self, *args, **kwargs):
         """Initialize an AddLocationForm"""
-        Form.__init__(self, args, kwargs)
+        Form.__init__(self, *args, **kwargs)
         self.location = None
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
 
     name = TextField(
         "Location Name",
@@ -36,8 +41,13 @@ class AddDepartmentForm(Form):
     """Form for adding a new department"""
     def __init__(self, *args, **kwargs):
         """Initialize an AddDepartmentForm"""
-        Form.__init__(self, args, kwargs)
+        Form.__init__(self, *args, **kwargs)
         self.department = None
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
 
     name = TextField(
         "Department Name",
@@ -53,8 +63,13 @@ class AddFieldForm(Form):
     """Form for adding a new field to a department"""
     def __init__(self, *args, **kwargs):
         """Initialize an AddFieldForm"""
-        Form.__init__(self, args, kwargs)
+        Form.__init__(self, *args, **kwargs)
         self.field = None
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
 
     name = TextField(
         "Field Name",
@@ -72,7 +87,7 @@ class AddFieldForm(Form):
                 message='You must provide the type of the field.',
             ),
         ],
-    ),
+    )
 
     department = SelectField(
         'Department',
@@ -89,6 +104,15 @@ class AddFieldForm(Form):
 
 class AddUserForm(Form):
     """Form for inviting a new user to the site"""
+    def __init__(self, *args, **kwargs):
+        """Initialize the AddUserForm"""
+        Form.__init__(self, *args, **kwargs)
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+
     name = TextField(
         "Full Name",
         validators=[
