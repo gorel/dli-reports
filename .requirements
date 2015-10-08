@@ -8,6 +8,7 @@ itsdangerous==0.24
 Jinja2==2.8
 logilab-astng==0.23.1
 logilab-common==0.58.0
+Markdown==2.6.2
 MarkupSafe==0.23
 MySQL-python==1.2.5
 pylint==0.25.1
