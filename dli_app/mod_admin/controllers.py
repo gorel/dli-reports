@@ -300,6 +300,17 @@ def edit_users():
     form = AddUserForm()
     if form.validate_on_submit():
         # TODO: Send user a registration link to the email
+	mail=Mail()
+	title = 'Activate the user'
+	content='Please go to this link to activate your account'
+	recipient='cs490testing@gmail.com'
+	sender='cs490testing@gmail.com'
+	msg=Message(title,
+		sender=sender,
+		recipients=[recipient],
+	)
+	msg.body=content
+	mail.send(msg)	
         return redirect(url_for('admin.edit_users'))
     else:
         # Get a list of users

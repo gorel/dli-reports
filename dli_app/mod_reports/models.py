@@ -424,9 +424,10 @@ class ExcelSheetHelper():
 
 
 class FieldTypeConstants():
-    """Constant FieldTypes used for easy type-checking in other modules"""
+    """Constant FieldTypes used for easy type-checking in other modules
     CURRENCY = FieldType.query.filter_by(name="currency").first()
     DOUBLE = FieldType.query.filter_by(name="double").first()
     INTEGER = FieldType.query.filter_by(name="integer").first()
     STRING = FieldType.query.filter_by(name="string").first()
-    TIME = FieldType.query.filter_by(name="time").first()
+    TIME = FieldType.query.filter_by(name="time").first()"""
+
