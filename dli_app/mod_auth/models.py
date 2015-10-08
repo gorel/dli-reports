@@ -70,6 +70,10 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean)
     location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
     dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
+    pw_reset = db.relationship(
+	"PasswordReset",
+	backref="user",
+    )
     reports = db.relationship(
         "Report",
         backref="user",
@@ -146,6 +150,21 @@ class User(db.Model):
     def get_by_email(cls, email):
         """Retrieve a user by their email address"""
         return User.query.filter_by(email=email).first()
+
+
+class PasswordReset(db.Model):
+    """Model for password reset key"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+    key = db.Column(db.String(64))
+
+    def __init__(self, user, key):
+        """Initialize a  model"""
+        self.user = user
+	self.key = key
+    def __repr__(self):
+	"""Return a descriptive representation of password reset"""
+	return '<Reset password for use %r>' % self.user
 
 
 class Location(db.Model):
