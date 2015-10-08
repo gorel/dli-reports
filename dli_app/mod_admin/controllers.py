@@ -332,8 +332,14 @@ def delete_user(user_id):
 
     user = User.get(user_id)
     if user is not None:
+        for report in user.reports
+            current_user.unfavorite(report)
+            if report.favorite_users:
+                newOwner = report.favorite_users[0]
+                report.user = newOwner
+            else:
+                db.session.delete(report)
         db.session.delete(user)
-        # TODO: Delete/move the user's reports, too
         db.session.commit()
 
         flash(
