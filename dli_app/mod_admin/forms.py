@@ -147,6 +147,11 @@ class AddUserForm(Form):
 
     def validate(self):
         """Validate the form"""
+
+        # First make sure we ignore any case differences
+        self.email.data = self.email.data.lower()
+        self.confirm_email.data = self.confirm_email.data.lower()
+
         if not Form.validate(self):
             return False
 
