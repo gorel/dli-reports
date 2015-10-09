@@ -32,6 +32,7 @@ from dli_app.mod_auth.forms import (
     LoginForm,
     RegistrationForm,
     ForgotForm,
+    NewPassForm,
 )
 
 # Import models
@@ -141,7 +142,8 @@ def resetpass():
         #ADD EMAIL STUFF HERE
 	mail=Mail(current_app)
 	title='Reset your Password'
-	content='Click this link to reset your password'
+        url="http://68.234.146.84:PORT /auth/setnewpass/"+pw_reset.key
+        content='Click this link to reset your password: '+url
 	sender='cs490testing@gmail.com'
 	msg=Message(title,sender=sender,recipients=[email])
 	msg.body=content
@@ -151,4 +153,29 @@ def resetpass():
     else:
         flash_form_errors(form)
     	return render_template('auth/resetpass.html', form=form)
+
+
+@mod_auth.route('/setnewpass/<reset_key>', methods=['GET', 'POST'])
+def setnewpass(reset_key):
+    """Set the user's new password
+
+    Update the user's password if they entered a new one correctly.
+    Arguments:
+    reset_key - the unique key for resetting the password
+    """
+    form = NewPassForm()
+    if form.validate_on_submit():
+        password = form.password.data
+        user = PasswordReset.get_by_key(reset_key)
+        if user is None:
+            flash("That is not a valid reset_key. Click the link in your email.", "alert-warning",)
+        user.set_password(password)
+        db.session.commit()
+        flash("Password reset!", "alert-success")
+        return redirect(url_for('default.home'))
+    else:
+        flash_form_errors(form)
+        flash("Password reset failed", "alert-warning")
+        return render_template('auth/setnewpass.html', form=form)
+
 

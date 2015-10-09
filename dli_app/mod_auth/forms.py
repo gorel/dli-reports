@@ -220,3 +220,41 @@ class ForgotForm(Form):
             ),
         ],
     )
+
+
+class NewPassForm(Form):
+    """Form for resetting a user's password"""
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
+        self.user = None
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+        return True
+
+    reset_key = HiddenField()
+
+    password = PasswordField(
+        'Password',
+        validators=[
+            validators.Required(
+                message='Please enter a password.',
+            ),
+            validators.EqualTo(
+                'confirm_password',
+                message='Passwords must match',
+             ),
+        ],
+    )
+
+    confirm_password = PasswordField(
+        'Confirm Password',
+        validators=[
+            validators.Required(
+                message='Please confirm your password.',
+            ),
+        ],
+    )
+
