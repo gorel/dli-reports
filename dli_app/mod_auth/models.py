@@ -165,6 +165,14 @@ class PasswordReset(db.Model):
     def __repr__(self):
 	"""Return a descriptive representation of password reset"""
 	return '<Reset password for use %r>' % self.user
+    @classmethod
+    def get_by_key(cls, key):
+        """Retrieve a user by the associated password reset key"""
+        pw_reset = PasswordReset.query.filter_by(key=key).first()
+        if pw_reset is not None:
+            return pw_reset.user
+        else:
+            return None
 
 
 class Location(db.Model):
