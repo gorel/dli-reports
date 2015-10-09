@@ -3,6 +3,8 @@
 Author: Logan Gore
 This file is responsible for loading all site pages under /auth.
 """
+import random
+import string
 
 from flask import (
     Blueprint,
@@ -11,12 +13,18 @@ from flask import (
     render_template,
     request,
     url_for,
+    current_app
 )
 
 from flask_login import (
     current_user,
     login_user,
     logout_user,
+)
+
+from flask_mail import (
+    Mail,
+    Message,
 )
 
 # Import forms
@@ -28,7 +36,9 @@ from dli_app.mod_auth.forms import (
 
 # Import models
 from dli_app.mod_auth.models import (
-    Location,
+    Location, 
+    PasswordReset,
+    User,
 )
 
 from dli_app import (
@@ -119,7 +129,7 @@ def resetpass():
         email = form.email.data
 	#Create User Specific URL here
         pw_reset = PasswordReset(
-            user_id= User.get_by_email(self.email.data),
+            user= User.get_by_email(email),
             key=''.join(
                 random.choice(
                     string.ascii_letters + string.digits
@@ -129,7 +139,7 @@ def resetpass():
         db.session.add(pw_reset)
         db.session.commit()
         #ADD EMAIL STUFF HERE
-	mail=Mail()
+	mail=Mail(current_app)
 	title='Reset your Password'
 	content='Click this link to reset your password'
 	sender='cs490testing@gmail.com'
