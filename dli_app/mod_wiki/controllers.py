@@ -58,7 +58,7 @@ mod_wiki = Blueprint('wiki', __name__, url_prefix='/wiki')
 @mod_wiki.route('/home/', methods=['GET'])
 def home():
     """Render the wiki homepage"""
-    page = WikiPage.query.filter_by(name='index').first()
+    page = WikiPage.query.filter_by(name='home').first()
     html = ''
 
     if page is not None:

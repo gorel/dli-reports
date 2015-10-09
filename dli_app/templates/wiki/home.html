@@ -1,6 +1,12 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
+    <div class="btn-group btn-group-sm pull-right">
+      <a href="{{ url_for('wiki.edit_page', page_name='home') }}" class="btn btn-primary">Edit this page</a>
+      <a href="{{ url_for('wiki.edit_page') }}" class="btn btn-success">Create new page</a>
+    </div>
     <h1>Wiki Home</h1>
   </div>
+
+  {{ html|safe }}
 {% endblock %}
