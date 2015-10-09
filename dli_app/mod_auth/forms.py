@@ -203,6 +203,24 @@ class LoginForm(Form):
 
 class ForgotForm(Form):
     """A form for recovering an account with a forgotten password"""
+
+    def validate(self):
+        """Validate the form
+
+        Perform validation by checking that the user email exists.
+        """
+
+        if not Form.validate(self):
+            return False
+
+        user = User.get_by_email(self.email.data)
+        if user is None:
+            self.email.errors.append('No account with that email found.')
+            return False
+
+        self.user = user
+        return True
+
     email = TextField(
         'Email',
         validators=[
@@ -212,3 +230,41 @@ class ForgotForm(Form):
             ),
         ],
     )
+
+
+class NewPassForm(Form):
+    """Form for resetting a user's password"""
+    def __init__(self, *args, **kwargs):
+        Form.__init__(self, *args, **kwargs)
+        self.user = None
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+        return True
+
+    reset_key = HiddenField()
+
+    password = PasswordField(
+        'Password',
+        validators=[
+            validators.Required(
+                message='Please enter a password.',
+            ),
+            validators.EqualTo(
+                'confirm_password',
+                message='Passwords must match',
+             ),
+        ],
+    )
+
+    confirm_password = PasswordField(
+        'Confirm Password',
+        validators=[
+            validators.Required(
+                message='Please confirm your password.',
+            ),
+        ],
+    )
+
