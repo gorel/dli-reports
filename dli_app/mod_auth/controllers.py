@@ -169,13 +169,13 @@ def setnewpass(reset_key):
         user = PasswordReset.get_by_key(reset_key)
         if user is None:
             flash("That is not a valid reset_key. Click the link in your email.", "alert-warning",)
+            return redirect(url_for('default.home'))
         user.set_password(password)
         db.session.commit()
         flash("Password reset!", "alert-success")
         return redirect(url_for('default.home'))
     else:
         flash_form_errors(form)
-        flash("Password reset failed", "alert-warning")
-        return render_template('auth/setnewpass.html', form=form)
+        return render_template('auth/setnewpass.html', form=form, reset_key=reset_key)
 
 
