@@ -30,7 +30,7 @@
 
 
   <div class="col-md-10">
-    <form method="POST" action="{{ url_for('reports.submit_report_data') }}" class="form-horizontal">
+    <form method="POST" action="{{ url_for('reports.submit_report_data', ds=ds, dept_id=department.id) }}" class="form-horizontal">
       {{ form.csrf_token }}
       {{ form.ds }}
       {% for field in form.instance_fields %}

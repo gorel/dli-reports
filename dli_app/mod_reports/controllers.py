@@ -156,10 +156,6 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
             )
         )
 
-    # Set the change_form defaults
-    change_form.date.data = datetime.strptime(ds, "%Y-%m-%d")
-    change_form.department.default = dept_id or current_user.department.id
-
     # We must generate the dynamic form before loading it
     if dept_id is None:
         dept_id = current_user.department.id
@@ -203,6 +199,10 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
         flash_form_errors(change_form)
         flash_form_errors(form)
         form.ds.data = ds
+
+        # Set the change_form defaults
+        change_form.date.data = datetime.strptime(ds, "%Y-%m-%d")
+        change_form.department.data = dept_id or current_user.department.id
 
         for field in form.instance_fields:
             # This line allows us to dynamically load the field data
