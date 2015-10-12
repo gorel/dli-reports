@@ -379,7 +379,7 @@ def delete_user(user_id):
 
 @mod_admin.route(
     '/edit_users/delete_candidate/<int:candidate_id>/',
-    methods=['POST']
+    methods=['POST'],
 )
 @login_required
 def delete_candidate(candidate_id):
