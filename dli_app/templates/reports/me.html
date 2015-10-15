@@ -46,7 +46,7 @@
     </thead>
 
     <tbody>
-      {% for report in reports %}
+      {% for report in reports.items %}
         <tr>
           <td>{{ report.id }}</td>
           <td>{{ report.name }}</td>
@@ -88,4 +88,16 @@
       {% endfor %}
     </tbody>
   </table>
+  {% if reports.page > 1 %}
+    <a href="{{ url_for('reports.my_reports') }}">First</a>
+  {% endif %}
+  {% if reports.has_prev %}
+    <a href="{{ url_for('reports.my_reports', page_num=reports.prev_num) }}">&laquo; Prev</a>
+  {% endif %}
+  {% if reports.has_next %}
+    <a href="{{ url_for('reports.my_reports', page_num=reports.next_num) }}">Next &raquo;</a>
+  {% endif %}
+  {% if reports.page < reports.pages %}
+    <a href="{{ url_for('reports.my_reports', page_num=reports.pages) }}">Last</a>
+  {% endif %}
 {% endblock %}

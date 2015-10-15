@@ -17,8 +17,8 @@
         </thead>
 
         <tbody>
-          {% for dept in dept_fields %}
-            {% for field in dept_fields[dept] %}
+          {% for department in departments %}
+            {% for field in department.fields %}
               <tr>
                 <td>{{ field.department.name }}</td>
                 <td>{{ field.name }}</td>

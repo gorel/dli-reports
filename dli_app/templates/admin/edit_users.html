@@ -18,7 +18,7 @@
         </thead>
 
         <tbody>
-          {% for user in users %}
+          {% for user in users.items %}
             <tr>
               <td>{{ user.name }}</td>
               <td>{{ user.email }}</td>
@@ -33,6 +33,18 @@
           {% endfor %}
         </tbody>
       </table>
+      {% if users.page > 1 %}
+        <a href="{{ url_for('admin.edit_users') }}">First</a>
+      {% endif %}
+      {% if users.has_prev %}
+        <a href="{{ url_for('admin.edit_users', page_num=users.prev_num) }}">&laquo; Prev</a>
+      {% endif %}
+      {% if users.has_next %}
+        <a href="{{ url_for('admin.edit_users', page_num=users.next_num) }}">Next &raquo;</a>
+      {% endif %}
+      {% if users.page < users.pages %}
+        <a href="{{ url_for('admin.edit_users', page_num=users.pages) }}">Last</a>
+      {% endif %}
     </div>
   </div>
 

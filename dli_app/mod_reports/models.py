@@ -437,3 +437,12 @@ class FieldTypeConstants():
         INTEGER = None
         STRING = None
         TIME = None
+
+    @classmethod
+    def reload(cls):
+        """Reload the class constants"""
+        cls.CURRENCY = FieldType.query.filter_by(name="currency").first()
+        cls.DOUBLE = FieldType.query.filter_by(name="double").first()
+        cls.INTEGER = FieldType.query.filter_by(name="integer").first()
+        cls.STRING = FieldType.query.filter_by(name="string").first()
+        cls.TIME = FieldType.query.filter_by(name="time").first()
