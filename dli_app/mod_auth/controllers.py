@@ -13,7 +13,7 @@ from flask import (
     render_template,
     request,
     url_for,
-    current_app
+    current_app,
 )
 
 from flask_login import (
@@ -131,22 +131,22 @@ def resetpass():
 	#Create User Specific URL here
         pw_reset = PasswordReset(
             user= User.get_by_email(email),
-            key=''.join(
-                random.choice(
-                    string.ascii_letters + string.digits
-                ) for _ in range(60)
-            ),
+          #  key=''.join(
+           #     random.choice(
+            #        string.ascii_letters + string.digits
+            #    ) for _ in range(60)
+           # ),
         )
         db.session.add(pw_reset)
         db.session.commit()
-        #ADD EMAIL STUFF HERE
-	mail=Mail(current_app)
-	title='Reset your Password'
-        url="http://68.234.146.84:PORT /auth/setnewpass/"+pw_reset.key
-        content='Click this link to reset your password: '+url
-	sender='cs490testing@gmail.com'
-	msg=Message(title,sender=sender,recipients=[email])
-	msg.body=content
+        #Send email here
+	mail = Mail(current_app)
+	title = 'Reset your Password'
+        url = "http://68.234.146.84:PORT /auth/setnewpass/"+pw_reset.key
+        content = 'Click this link to reset your password: '+url
+	sender = 'cs490testing@gmail.com'
+	msg = Message(title,sender=sender,recipients=[email])
+	msg.body = content
 	mail.send(msg)
         flash("Email sent!", "alert-success")
         return redirect(url_for('default.home'))

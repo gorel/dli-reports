@@ -158,13 +158,15 @@ class PasswordReset(db.Model):
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
     key = db.Column(db.String(64))
 
-    def __init__(self, user, key):
+    def __init__(self, user, key=None):
         """Initialize a  model"""
+        if key is None:
+            key =''.join(random.choice(string.ascii_letters + string.digits) for _ in range(60))
         self.user = user
 	self.key = key
     def __repr__(self):
 	"""Return a descriptive representation of password reset"""
-	return '<Reset password for use %r>' % self.user
+	return '<Reset password for user %r>' % self.user
     @classmethod
     def get_by_key(cls, key):
         """Retrieve a user by the associated password reset key"""

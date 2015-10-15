@@ -5,7 +5,7 @@
 </div>
 
 <div class="col-md-6">
-    <form method="POST" action="{{ url_for('auth.resetpass', next='/') }}" class="form-horizontal">
+    <form method="POST" action="{{ url_for('auth.resetpass') }}" class="form-horizontal">
         {{ form.csrf_token }}
         <div class="form-group">
             {{ form.email.label(class='control-label col-sm-2') }}
