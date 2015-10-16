@@ -161,7 +161,9 @@ class PasswordReset(db.Model):
     def __init__(self, user, key=None):
         """Initialize a  model"""
         if key is None:
-            key = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(60))
+            key = ''.join(random.choice(
+                string.ascii_letters
+                + string.digits) for _ in range(60))
         self.user = user
         self.key = key
 
