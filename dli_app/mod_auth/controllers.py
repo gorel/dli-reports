@@ -3,8 +3,6 @@
 Author: Logan Gore
 This file is responsible for loading all site pages under /auth.
 """
-import random
-import string
 
 from flask import (
     Blueprint,
@@ -126,33 +124,26 @@ def resetpass():
 
     form = ForgotForm()
     if form.validate_on_submit():
-        # Email is authenticated and sent
         email = form.email.data
-	#Create User Specific URL here
         pw_reset = PasswordReset(
             user= User.get_by_email(email),
-          #  key=''.join(
-           #     random.choice(
-            #        string.ascii_letters + string.digits
-            #    ) for _ in range(60)
-           # ),
         )
         db.session.add(pw_reset)
         db.session.commit()
         #Send email here
-	mail = Mail(current_app)
-	title = 'Reset your Password'
-        url = "http://68.234.146.84:PORT /auth/setnewpass/"+pw_reset.key
-        content = 'Click this link to reset your password: '+url
-	sender = 'cs490testing@gmail.com'
-	msg = Message(title,sender=sender,recipients=[email])
-	msg.body = content
-	mail.send(msg)
+        mail = Mail(current_app)
+        title = 'Reset your Password'
+        url = "http://68.234.146.84:PORT /auth/setnewpass/" + pw_reset.key
+        content = 'Click this link to reset your password: ' + url
+        sender = 'cs490testing@gmail.com'
+        msg = Message(title, sender=sender, recipients=[email])
+        msg.body = content
+        mail.send(msg)
         flash("Email sent!", "alert-success")
         return redirect(url_for('default.home'))
     else:
         flash_form_errors(form)
-    	return render_template('auth/resetpass.html', form=form)
+        return render_template('auth/resetpass.html', form=form)
 
 
 @mod_auth.route('/setnewpass/<reset_key>', methods=['GET', 'POST'])
@@ -177,5 +168,4 @@ def setnewpass(reset_key):
     else:
         flash_form_errors(form)
         return render_template('auth/setnewpass.html', form=form, reset_key=reset_key)
-
 

@@ -236,13 +236,6 @@ class NewPassForm(Form):
     """Form for resetting a user's password"""
     def __init__(self, *args, **kwargs):
         Form.__init__(self, *args, **kwargs)
-        self.user = None
-
-    def validate(self):
-        """Validate the form"""
-        if not Form.validate(self):
-            return False
-        return True
 
     reset_key = HiddenField()
 
