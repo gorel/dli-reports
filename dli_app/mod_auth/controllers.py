@@ -11,6 +11,7 @@ from flask import (
     render_template,
     request,
     url_for,
+    current_app,
 )
 
 from flask_login import (
@@ -19,15 +20,24 @@ from flask_login import (
     logout_user,
 )
 
+from flask_mail import (
+    Mail,
+    Message,
+)
+
 # Import forms
 from dli_app.mod_auth.forms import (
     LoginForm,
     RegistrationForm,
+    ForgotForm,
+    NewPassForm,
 )
 
 # Import models
 from dli_app.mod_auth.models import (
-    Location,
+    Location, 
+    PasswordReset,
+    User,
 )
 
 from dli_app import (
@@ -103,3 +113,59 @@ def logout():
         logout_user()
     flash('You have successfully logged out.', 'alert-success')
     return redirect(url_for('default.home'))
+
+@mod_auth.route('/resetpass/', methods=['GET', 'POST'])
+def resetpass():
+    """Reset the user's password
+
+    If the user successfully submitted the form, send a password 
+    reset email. Otherwise, render the reset form again.
+    """
+
+    form = ForgotForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        pw_reset = PasswordReset(
+            user= User.get_by_email(email),
+        )
+        db.session.add(pw_reset)
+        db.session.commit()
+        #Send email here
+        mail = Mail(current_app)
+        title = 'Reset your Password'
+        url = "http://68.234.146.84:PORT /auth/setnewpass/" + pw_reset.key
+        content = 'Click this link to reset your password: ' + url
+        sender = 'cs490testing@gmail.com'
+        msg = Message(title, sender=sender, recipients=[email])
+        msg.body = content
+        mail.send(msg)
+        flash("Email sent!", "alert-success")
+        return redirect(url_for('default.home'))
+    else:
+        flash_form_errors(form)
+        return render_template('auth/resetpass.html', form=form)
+
+
+@mod_auth.route('/setnewpass/<reset_key>', methods=['GET', 'POST'])
+def setnewpass(reset_key):
+    """Set the user's new password
+
+    Update the user's password if they entered a new one correctly.
+    Arguments:
+    reset_key - the unique key for resetting the password
+    """
+    form = NewPassForm()
+    if form.validate_on_submit():
+        password = form.password.data
+        user = PasswordReset.get_by_key(reset_key)
+        if user is None:
+            flash("That is not a valid reset_key. Click the link in your email.", "alert-warning",)
+            return redirect(url_for('default.home'))
+        user.set_password(password)
+        db.session.commit()
+        flash("Password reset!", "alert-success")
+        return redirect(url_for('default.home'))
+    else:
+        flash_form_errors(form)
+        return render_template('auth/setnewpass.html', form=form, reset_key=reset_key)
+
