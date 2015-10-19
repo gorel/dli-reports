@@ -49,6 +49,8 @@ mod_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 
 # Set all routing for the module
+@mod_admin.route('/', methods=['GET'])
+@mod_admin.route('/home', methods=['GET'])
 @mod_admin.route('/home/', methods=['GET'])
 @login_required
 def home():
@@ -68,6 +70,7 @@ def home():
     return render_template('admin/home.html')
 
 
+@mod_admin.route('/edit_locations', methods=['GET', 'POST'])
 @mod_admin.route('/edit_locations/', methods=['GET', 'POST'])
 @login_required
 def edit_locations():
@@ -109,6 +112,7 @@ def edit_locations():
         )
 
 
+@mod_admin.route('/edit_locations/delete/<int:loc_id>', methods=['POST'])
 @mod_admin.route('/edit_locations/delete/<int:loc_id>/', methods=['POST'])
 @login_required
 def delete_location(loc_id):
@@ -140,6 +144,7 @@ def delete_location(loc_id):
 
 
 
+@mod_admin.route('/edit_departments', methods=['GET', 'POST'])
 @mod_admin.route('/edit_departments/', methods=['GET', 'POST'])
 @login_required
 def edit_departments():
@@ -181,6 +186,7 @@ def edit_departments():
         )
 
 
+@mod_admin.route('/edit_departments/delete/<int:dept_id>', methods=['POST'])
 @mod_admin.route('/edit_departments/delete/<int:dept_id>/', methods=['POST'])
 @login_required
 def delete_department(dept_id):
@@ -211,6 +217,7 @@ def delete_department(dept_id):
     return redirect(url_for('admin.edit_departments'))
 
 
+@mod_admin.route('/edit_fields', methods=['GET', 'POST'])
 @mod_admin.route('/edit_fields/', methods=['GET', 'POST'])
 @login_required
 def edit_fields():
@@ -260,6 +267,7 @@ def edit_fields():
         )
 
 
+@mod_admin.route('/edit_fields/delete/<int:field_id>', methods=['POST'])
 @mod_admin.route('/edit_fields/delete/<int:field_id>/', methods=['POST'])
 @login_required
 def delete_field(field_id):
@@ -290,6 +298,7 @@ def delete_field(field_id):
     return redirect(url_for('admin.edit_fields'))
 
 
+@mod_admin.route('/edit_users', methods=['GET', 'POST'])
 @mod_admin.route('/edit_users/', methods=['GET', 'POST'])
 @login_required
 def edit_users():
@@ -333,6 +342,7 @@ def edit_users():
         )
 
 
+@mod_admin.route('/edit_users/delete/<int:user_id>', methods=['POST'])
 @mod_admin.route('/edit_users/delete/<int:user_id>/', methods=['POST'])
 @login_required
 def delete_user(user_id):
@@ -377,10 +387,8 @@ def delete_user(user_id):
     return redirect(url_for('admin.edit_users'))
 
 
-@mod_admin.route(
-    '/edit_users/delete_candidate/<int:candidate_id>/',
-    methods=['POST'],
-)
+@mod_admin.route('/edit_users/delete_candidate/<int:candidate_id>', methods=['POST'])
+@mod_admin.route('/edit_users/delete_candidate/<int:candidate_id>/', methods=['POST'])
 @login_required
 def delete_candidate(candidate_id):
     """Delete a RegisterCandidate

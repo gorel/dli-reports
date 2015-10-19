@@ -37,6 +37,8 @@ mod_account = Blueprint('account', __name__, url_prefix='/account')
 
 
 # Set all routing for the module
+@mod_account.route('/', methods=['GET'])
+@mod_account.route('/home', methods=['GET'])
 @mod_account.route('/home/', methods=['GET'])
 @login_required
 def home():
@@ -44,6 +46,7 @@ def home():
     return render_template('account/home.html')
 
 
+@mod_account.route('/edit', methods=['GET', 'POST'])
 @mod_account.route('/edit/', methods=['GET', 'POST'])
 @login_required
 def edit():
