@@ -55,6 +55,7 @@ mod_wiki = Blueprint('wiki', __name__, url_prefix='/wiki')
 
 # Set all routing for the module
 @mod_wiki.route('/', methods=['GET'])
+@mod_wiki.route('/home', methods=['GET'])
 @mod_wiki.route('/home/', methods=['GET'])
 def home():
     """Render the wiki homepage"""
@@ -67,6 +68,7 @@ def home():
     return render_template('wiki/home.html', html=html)
 
 
+@mod_wiki.route('/<page_name>', methods=['GET'])
 @mod_wiki.route('/<page_name>/', methods=['GET'])
 def view_page(page_name):
     """ Render a specific page of the wiki"""
@@ -78,6 +80,7 @@ def view_page(page_name):
     return render_template('wiki/view.html', page=page, html=html, toc=MD.toc)
 
 
+@mod_wiki.route('/edit', methods=['GET', 'POST'])
 @mod_wiki.route('/edit/', methods=['GET', 'POST'])
 @mod_wiki.route('/edit/<page_name>/', methods=['GET', 'POST'])
 @login_required
@@ -116,6 +119,7 @@ def edit_page(page_name=''):
         return render_template('wiki/edit.html', form=form)
 
 
+@mod_wiki.route('/delete/<int:page_id>', methods=['POST'])
 @mod_wiki.route('/delete/<int:page_id>/', methods=['POST'])
 @login_required
 def delete_page(page_id):

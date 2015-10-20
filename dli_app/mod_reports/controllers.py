@@ -72,6 +72,7 @@ def all_reports(page_num=1):
     return render_template('reports/all.html', reports=reports)
 
 
+@mod_reports.route('/favorite/<int:report_id>', methods=['POST'])
 @mod_reports.route('/favorite/<int:report_id>/', methods=['POST'])
 @login_required
 def favorite_report(report_id):
@@ -92,6 +93,7 @@ def favorite_report(report_id):
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
 
+@mod_reports.route('/unfavorite/<int:report_id>', methods=['POST'])
 @mod_reports.route('/unfavorite/<int:report_id>/', methods=['POST'])
 @login_required
 def unfavorite_report(report_id):
@@ -114,6 +116,7 @@ def unfavorite_report(report_id):
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
 
+@mod_reports.route('/create', methods=['GET', 'POST'])
 @mod_reports.route('/create/', methods=['GET', 'POST'])
 @login_required
 def create_report():
@@ -141,6 +144,7 @@ def create_report():
         return render_template('reports/create.html', form=form)
 
 
+@mod_reports.route('/data', methods=['GET', 'POST'])
 @mod_reports.route('/data/', methods=['GET', 'POST'])
 @mod_reports.route('/data/<ds>/<int:dept_id>', methods=['GET', 'POST'])
 @login_required
@@ -229,6 +233,7 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
         )
 
 
+@mod_reports.route('/view/<int:report_id>', methods=['GET', 'POST'])
 @mod_reports.route('/view/<int:report_id>/', methods=['GET', 'POST'])
 @mod_reports.route('/view/<int:report_id>/<ds>/', methods=['GET', 'POST'])
 @login_required
@@ -258,6 +263,7 @@ def view_report(report_id, ds=datetime.now().strftime('%Y-%m-%d')):
         ds=ds,
     )
 
+@mod_reports.route('/download/<int:report_id>/<ds>', methods=['GET'])
 @mod_reports.route('/download/<int:report_id>/<ds>/', methods=['GET'])
 @login_required
 def download_report(report_id, ds):
@@ -278,6 +284,7 @@ def download_report(report_id, ds):
 
 
 @mod_reports.route('/delete/<int:report_id>', methods=['POST'])
+@mod_reports.route('/delete/<int:report_id>/', methods=['POST'])
 @login_required
 def delete_report(report_id):
     """Delete the specified report"""
