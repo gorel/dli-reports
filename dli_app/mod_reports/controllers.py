@@ -49,20 +49,26 @@ mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 
 
 # Set all routing for the module
+@mod_reports.route('/me', methods=['GET'])
 @mod_reports.route('/me/', methods=['GET'])
+@mod_reports.route('/me/<int:page_num>', methods=['GET'])
 @login_required
-def my_reports():
+def my_reports(page_num=1):
     """Show the user all of their reports"""
     # Download reports that belong to the current user
-    reports = Report.query.filter_by(user_id=current_user.id).all()
+    reports = Report.query.filter_by(
+        user_id=current_user.id,
+    ).paginate(page_num)
     return render_template('reports/me.html', reports=reports)
 
 
+@mod_reports.route('/all', methods=['GET'])
 @mod_reports.route('/all/', methods=['GET'])
+@mod_reports.route('/all/<int:page_num>', methods=['GET'])
 @login_required
-def all_reports():
+def all_reports(page_num=1):
     """Show the user all reports (made by anyone"""
-    reports = Report.query.all()
+    reports = Report.query.paginate(page_num)
     return render_template('reports/all.html', reports=reports)
 
 
@@ -100,7 +106,9 @@ def unfavorite_report(report_id):
         current_user.unfavorite(report)
         db.session.commit()
         flash(
-            "Added Report: {name} to favorites list".format(name=report.name),
+            "Removed Report: {name} from favorites list".format(
+                name=report.name,
+            ),
             "alert-success",
         )
     return redirect(request.args.get('next') or url_for('reports.my_reports'))

@@ -256,7 +256,7 @@ def edit_fields():
         return render_template(
             'admin/edit_fields.html',
             form=form,
-            dept_fields=Department.get_dept_field_map(),
+            departments=Department.query.all(),
         )
 
 
@@ -290,9 +290,11 @@ def delete_field(field_id):
     return redirect(url_for('admin.edit_fields'))
 
 
+@mod_admin.route('/edit_users', methods=['GET', 'POST'])
 @mod_admin.route('/edit_users/', methods=['GET', 'POST'])
+@mod_admin.route('/edit_users/<int:page_num>', methods=['GET', 'POST'])
 @login_required
-def edit_users():
+def edit_users(page_num=1):
     """Render the user editing page
 
     First perform a check to ensure the user is an admin.
@@ -321,7 +323,7 @@ def edit_users():
         return redirect(url_for('admin.edit_users'))
     else:
         # Get a list of users
-        users = User.query.all()
+        users = User.query.paginate(page_num)
         candidates = RegisterCandidate.query.all()
 
         flash_form_errors(form)

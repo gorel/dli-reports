@@ -19,7 +19,7 @@
     </thead>
 
     <tbody>
-      {% for report in reports %}
+      {% for report in reports.items %}
         <tr>
           <td>{{ report.id }}</td>
           <td>{{ report.name }}</td>
@@ -61,4 +61,15 @@
       {% endfor %}
     </tbody>
   </table>
+
+  {% if reports.has_prev %}
+    <a class="btn btn-primary" href="{{ url_for('reports.all_reports') }}">First</a>
+    <a class="btn btn-primary" href="{{ url_for('reports.all_reports', page_num=reports.prev_num) }}">&laquo; Prev</a>
+  {% endif %}
+  {% if reports.has_next %}
+    <span class="pull-right">
+      <a class="btn btn-primary" href="{{ url_for('reports.all_reports', page_num=reports.next_num) }}">Next &raquo;</a>
+      <a class="btn btn-primary" href="{{ url_for('reports.all_reports', page_num=reports.pages) }}">Last</a>
+    </span>
+  {% endif %}
 {% endblock %}

@@ -222,16 +222,3 @@ class Department(db.Model):
     def __repr__(self):
         """Return a descriptive representation of a Department"""
         return '<Department %r>' % self.name
-
-    @classmethod
-    def get_dept_field_map(cls):
-        """Get a list of all fields
-
-        Get a list of all fields and return a dict of the form:
-          {dept1: [field1, field2, ...], ...} for easy templating
-        """
-
-        return {
-            department: department.fields
-            for department in Department.query.all()
-        }
