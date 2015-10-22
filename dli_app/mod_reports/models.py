@@ -5,6 +5,7 @@ This file is responsible for defining models that belong in the reports module.
 """
 
 import collections
+import datetime
 import os
 
 import xlsxwriter
@@ -23,6 +24,20 @@ report_fields = db.Table(
 report_tags = db.Table(
     'report_tags',
     db.Column('report_id', db.Integer, db.ForeignKey('report.id')),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')),
+)
+
+
+chart_fields = db.Table(
+    'chart_fields',
+    db.Column('chart_id', db.Integer, db.ForeignKey('chart.id')),
+    db.Column('field_id', db.Integer, db.ForeignKey('field.id')),
+)
+
+
+chart_tags = db.Table(
+    'chart_tags',
+    db.Column('chart_id', db.Integer, db.ForeignKey('chart.id')),
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')),
 )
 
@@ -233,7 +248,8 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.TIME:
             return self.ivalue
         else:
-            return "ERROR: Type %s not supported!" % ftype
+            print("ERROR: Type %s not supported!" % ftype)
+            raise
 
     @property
     def pretty_value(self):
@@ -260,7 +276,8 @@ class FieldData(db.Model):
                 secs=secs,
             )
         else:
-            return "ERROR: Type %s not supported!" % ftype
+            print("ERROR: Type %s not supported!" % ftype)
+            raise
 
 
 class Tag(db.Model):
@@ -286,6 +303,114 @@ class Tag(db.Model):
             db.session.add(tag)
             db.session.commit()
         return tag
+
+
+class Chart(db.Model):
+    """Model for a DLI Chart"""
+    __tablename__ = "chart"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), index=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    ctype_id = db.Column(db.Integer, db.ForeignKey("chart_type.id"))
+    ctype = db.relationship("ChartType", backref="charts")
+    cdtype_id = db.Column(db.Integer, db.ForeignKey("chart_date_type.id"))
+    cdtype = db.relationship("ChartDateType", backref="charts")
+    fields = db.relationship(
+        'Field',
+        secondary=chart_fields,
+        backref='charts',
+    )
+    tags = db.relationship(
+        'Tag',
+        secondary=chart_tags,
+        backref='charts',
+    )
+
+    def __init__(self, name, owner, ctype, cdtype, fields, tags):
+        """Initialize a Chart model"""
+        self.name = name
+        self.owner = owner
+        self.ctype = ctype
+        self.cdtype = cdtype
+        self.fields = fields
+        self.tags = tags
+
+    def __repr__(self):
+        """Return a descriptive representation of a Chart"""
+        return '<Chart %r>' % self.name
+
+    @property
+    def data_points(self):
+        """Retrieve the data points needed for this chart"""
+        today = datetime.date.today()
+        if self.cdtype == ChartDateTypeConstants.FROM_WEEK:
+            days = today.weekday() + 1
+            date = today - datetime.timedelta(days=days)
+        elif self.cdtype == ChartDateTypeConstants.ROLLING_WEEK:
+            date = today - datetime.timedelta(days=7)
+        elif self.cdtype == ChartDateTypeConstants.FROM_MONTH:
+            date = datetime.date(today.year, today.month, 1)
+        elif self.cdtype == ChartDateTypeConstants.ROLLING_MONTH:
+            date = today - datetime.timedelta(days=30)
+        elif self.cdtype == ChartDateTypeConstants.FROM_YEAR:
+            date = datetime.date(today.year, 1, 1)
+        elif self.cdtype == ChartDateTypeConstants.ROLLING_YEAR:
+            date = today - datetime.timedelta(days=365)
+        elif self.cdtype == ChartDateTypeConstants.ALL_TIME:
+            weeks = today.year * 52
+            date = today - datetime.timedelta(weeks=weeks)
+        else:
+            print('Unexpected cdtype: %r' % self.cdtype)
+            raise
+
+        ds = date.strftime('%Y-%m-%d')
+        return {
+            field.name: field.data_points.filter_by(ds>ds).all()
+            for field in self.fields
+        }
+
+    @property
+    def tagnames(self):
+        """Helper function to get the names of the Report's tags"""
+        return [tag.name for tag in self.tags]
+
+
+class ChartType(db.Model):
+    """Model for a ChartType (eg. Line, Bar, etc.)"""
+    __tablename__ = 'chart_type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), index=True)
+
+    def __init__(self, name):
+        """Initialize a ChartType model"""
+        self.name = name
+
+    def __repr__(self):
+        """Return a descriptive representation of a ChartType"""
+        return '<Chart Type %r>' % self.name
+
+    def __eq__(self, other):
+        """Determine if two ChartTypes are equal"""
+        return other is not None and self.id == other.id
+
+
+class ChartDateType(db.Model):
+    """Model for a ChartDateType (eg. From week, rolling week, etc.)"""
+    __tablename__ = 'chart_date_type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), index=True)
+
+    def __init__(self, name):
+        """Initialize a ChartDateType model"""
+        self.name = name
+
+    def __repr__(self):
+        """Return a descriptive representation of a ChartDateType"""
+        return '<Chart Date Type %r>' % self.name
+
+    def __eq__(self, other):
+        """Determine if two ChartDateTypes are equal"""
+        return other is not None and self.id == other.id
 
 
 class ExcelSheetHelper():
@@ -437,3 +562,82 @@ class FieldTypeConstants():
         INTEGER = None
         STRING = None
         TIME = None
+
+    def __init__(self):
+        """Initialize a FieldTypeConstants instance"""
+        self.CURRENCY = FieldType.query.filter_by(name="currency").first()
+        self.DOUBLE = FieldType.query.filter_by(name="double").first()
+        self.INTEGER = FieldType.query.filter_by(name="integer").first()
+        self.STRING = FieldType.query.filter_by(name="string").first()
+        self.TIME = FieldType.query.filter_by(name="time").first()
+
+
+
+class ChartTypeConstants():
+    """Constant ChartTypes used for easy type-checking in other modules"""
+    try:
+        LINE = ChartType.query.filter_by(name="line").first()
+        BAR = ChartType.query.filter_by(name="bar").first()
+        PIE = ChartType.query.filter_by(name="pie").first()
+    except:
+        LINE = None
+        BAR = None
+        PIE = None
+
+    def __init__(self):
+        """Initialize a ChartTypeConstants instance"""
+        self.LINE = ChartType.query.filter_by(name="line").first()
+        self.BAR = ChartType.query.filter_by(name="bar").first()
+        self.PIE = ChartType.query.filter_by(name="pie").first()
+
+    @classmethod
+    def reload(cls):
+        """Reload the class constants"""
+        cls.LINE = ChartType.query.filter_by(name="line").first()
+        cls.BAR = ChartType.query.filter_by(name="bar").first()
+        cls.PIE = ChartType.query.filter_by(name="pie").first()
+
+
+class ChartDateTypeConstants():
+    """Constant ChartTypes used for easy type-checking in other modules"""
+    try:
+        TODAY = ChartDateType.query.filter_by(name="today").first()
+        FROM_WEEK = ChartDateType.query.filter_by(name="from_week").first()
+        ROLLING_WEEK = ChartDateType.query.filter_by(name="rolling_week").first()
+        FROM_MONTH = ChartDateType.query.filter_by(name="from_month").first()
+        ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
+        FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
+        ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
+        ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()
+    except:
+        TODAY = None
+        FROM_WEEK = None
+        ROLLING_WEEK = None
+        FROM_MONTH = None
+        ROLLING_MONTH = None
+        FROM_YEAR = None
+        ROLLING_YEAR = None
+        ALL_TIME = None
+
+    def __init__(self):
+        """Initialize a ChartDateTypeConstants instance"""
+        self.TODAY = ChartDateType.query.filter_by(name="today").first()
+        self.FROM_WEEK = ChartDateType.query.filter_by(name="from_week").first()
+        self.ROLLING_WEEK = ChartDateType.query.filter_by(name="rolling_week").first()
+        self.FROM_MONTH = ChartDateType.query.filter_by(name="from_month").first()
+        self.ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
+        self.FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
+        self.ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
+        self.ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()
+
+    @classmethod
+    def reload(cls):
+        """Reload the class constants"""
+        cls.TODAY = ChartDateType.query.filter_by(name="today").first()
+        cls.FROM_WEEK = ChartDateType.query.filter_by(name="from_week").first()
+        cls.ROLLING_WEEK = ChartDateType.query.filter_by(name="rolling_week").first()
+        cls.FROM_MONTH = ChartDateType.query.filter_by(name="from_month").first()
+        cls.ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
+        cls.FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
+        cls.ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
+        cls.ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()

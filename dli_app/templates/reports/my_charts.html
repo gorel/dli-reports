@@ -1,0 +1,91 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <div class="page-header">
+    <div class="btn-group btn-group-lg pull-right">
+      <a href="{{ url_for('reports.create_chart') }}" class="btn btn-primary">Create Chart</a>
+      <a href="{{ url_for('reports.all_charts') }}" class="btn btn-default">View All Charts</a>
+    </div>
+    <h1>My Charts</h1>
+  </div>
+
+  {% if current_user.favorite_charts|length > 0 %}
+    <h2>Favorite Charts</h2>
+    <table class="table table-striped">
+      <thead>
+        <tr><th colspan="4">Favorites</th></tr>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Tags</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for chart in current_user.favorite_charts %}
+          <tr>
+            <td>{{ chart.id }}</td>
+            <td>{{ chart.name }}</td>
+            <td>{{ ', '.join(chart.tagnames) }}</td>
+            <td><a href="{{ url_for('reports.view_chart', chart_id=chart.id) }}" class="btn btn-info btn-xs">View</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif%}
+
+  <table class="table table-striped">
+    <thead>
+      <tr><th colspan="4">Charts I Own</th></tr>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Tags</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for chart in charts %}
+        <tr>
+          <td>{{ chart.id }}</td>
+          <td>{{ chart.name }}</td>
+          <td>{{ ', '.join(chart.tagnames) }}</td>
+          <td>
+            {% if chart not in current_user.favorite_charts %}
+              <form method="POST" action="{{ url_for('reports.favorite_chart', chart_id=chart.id) }}">
+                <button type="submit" class="btn btn-success btn-xs">
+                  <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Favorite
+                </button>
+              </form>
+
+              <form method="POST" action="{{ url_for('reports.delete_chart', chart_id=chart.id) }}">
+                <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+              </form>
+
+              <div class="btn-group">
+                <a href="{{ url_for('reports.view_chart', chart_id=chart.id) }}" class="btn btn-info btn-xs">View</a>
+                <a href="{{ url_for('reports.submit_report_data') }}" class="btn btn-default btn-xs">Submit Data</a>
+              </div>
+            {% else %}
+              <form method="POST" action="{{ url_for('reports.unfavorite_chart', chart_id=chart.id) }}">
+                <button type="submit" class="btn btn-warning btn-xs">
+                  <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Unfavorite
+                </button>
+              </form>
+
+              <form method="POST" action="{{ url_for('reports.delete_chart', chart_id=chart.id) }}">
+                <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+              </form>
+
+              <div class="btn-group">
+                <a href="{{ url_for('reports.view_chart', chart_id=chart.id) }}" class="btn btn-info btn-xs">View</a>
+                <a href="{{ url_for('reports.submit_report_data') }}" class="btn btn-default btn-xs">Submit Data</a>
+              </div>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
