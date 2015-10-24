@@ -73,11 +73,10 @@ def home():
 def view_page(page_name):
     """ Render a specific page of the wiki"""
     page = WikiPage.query.filter_by(name=page_name).first()
-    page.views += 1
-    db.session.commit()
     if page is None:
         return render_template('wiki/404.html'), 404
-
+    page.views += 1
+    db.session.commit()
     html = MD.convert(page.content)
     return render_template('wiki/view.html', page=page, html=html, toc=MD.toc)
 
