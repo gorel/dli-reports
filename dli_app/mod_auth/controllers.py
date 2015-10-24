@@ -35,6 +35,7 @@ from dli_app.mod_auth.forms import (
 
 # Import models
 from dli_app.mod_auth.models import (
+    Department,
     Location,
     PasswordReset,
     User,
@@ -63,6 +64,13 @@ def register(registration_key):
     """
 
     form = RegistrationForm()
+    form.registration_key.data = registration_key
+    form.location.choices = [
+        (location.id, location.name) for location in Location.query.all()
+    ]
+    form.department.choices = [
+        (department.id, department.name) for department in Department.query.all()
+    ]
     if form.validate_on_submit():
         db.session.add(form.user)
         db.session.commit()
@@ -72,13 +80,8 @@ def register(registration_key):
         flash("You have created a new account at DLI-Reports", "alert-success")
         return redirect(request.args.get('next') or url_for('default.home'))
     else:
-        form.registration_key.data = registration_key
-        form.location.choices = [
-            (location.id, location.name) for location in Location.query.all()
-        ]
-
         flash_form_errors(form)
-        return render_template('auth/register.html', form=form)
+        return render_template('auth/register.html', form=form, registration_key=registration_key)
 
 
 @mod_auth.route('/login', methods=['GET', 'POST'])

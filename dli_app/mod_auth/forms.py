@@ -131,6 +131,7 @@ class RegistrationForm(Form):
                 message='Please select your default department.',
             ),
         ],
+	coerce=int,
     )
 
     location = SelectField(
