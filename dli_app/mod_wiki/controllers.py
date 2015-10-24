@@ -99,7 +99,7 @@ def edit_page(page_name=''):
         if page is not None:
             page.name = form.page.name
             page.content = form.page.content
-            page.modtime = modtime = datetime.datetime.now().strftime('%m/%d/%Y %I:%M %p')
+            page.modtime = datetime.datetime.now().strftime('%m/%d/%Y %I:%M %p')
             page.editor = current_user.name
             flash(
                 "WikiPage updated successfully",
