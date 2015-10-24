@@ -326,22 +326,24 @@ def edit_users(page_num=1):
         return redirect(url_for('default.home'))
 
     form = AddUserForm()
-    if form.validate_on_submit():
-        
+    if form.validate_on_submit(): 
         db.session.add(form.user)
         db.session.commit()
-	candidate=RegisterCandidate.query.filter_by(email=form.user.email).first()
-	if candidate is not None:
-	    key = candidate.registration_key
-	    mail = Mail(current_app)
-	    title = 'Activate your account'
-	    content = 'Please go to the link: '
-	    url = '68.234.146.84:PORT/auth/register/'+key
-	    sender = 'cs490testing@gmail.com'
-	    recipient = candidate.email
-	    msg = Message(title, sender=sender, recipients=[recipient])
-	    msg.body = content + url
-	    mail.send(msg)
+        candidate = RegisterCandidate.query.filter_by(email=form.user.email).first()
+        if candidate is not None:
+            key = candidate.registration_key
+            mail = Mail(current_app)
+            title = 'Activate your account'
+            content = 'Please go to the link: '
+            url = '{site}/auth/register/{key}'.format(
+                site='68.234.146.84:PORT',
+                key=key,
+            )
+            sender = 'cs490testing@gmail.com'
+            recipient = candidate.email
+            msg = Message(title, sender=sender, recipients=[recipient])
+            msg.body = content + url
+            mail.send(msg)
             flash(
                 "Sent an invite link to {email}".format(email=form.user.email),
                 "alert-success",
