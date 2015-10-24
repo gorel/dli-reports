@@ -62,7 +62,6 @@ def home():
     pages = WikiPage.query.order_by(WikiPage.views.desc()).limit(10).all()
     page = WikiPage.query.filter_by(name='home').first()
     html = ''
-    #TODO: refer to top wiki pages here?
     if page is not None:
         html = MD.convert(page.content)
 
@@ -74,7 +73,7 @@ def home():
 def view_page(page_name):
     """ Render a specific page of the wiki"""
     page = WikiPage.query.filter_by(name=page_name).first()
-    page.views = page.views + 1
+    page.views +=1
     if page is None:
         return render_template('wiki/404.html'), 404
 

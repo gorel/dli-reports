@@ -40,7 +40,7 @@ class AddLocationForm(Form):
             res = False
 
         self.location = Location(self.name.data)
-        res
+        return res
 
     name = TextField(
         "Location Name",
