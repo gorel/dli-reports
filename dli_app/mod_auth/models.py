@@ -86,6 +86,10 @@ class User(db.Model):
         "Report",
         backref="user",
     )
+    charts = db.relationship(
+        "Chart",
+        backref="user",
+    )
     favorite_reports = db.relationship(
         'Report',
         secondary=report_users,

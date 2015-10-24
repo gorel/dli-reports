@@ -12,6 +12,7 @@ from flask_wtf import (
 )
 
 from wtforms import (
+    BooleanField,
     DecimalField,
     FieldList,
     HiddenField,
@@ -26,10 +27,13 @@ from wtforms import (
 
 from dli_app.mod_auth.models import (
     Department,
+    User,
 )
 
 from dli_app.mod_reports.models import (
     Chart,
+    ChartType,
+    ChartDateType,
     Field,
     FieldData,
     FieldTypeConstants,
@@ -144,8 +148,9 @@ class CreateReportForm(Form):
 
             def validate(self):
                 """Validate the form"""
+                res = True
                 if not Form.validate(self):
-                    return False
+                    res = False
 
                 report_fields = []
                 for department in self.departments:
@@ -158,14 +163,19 @@ class CreateReportForm(Form):
                     if tag and tag.strip() != ''
                 ]
 
+                user = User.query.get(self.user_id.data)
+                if not user:
+                    self.user_id.errors.append("User not found!")
+                    res = False
+
                 self.report = Report(
-                    user_id=self.user_id.data,
+                    user=user,
                     name=self.name.data,
                     fields=report_fields,
                     tags=tags,
                 )
 
-                return True
+                return res
 
             @classmethod
             def add_department(cls, department):
@@ -214,6 +224,8 @@ class CreateChartForm(Form):
         "Date Range",
         coerce=int,
     )
+
+    with_table = BooleanField('Include table?')
 
     tags = FieldList(
         TextField(
@@ -265,8 +277,8 @@ class CreateChartForm(Form):
                     if tag and tag.strip() != ''
                 ]
 
-                owner = User.query.get(self.user_id.data)
-                if not owner:
+                user = User.query.get(self.user_id.data)
+                if not user:
                     self.user_id.errors.append("User not found!")
                     res = False
 
@@ -282,7 +294,8 @@ class CreateChartForm(Form):
 
                 self.chart = Chart(
                     name=self.name.data,
-                    owner=owner,
+                    with_table=self.with_table.data,
+                    user=user,
                     ctype=ctype,
                     cdtype=cdtype,
                     fields=chart_fields,
@@ -384,6 +397,7 @@ class SubmitReportDataForm(Form):
                     formfield = TextField(
                         field.name,
                         validators=[
+                            validators.Optional(),
                             SplitNumValidator(
                                 split='.',
                                 filter_chars="$,",
@@ -399,22 +413,26 @@ class SubmitReportDataForm(Form):
                 elif field.ftype == FieldTypeConstants.DOUBLE:
                     formfield = DecimalField(
                         field.name,
+                        validators=[validators.Optional()],
                         filters=[lambda x: x or None],
                     )
                 elif field.ftype == FieldTypeConstants.INTEGER:
                     formfield = IntegerField(
                         field.name,
+                        validators=[validators.Optional()],
                         filters=[lambda x: x or None],
                     )
                 elif field.ftype == FieldTypeConstants.STRING:
                     formfield = TextField(
                         field.name,
+                        validators=[validators.Optional()],
                         filters=[lambda x: x or None],
                     )
                 elif field.ftype == FieldTypeConstants.TIME:
                     formfield = TextField(
                         field.name,
                         validators=[
+                            validators.Optional(),
                             SplitNumValidator(
                                 split=':',
                                 filter_chars="ms",

@@ -34,6 +34,8 @@ from dli_app.mod_auth.models import (
 
 from dli_app.mod_reports.models import (
     Chart,
+    ChartType,
+    ChartDateType,
     Report,
 )
 
@@ -319,7 +321,7 @@ def delete_report(report_id):
 def my_charts(page_num=1):
     """View the current user's charts"""
     # Download charts that belong to the current user
-    charts = Chart.query.filter_by(user_id=current_user.id).paginate(page_num)
+    charts = Chart.query.filter_by(owner_id=current_user.id).paginate(page_num)
     return render_template('reports/my_charts.html', charts=charts)
 
 
@@ -348,6 +350,48 @@ def view_chart(chart_id):
         return render_template('reports/view_chart.html', chart=chart)
 
 
+@mod_reports.route('/charts/favorite/<int:chart_id>', methods=['POST'])
+@mod_reports.route('/charts/favorite/<int:chart_id>/', methods=['POST'])
+@login_required
+def favorite_chart(chart_id):
+    """Add a chart to the user's favorite charts"""
+    chart = Chart.query.get(chart_id)
+    if chart is None:
+        flash(
+            "No chart with that chart_id found!",
+            "alert-warning",
+        )
+    else:
+        current_user.favorite_chart(chart)
+        db.session.commit()
+        flash(
+            "Added Chart: {name} to favorites list".format(name=chart.name),
+            "alert-success",
+        )
+    return redirect(request.args.get('next') or url_for('reports.my_charts'))
+
+
+@mod_reports.route('/charts/unfavorite/<int:chart_id>', methods=['POST'])
+@mod_reports.route('/charts/unfavorite/<int:chart_id>/', methods=['POST'])
+@login_required
+def unfavorite_chart(chart_id):
+    """Remove a chart from the user's favorite charts"""
+    chart = Chart.query.get(chart_id)
+    if chart is None:
+        flash(
+            "No chart with that chart_id found!",
+            "alert-warning",
+        )
+    else:
+        current_user.unfavorite_chart(chart)
+        db.session.commit()
+        flash(
+            "Removed Chart: {name} from favorites list".format(name=chart.name),
+            "alert-success",
+        )
+    return redirect(request.args.get('next') or url_for('reports.my_charts'))
+
+
 @mod_reports.route('/charts/create', methods=['GET', 'POST'])
 @mod_reports.route('/charts/create/', methods=['GET', 'POST'])
 @login_required
@@ -366,10 +410,10 @@ def create_chart():
     form = LocalCreateChartForm()
     form.user_id.data = current_user.id
     form.chart_type.choices = [
-        (ctype.id, ctype.name) for ctype in ChartType.query.all()
+        (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
     ]
     form.chart_date_type.choices = [
-        (cdtype.id, cdtype.name) for cdtype in ChartDateType.query.all()
+        (cdtype.id, cdtype.name.upper().replace('_', ' ')) for cdtype in ChartDateType.query.all()
     ]
     if form.validate_on_submit():
         # Add the new chart to the database

@@ -101,6 +101,9 @@ def populate_db_users():
             department=Department.query.first(),
         ),
     ]
+
+    # Set the "Nobody" user to be an admin by default
+    users[0].is_admin = True
     db.session.add_all(users)
     db.session.commit()
 
@@ -1201,7 +1204,7 @@ def populate_db_reports():
     """Populate the database Report model"""
     reports = [
         Report(
-            user_id=User.query.first().id,
+            user=User.query.first(),
             name='8:40 Report',
             fields=Field.query.all(),
             tags=Tag.query.all(),
@@ -1245,7 +1248,8 @@ def populate_db_charts():
     charts = [
         Chart(
             name='Adjusted Sales (from start of week)',
-            owner=User.query.first(),
+            user=User.query.first(),
+            with_table=True,
             ctype=ChartTypeConstants.LINE,
             cdtype=ChartDateTypeConstants.FROM_WEEK,
             fields=[Field.query.filter_by(name='Adjusted Sales').first()],
@@ -1253,7 +1257,8 @@ def populate_db_charts():
         ),
         Chart(
             name='Customer Service On Time Percentage (DLI vs. Omaha)',
-            owner=User.query.first(),
+            user=User.query.first(),
+            with_table=True,
             ctype=ChartTypeConstants.BAR,
             cdtype=ChartDateTypeConstants.ROLLING_WEEK,
             fields=[
@@ -1264,7 +1269,8 @@ def populate_db_charts():
         ),
         Chart(
             name='Press Breakdown',
-            owner=User.query.first(),
+            user=User.query.first(),
+            with_table=False,
             ctype=ChartTypeConstants.PIE,
             cdtype=ChartDateTypeConstants.TODAY,
             fields=Field.query.filter(Field.name.like('Orders on Press%')).all(),

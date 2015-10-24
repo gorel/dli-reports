@@ -13,6 +13,7 @@
       <ul class="nav navbar-nav">
       {% if current_user.is_active %}
         <li><a href="{{ url_for('reports.my_reports') }}">Reports</a></li>
+        <li><a href="{{ url_for('reports.my_charts') }}">Charts</a></li>
       {% endif %}
       {% if current_user.is_admin %}
         <li><a href="{{ url_for('admin.home') }}">Admin</a></li>
