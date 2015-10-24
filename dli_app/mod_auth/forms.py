@@ -161,21 +161,21 @@ class LoginForm(Form):
         Perform validation by checking that the user account exists and the
         password hashes match.
         """
-
+        res = True
         if not Form.validate(self):
-            return False
+            res =  False
 
         user = User.get_by_email(self.email.data)
         if user is None:
             self.email.errors.append('No account with that email found.')
-            return False
+            res = False
 
         if not user.check_password(self.password.data):
             self.password.errors.append('Incorrect password!')
-            return False
+            res = False
 
         self.user = user
-        return True
+        return res
 
     email = TextField(
         'Email',

@@ -35,11 +35,12 @@ class AddLocationForm(Form):
 
     def validate(self):
         """Validate the form"""
+        res = True
         if not Form.validate(self):
-            return False
+            res = False
 
         self.location = Location(self.name.data)
-        return True
+        res
 
     name = TextField(
         "Location Name",
