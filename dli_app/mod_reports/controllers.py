@@ -34,6 +34,7 @@ from dli_app.mod_auth.models import (
 
 from dli_app.mod_reports.models import (
     Report,
+    Field
 )
 
 # Import forms
@@ -144,11 +145,11 @@ def create_report():
         return render_template('reports/create.html', form=form)
 
 
-@mod_reports.route('/data', methods=['GET', 'POST'])
-@mod_reports.route('/data/', methods=['GET', 'POST'])
-@mod_reports.route('/data/<ds>/<int:dept_id>', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/<ds>/<int:dept_id>', methods=['GET', 'POST'])
 @login_required
-def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
+def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
     """Submit new report data
 
     If the user successfully submitted the form, submit all of the report
@@ -163,10 +164,13 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
         return redirect(
             url_for(
                 'reports.submit_report_data',
+                report_id=report_id,
                 ds=change_form.ds,
                 dept_id=change_form.dept_id,
             )
         )
+
+    report = Report.query.get(report_id)
 
     # We must generate the dynamic form before loading it
     if dept_id is None:
@@ -178,12 +182,13 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
             "No department with that ID found.",
             "alert-warning",
         )
-        return redirect(url_for('reports.submit_report_data'))
+        return redirect(url_for('reports.submit_report_data', report_id=report_id))
 
     LocalSubmitReportDataForm = SubmitReportDataForm.get_instance()
 
-    for field in department.fields:
-        LocalSubmitReportDataForm.add_field(field)
+    for field in report.fields:
+        if field.department_id == dept_id:
+            LocalSubmitReportDataForm.add_field(field)
 
     # *Now* the form is properly initialized
     form = LocalSubmitReportDataForm()
@@ -228,6 +233,7 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
             'reports/submit_data.html',
             change_form=change_form,
             form=form,
+            report=report,
             department=department,
             ds=ds,
         )
