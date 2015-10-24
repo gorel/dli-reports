@@ -364,3 +364,100 @@ class ChangeDateAndDepartmentForm(Form):
         "Department",
         coerce=int,
     )
+
+class EditReportForm(Form):
+    """A form for creating a new report"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the edit report form"""
+        Form.__init__(self, *args, **kwargs)
+        self.report = None
+
+    report_id = HiddenField()
+
+    name = TextField(
+        "Report name",
+        validators=[
+            validators.Required(
+                message="Please give this report a name.",
+            ),
+        ],
+    )
+
+    tags = FieldList(
+        TextField(
+            'Tag',
+            filters=[lambda x: x or None],
+        ),
+        min_entries=5,
+    )
+
+    @classmethod
+    def get_instance(cls):
+        """Return a new class instance of a LocalEditReportForm"""
+        return cls.generate_local_edit_report_form()
+
+    @classmethod
+    def generate_local_edit_report_form(cls):
+        """Dynamically generate a class for the SubmitReportDataForm"""
+        class LocalEditReportForm(EditReportForm):
+            """Local copy of a EditReportForm
+
+            This class represents a dynamic EditReportForm since we don't
+            know what fields are available until runtime. For more info,
+            see LocalSubmitReportDataForm.
+            """
+
+            departments = []
+            def __init__(self, *args, **kwargs):
+                """Initialize the local form"""
+                EditReportForm.__init__(self, *args, **kwargs)
+                self.departments = [
+                    dept for dept in LocalEditReportForm.departments
+                ]
+                LocalEditReportForm.departments = []
+
+            def validate(self):
+                """Validate the form"""
+                if not Form.validate(self):
+                    return False
+
+                self.report = Report.query.get(self.report_id.data)
+
+                report_fields = []
+                for department in self.departments:
+                    multiselect = getattr(self, department.name)
+                    for field_id in multiselect.data:
+                        report_fields.append(Field.query.get(field_id))
+
+                tags = [
+                    Tag.get_or_create(tag) for tag in self.tags.data
+                    if tag and tag.strip() != ''
+                ]
+
+                self.report.name = self.name.data
+                self.report.fields = report_fields
+                self.report.tags = tags
+
+                return True
+
+            @classmethod
+            def add_department(cls, department):
+                """Add the given department to this form dynamically"""
+                cls.departments.append(department)
+                formfield = SelectMultipleField(
+                    department.name,
+                    choices=[
+                        (field.id, field.name) for field in department.fields
+                    ],
+                    coerce=int,
+                    option_widget=widgets.CheckboxInput(),
+                    widget=widgets.ListWidget(prefix_label=False),
+                )
+
+                setattr(cls, department.name, formfield)
+
+        return LocalEditReportForm
+
+
+
