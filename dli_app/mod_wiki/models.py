@@ -4,21 +4,29 @@ Author: Logan Gore
 This file is responsible for defining models that belong in the wiki module.
 """
 
+import datetime
+
 from dli_app import db
 
+from flask_login import (
+    current_user,
+)
 
 class WikiPage(db.Model):
     """Model for a page on the wiki"""
     __tablename__ = 'wiki_page'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
-    content = db.Column(db.Text)
-    # TODO: Add other necessary columns and bookkeeping information
+    content = db.Column(db.String(64))
+    modtime = db.Column(db.String(32))
+    editor = db.Column(db.String(64))
 
     def __init__(self, name, content):
         """Initiialize a WikiPage model"""
         self.name = name
         self.content = content
+        self.modtime = datetime.datetime.now().strftime('%m/%d/%Y %I:%M %p')
+        self.editor = current_user.name
 
     def __repr__(self):
         """Return a descriptive representation of a WikiPage"""
