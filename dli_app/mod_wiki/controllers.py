@@ -38,6 +38,7 @@ from dli_app.mod_wiki.models import (
 
 from dli_app.mod_wiki.forms import (
     EditWikiPageForm,
+    SearchForm,
 )
 
 EXTENSIONS = [
@@ -65,7 +66,8 @@ def home():
     if page is not None:
         html = MD.convert(page.content)
 
-    return render_template('wiki/home.html', html=html)
+    form = SearchForm()
+    return render_template('wiki/home.html', form=form, html=html)
 
 
 @mod_wiki.route('/<page_name>', methods=['GET'])
@@ -139,3 +141,16 @@ def delete_page(page_id):
         db.session.commit()
 
     return redirect(url_for('wiki.home'))
+
+@mod_wiki.route('/search', methods=['POST', 'POST'])
+@mod_wiki.route('/search/', methods=['POST'])
+@login_required
+def search():
+    """Search for a specific wiki with keyword"""
+    form = SearchForm()
+    if form.validate_on_submit():
+        # Show the user the list of results (form.results maybe?)
+        return render_template('wiki/search.html', form=form, results=form.results)
+    else:
+        flash_form_errors(form)
+        return render_template('wiki/home.html', form=form)

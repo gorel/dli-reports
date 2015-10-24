@@ -2,7 +2,6 @@
 {% block body %}
   <div class="page-header">
     <div class="btn-group btn-group-sm pull-right">
-      <a href="{{ url_for('wiki.edit_page', page_name='home') }}" class="btn btn-primary">Edit this page</a>
       <a href="{{ url_for('wiki.edit_page') }}" class="btn btn-success">Create new page</a>
       <form method="POST" action="{{ url_for('wiki.search') }}" class="form-horizontal">
         {{ form.csrf_token }}
@@ -15,8 +14,21 @@
         </div>
       </form>
     </div>
-    <h1>Wiki Home</h1>
+    <h1>Search Results</h1>
   </div>
 
-  {{ html|safe }}
+  <table class="borderless">
+  {% for page in results %}
+    <tr>
+      <td><a href="{{ url_for('wiki.view_page', page_name=page.name) }}">{{ page.name }}</a></td>
+    </tr>
+    {% if page.content|length > 100 %}
+      <tr><td>{{ page.content|truncate(100) }}...</td></tr>
+    {% else %}
+      <tr><td>{{ page.content }}</td></tr>
+    {% endif %}
+    <tr><td><br></td></tr>
+  {% endfor %}
+  </table>
+
 {% endblock %}
