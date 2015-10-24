@@ -17,7 +17,7 @@ class WikiPage(db.Model):
     __tablename__ = 'wiki_page'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
-    content = db.Column(db.String(64))
+    content = db.Column(db.Text)
     modtime = db.Column(db.String(32))
     editor = db.Column(db.String(64))
 
