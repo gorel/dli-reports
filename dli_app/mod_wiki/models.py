@@ -13,12 +13,14 @@ class WikiPage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     content = db.Column(db.Text)
+    views = db.Column(db.Integer, index=True)
     # TODO: Add other necessary columns and bookkeeping information
 
     def __init__(self, name, content):
         """Initiialize a WikiPage model"""
         self.name = name
         self.content = content
+        self.views = 0
 
     def __repr__(self):
         """Return a descriptive representation of a WikiPage"""
