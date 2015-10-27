@@ -397,7 +397,6 @@ class Chart(db.Model):
     @property
     def generated_js(self):
         """Property that represents this chart generated as C3 JavaScript"""
-        # TODO: Display table, too?
         return """
             var chart = c3.generate({{
                 bindto: '#chart',
@@ -418,6 +417,7 @@ class Chart(db.Model):
                     }}
                 }},
                 line: {{
+                    connect_null: false
                 }},
                 bar: {{
                 }},
@@ -505,7 +505,6 @@ class Chart(db.Model):
 
     def get_data_sequences(self):
         """Get the data sequences that represent this chart in C3"""
-        # TODO: No guarantee that field.name is a unique identifier!!!
         data_points = self.data_points
 
         return ', '.join([
@@ -795,7 +794,7 @@ class FieldDataDummy():
     def __init__(self, ds):
         """Initialize the FieldDataDummy"""
         self.ds = ds
-        self.value = 0
+        self.value = 'null'
 
     def __repr__(self):
         """Return a representation of this FieldDataDummy"""
