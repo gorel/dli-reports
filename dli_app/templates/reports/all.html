@@ -38,7 +38,7 @@
 
               <div class="btn-group">
                 <a href="{{ url_for('reports.view_report', report_id=report.id) }}" class="btn btn-info btn-xs">View</a>
-                <a href="{{ url_for('reports.submit_report_data') }}" class="btn btn-default btn-xs">Submit Data</a>
+                <a href="{{ url_for('reports.submit_report_data', report_id=report.id) }}" class="btn btn-default btn-xs">Submit Data</a>
               </div>
             {% else %}
               <form method="POST" action="{{ url_for('reports.unfavorite_report', report_id=report.id) }}">
@@ -53,7 +53,7 @@
 
               <div class="btn-group">
                 <a href="{{ url_for('reports.view_report', report_id=report.id) }}" class="btn btn-info btn-xs">View</a>
-                <a href="{{ url_for('reports.submit_report_data') }}" class="btn btn-default btn-xs">Submit Data</a>
+                <a href="{{ url_for('reports.submit_report_data', report_id=report.id) }}" class="btn btn-default btn-xs">Submit Data</a>
               </div>
             {% endif %}
           </td>

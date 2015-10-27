@@ -10,6 +10,12 @@ from flask import (
     redirect,
     render_template,
     url_for,
+    current_app,
+)
+
+from flask_mail import (
+    Mail,
+    Message,
 )
 
 from flask_login import (
@@ -320,15 +326,29 @@ def edit_users(page_num=1):
         return redirect(url_for('default.home'))
 
     form = AddUserForm()
-    if form.validate_on_submit():
-        # TODO: Send user a registration link to the email
+    if form.validate_on_submit(): 
         db.session.add(form.user)
         db.session.commit()
-        flash(
-            "Sent an invite link to {email}".format(email=form.user.email),
-            "alert-success",
-        )
-        return redirect(url_for('admin.edit_users'))
+        candidate = RegisterCandidate.query.filter_by(email=form.user.email).first()
+        if candidate is not None:
+            key = candidate.registration_key
+            mail = Mail(current_app)
+            title = 'Activate your account'
+            content = 'Please go to the link: '
+            url = '{site}/auth/register/{key}'.format(
+                site='68.234.146.84:PORT',
+                key=key,
+            )
+            sender = 'cs490testing@gmail.com'
+            recipient = candidate.email
+            msg = Message(title, sender=sender, recipients=[recipient])
+            msg.body = content + url
+            mail.send(msg)
+            flash(
+                "Sent an invite link to {email}".format(email=form.user.email),
+                "alert-success",
+            )
+            return redirect(url_for('admin.edit_users'))
     else:
         # Get a list of users
         users = User.query.paginate(page_num)

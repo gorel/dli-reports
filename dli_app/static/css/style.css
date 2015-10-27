@@ -17,3 +17,13 @@ body {
   z-index: 1000;
   width: 400px;
 }
+
+.page-header .header-buttons {
+  margin-top: 13px;
+}
+
+#content_editor {
+  position: relative;
+  width: 100%;
+  height: 400px;
+}

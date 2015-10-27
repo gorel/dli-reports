@@ -4,6 +4,8 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /wiki.
 """
 
+import datetime
+
 from markdown import (
     Markdown,
 )
@@ -24,6 +26,7 @@ from flask import (
 )
 
 from flask_login import (
+    current_user,
     login_required,
 )
 
@@ -67,7 +70,7 @@ def home():
         html = MD.convert(page.content)
 
     form = SearchForm()
-    return render_template('wiki/home.html', form=form, html=html)
+    return render_template('wiki/home.html', form=form, html=html, page=page)
 
 
 @mod_wiki.route('/<page_name>', methods=['GET'])
@@ -98,7 +101,8 @@ def edit_page(page_name=''):
         if page is not None:
             page.name = form.page.name
             page.content = form.page.content
-            # TODO: Additional fields that need to be set here
+            page.modtime = datetime.datetime.now().strftime('%m/%d/%Y %I:%M %p')
+            page.editor = current_user.name
             flash(
                 "WikiPage updated successfully",
                 "alert-success",
