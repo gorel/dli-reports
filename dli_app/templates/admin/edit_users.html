@@ -27,6 +27,7 @@
               <td>{{ user.department.name }}</td>
               <td>
                 <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-xs btn-danger">Delete</button>
                 </form>
             </tr>
@@ -64,6 +65,7 @@
                 <td>{{ candidate.email }}</td>
               <td>
                 <form action="{{ url_for('admin.delete_candidate', candidate_id=candidate.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-xs btn-danger">Delete</button>
                 </form>
             </tr>

@@ -54,12 +54,14 @@
           <td>
             {% if report not in current_user.favorite_reports %}
               <form method="POST" action="{{ url_for('reports.favorite_report', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-success btn-xs">
                   <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Favorite
                 </button>
               </form>
 
               <form method="POST" action="{{ url_for('reports.delete_report', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-danger btn-xs">Delete</button>
               </form>
 
@@ -69,12 +71,14 @@
               </div>
             {% else %}
               <form method="POST" action="{{ url_for('reports.unfavorite_report', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-warning btn-xs">
                   <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Unfavorite
                 </button>
               </form>
 
               <form method="POST" action="{{ url_for('reports.delete_report', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-danger btn-xs">Delete</button>
               </form>
 
