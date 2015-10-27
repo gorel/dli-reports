@@ -33,11 +33,12 @@ class EditWikiPageForm(Form):
 
     def validate(self):
         """Validate the form"""
+        res = True
         if not Form.validate(self):
-            return False
+            res = False
 
         self.page = WikiPage(name=self.name.data, content=self.content.data)
-        return True
+        return res
 
 
     name = TextField(

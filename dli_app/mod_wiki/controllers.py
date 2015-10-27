@@ -63,14 +63,14 @@ mod_wiki = Blueprint('wiki', __name__, url_prefix='/wiki')
 @mod_wiki.route('/home/', methods=['GET'])
 def home():
     """Render the wiki homepage"""
+    pages = WikiPage.query.order_by(WikiPage.views.desc()).limit(10).all()
     page = WikiPage.query.filter_by(name='home').first()
     html = ''
-
     if page is not None:
         html = MD.convert(page.content)
 
     form = SearchForm()
-    return render_template('wiki/home.html', form=form, html=html, page=page)
+    return render_template('wiki/home.html', form=form, html=html, page=page, pages=pages)
 
 
 @mod_wiki.route('/<page_name>', methods=['GET'])
@@ -80,7 +80,8 @@ def view_page(page_name):
     page = WikiPage.query.filter_by(name=page_name).first()
     if page is None:
         return render_template('wiki/404.html'), 404
-
+    page.views += 1
+    db.session.commit()
     html = MD.convert(page.content)
     return render_template('wiki/view.html', page=page, html=html, toc=MD.toc)
 

@@ -17,6 +17,13 @@
     </div>
     <h1>Wiki Home</h1>
   </div>
-
+  <h2>Most Visited Pages</h2>
+  <table>
+    {% for page in pages %}
+      <tr><td>
+        <a href="{{ url_for('wiki.view_page',page_name=page.name) }}">{{page.name}}</a>
+      </td></tr>
+    {% endfor %}
+  </table>
   {{ html|safe }}
 {% endblock %}

@@ -20,6 +20,7 @@ class WikiPage(db.Model):
     content = db.Column(db.Text)
     modtime = db.Column(db.String(32))
     editor = db.Column(db.String(64))
+    views = db.Column(db.Integer, index=True)
 
     def __init__(self, name, content):
         """Initiialize a WikiPage model"""
@@ -27,6 +28,7 @@ class WikiPage(db.Model):
         self.content = content
         self.modtime = datetime.datetime.now().strftime('%m/%d/%Y %I:%M %p')
         self.editor = current_user.name
+        self.views = 0
 
     def __repr__(self):
         """Return a descriptive representation of a WikiPage"""
