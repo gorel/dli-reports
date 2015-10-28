@@ -10,6 +10,12 @@ from flask import (
     redirect,
     render_template,
     url_for,
+    current_app,
+)
+
+from flask_mail import (
+    Mail,
+    Message,
 )
 
 from flask_login import (
@@ -49,6 +55,8 @@ mod_admin = Blueprint('admin', __name__, url_prefix='/admin')
 
 
 # Set all routing for the module
+@mod_admin.route('/', methods=['GET'])
+@mod_admin.route('/home', methods=['GET'])
 @mod_admin.route('/home/', methods=['GET'])
 @login_required
 def home():
@@ -68,6 +76,7 @@ def home():
     return render_template('admin/home.html')
 
 
+@mod_admin.route('/edit_locations', methods=['GET', 'POST'])
 @mod_admin.route('/edit_locations/', methods=['GET', 'POST'])
 @login_required
 def edit_locations():
@@ -109,6 +118,7 @@ def edit_locations():
         )
 
 
+@mod_admin.route('/edit_locations/delete/<int:loc_id>', methods=['POST'])
 @mod_admin.route('/edit_locations/delete/<int:loc_id>/', methods=['POST'])
 @login_required
 def delete_location(loc_id):
@@ -140,6 +150,7 @@ def delete_location(loc_id):
 
 
 
+@mod_admin.route('/edit_departments', methods=['GET', 'POST'])
 @mod_admin.route('/edit_departments/', methods=['GET', 'POST'])
 @login_required
 def edit_departments():
@@ -181,6 +192,7 @@ def edit_departments():
         )
 
 
+@mod_admin.route('/edit_departments/delete/<int:dept_id>', methods=['POST'])
 @mod_admin.route('/edit_departments/delete/<int:dept_id>/', methods=['POST'])
 @login_required
 def delete_department(dept_id):
@@ -211,6 +223,7 @@ def delete_department(dept_id):
     return redirect(url_for('admin.edit_departments'))
 
 
+@mod_admin.route('/edit_fields', methods=['GET', 'POST'])
 @mod_admin.route('/edit_fields/', methods=['GET', 'POST'])
 @login_required
 def edit_fields():
@@ -256,10 +269,11 @@ def edit_fields():
         return render_template(
             'admin/edit_fields.html',
             form=form,
-            dept_fields=Department.get_dept_field_map(),
+            departments=Department.query.all(),
         )
 
 
+@mod_admin.route('/edit_fields/delete/<int:field_id>', methods=['POST'])
 @mod_admin.route('/edit_fields/delete/<int:field_id>/', methods=['POST'])
 @login_required
 def delete_field(field_id):
@@ -290,9 +304,11 @@ def delete_field(field_id):
     return redirect(url_for('admin.edit_fields'))
 
 
+@mod_admin.route('/edit_users', methods=['GET', 'POST'])
 @mod_admin.route('/edit_users/', methods=['GET', 'POST'])
+@mod_admin.route('/edit_users/<int:page_num>', methods=['GET', 'POST'])
 @login_required
-def edit_users():
+def edit_users(page_num=1):
     """Render the user editing page
 
     First perform a check to ensure the user is an admin.
@@ -310,18 +326,32 @@ def edit_users():
         return redirect(url_for('default.home'))
 
     form = AddUserForm()
-    if form.validate_on_submit():
-        # TODO: Send user a registration link to the email
+    if form.validate_on_submit(): 
         db.session.add(form.user)
         db.session.commit()
-        flash(
-            "Sent an invite link to {email}".format(email=form.user.email),
-            "alert-success",
-        )
-        return redirect(url_for('admin.edit_users'))
+        candidate = RegisterCandidate.query.filter_by(email=form.user.email).first()
+        if candidate is not None:
+            key = candidate.registration_key
+            mail = Mail(current_app)
+            title = 'Activate your account'
+            content = 'Please go to the link: '
+            url = '{site}/auth/register/{key}'.format(
+                site='68.234.146.84:PORT',
+                key=key,
+            )
+            sender = 'cs490testing@gmail.com'
+            recipient = candidate.email
+            msg = Message(title, sender=sender, recipients=[recipient])
+            msg.body = content + url
+            mail.send(msg)
+            flash(
+                "Sent an invite link to {email}".format(email=form.user.email),
+                "alert-success",
+            )
+            return redirect(url_for('admin.edit_users'))
     else:
         # Get a list of users
-        users = User.query.all()
+        users = User.query.paginate(page_num)
         candidates = RegisterCandidate.query.all()
 
         flash_form_errors(form)
@@ -333,6 +363,7 @@ def edit_users():
         )
 
 
+@mod_admin.route('/edit_users/delete/<int:user_id>', methods=['POST'])
 @mod_admin.route('/edit_users/delete/<int:user_id>/', methods=['POST'])
 @login_required
 def delete_user(user_id):
@@ -377,10 +408,8 @@ def delete_user(user_id):
     return redirect(url_for('admin.edit_users'))
 
 
-@mod_admin.route(
-    '/edit_users/delete_candidate/<int:candidate_id>/',
-    methods=['POST'],
-)
+@mod_admin.route('/edit_users/delete_candidate/<int:candidate_id>', methods=['POST'])
+@mod_admin.route('/edit_users/delete_candidate/<int:candidate_id>/', methods=['POST'])
 @login_required
 def delete_candidate(candidate_id):
     """Delete a RegisterCandidate

@@ -130,6 +130,7 @@ def populate_db_fields():
     """
 
     from dli_app.mod_reports.models import FieldTypeConstants
+    FieldTypeConstants.reload()
 
     ad = Department.query.filter_by(name='Account Development').first()
     comp = Department.query.filter_by(name='Composition').first()

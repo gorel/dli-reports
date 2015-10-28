@@ -35,7 +35,8 @@ from dli_app.mod_auth.forms import (
 
 # Import models
 from dli_app.mod_auth.models import (
-    Location, 
+    Department,
+    Location,
     PasswordReset,
     User,
 )
@@ -50,6 +51,7 @@ mod_auth = Blueprint('auth', __name__, url_prefix='/auth')
 
 
 # Set all routing for the module
+@mod_auth.route('/register/<registration_key>', methods=['GET', 'POST'])
 @mod_auth.route('/register/<registration_key>/', methods=['GET', 'POST'])
 def register(registration_key):
     """Register a new user
@@ -62,6 +64,13 @@ def register(registration_key):
     """
 
     form = RegistrationForm()
+    form.registration_key.data = registration_key
+    form.location.choices = [
+        (location.id, location.name) for location in Location.query.all()
+    ]
+    form.department.choices = [
+        (department.id, department.name) for department in Department.query.all()
+    ]
     if form.validate_on_submit():
         db.session.add(form.user)
         db.session.commit()
@@ -71,15 +80,11 @@ def register(registration_key):
         flash("You have created a new account at DLI-Reports", "alert-success")
         return redirect(request.args.get('next') or url_for('default.home'))
     else:
-        form.registration_key.data = registration_key
-        form.location.choices = [
-            (location.id, location.name) for location in Location.query.all()
-        ]
-
         flash_form_errors(form)
-        return render_template('auth/register.html', form=form)
+        return render_template('auth/register.html', form=form, registration_key=registration_key)
 
 
+@mod_auth.route('/login', methods=['GET', 'POST'])
 @mod_auth.route('/login/', methods=['GET', 'POST'])
 def login():
     """Login the user
@@ -99,6 +104,7 @@ def login():
         return render_template('auth/login.html', form=form)
 
 
+@mod_auth.route('/logout', methods=['POST'])
 @mod_auth.route('/logout/', methods=['POST'])
 def logout():
     """Log the user out of their account
@@ -114,11 +120,12 @@ def logout():
     flash('You have successfully logged out.', 'alert-success')
     return redirect(url_for('default.home'))
 
+@mod_auth.route('/resetpass', methods=['GET', 'POST'])
 @mod_auth.route('/resetpass/', methods=['GET', 'POST'])
 def resetpass():
     """Reset the user's password
 
-    If the user successfully submitted the form, send a password 
+    If the user successfully submitted the form, send a password
     reset email. Otherwise, render the reset form again.
     """
 
@@ -147,6 +154,7 @@ def resetpass():
 
 
 @mod_auth.route('/setnewpass/<reset_key>', methods=['GET', 'POST'])
+@mod_auth.route('/setnewpass/<reset_key>/', methods=['GET', 'POST'])
 def setnewpass(reset_key):
     """Set the user's new password
 

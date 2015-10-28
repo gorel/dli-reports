@@ -365,8 +365,9 @@ class SubmitReportDataForm(Form):
 
             def validate(self):
                 """Validate the form"""
+                res = True
                 if not Form.validate(self):
-                    return False
+                    res = False
 
                 for field in self.instance_fields:
                     formfield = getattr(self, field.name)
@@ -386,7 +387,7 @@ class SubmitReportDataForm(Form):
                         )
                         self.data_points.append(data_point)
 
-                return True
+                return res
 
             @classmethod
             def add_field(cls, field):

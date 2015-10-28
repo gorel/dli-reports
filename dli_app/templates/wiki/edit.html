@@ -4,8 +4,8 @@
     <h1>Add/Edit Wiki Page</h1>
   </div>
 
-  <div class="col-md-6">
-    <form name="editform" method="POST" onsubmit="return editPageLink()" class="form-horizontal">
+  <div class="col-md-8">
+    <form name="editform" method="POST" class="form-horizontal">
       {{ form.csrf_token }}
       <div class="form-group">
         {{ form.name.label(class='control-label col-sm-2') }}
@@ -16,7 +16,8 @@
       <div class="form-group">
         {{ form.content.label(class='control-label col-sm-2') }}
         <div class="col-sm-10">
-          {{ form.content(class='form-control') }}
+          {{ form.content(class='form-control', id='content_textarea') }}
+          <div id="content_editor"></div>
         </div>
       </div>
 
@@ -28,9 +29,17 @@
       </div>
     </form>
 
+    <script src="{{ url_for('static', filename='js/ace/ace.js') }}" charset="utf-8"></script>
+    <script src="{{ url_for('static', filename='js/ace/mode-markdown.js') }}" charset="utf-8"></script>
     <script>
-    function editPageLink() {
-      return true;
-    }
+    var editor = ace.edit('content_editor');
+    var textarea = $('textarea[id=content_textarea]').hide();
+    var MarkdownMode = ace.require("ace/mode/markdown").Mode;
+    editor.$blockScrolling = Infinity;
+    editor.getSession().setValue(textarea.val());
+    editor.session.setMode(new MarkdownMode());
+    editor.getSession().on('change', function(){
+      textarea.val(editor.getSession().getValue());
+    });
     </script>
 {% endblock %}

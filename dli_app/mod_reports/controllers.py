@@ -37,6 +37,7 @@ from dli_app.mod_reports.models import (
     ChartType,
     ChartDateType,
     Report,
+    Field
 )
 
 # Import forms
@@ -53,23 +54,30 @@ mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 
 
 # Set all routing for the module
+@mod_reports.route('/me', methods=['GET'])
 @mod_reports.route('/me/', methods=['GET'])
+@mod_reports.route('/me/<int:page_num>', methods=['GET'])
 @login_required
-def my_reports():
+def my_reports(page_num=1):
     """Show the user all of their reports"""
     # Download reports that belong to the current user
-    reports = Report.query.filter_by(user_id=current_user.id).all()
+    reports = Report.query.filter_by(
+        user_id=current_user.id,
+    ).paginate(page_num)
     return render_template('reports/me.html', reports=reports)
 
 
+@mod_reports.route('/all', methods=['GET'])
 @mod_reports.route('/all/', methods=['GET'])
+@mod_reports.route('/all/<int:page_num>', methods=['GET'])
 @login_required
-def all_reports():
+def all_reports(page_num=1):
     """Show the user all reports (made by anyone"""
-    reports = Report.query.all()
+    reports = Report.query.paginate(page_num)
     return render_template('reports/all.html', reports=reports)
 
 
+@mod_reports.route('/favorite/<int:report_id>', methods=['POST'])
 @mod_reports.route('/favorite/<int:report_id>/', methods=['POST'])
 @login_required
 def favorite_report(report_id):
@@ -90,6 +98,7 @@ def favorite_report(report_id):
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
 
+@mod_reports.route('/unfavorite/<int:report_id>', methods=['POST'])
 @mod_reports.route('/unfavorite/<int:report_id>/', methods=['POST'])
 @login_required
 def unfavorite_report(report_id):
@@ -104,12 +113,15 @@ def unfavorite_report(report_id):
         current_user.unfavorite(report)
         db.session.commit()
         flash(
-            "Added Report: {name} to favorites list".format(name=report.name),
+            "Removed Report: {name} from favorites list".format(
+                name=report.name,
+            ),
             "alert-success",
         )
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
 
+@mod_reports.route('/create', methods=['GET', 'POST'])
 @mod_reports.route('/create/', methods=['GET', 'POST'])
 @login_required
 def create_report():
@@ -137,10 +149,11 @@ def create_report():
         return render_template('reports/create.html', form=form)
 
 
-@mod_reports.route('/data/', methods=['GET', 'POST'])
-@mod_reports.route('/data/<ds>/<int:dept_id>', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/<ds>/<int:dept_id>', methods=['GET', 'POST'])
 @login_required
-def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
+def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
     """Submit new report data
 
     If the user successfully submitted the form, submit all of the report
@@ -155,10 +168,13 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
         return redirect(
             url_for(
                 'reports.submit_report_data',
+                report_id=report_id,
                 ds=change_form.ds,
                 dept_id=change_form.dept_id,
             )
         )
+
+    report = Report.query.get(report_id)
 
     # We must generate the dynamic form before loading it
     if dept_id is None:
@@ -170,12 +186,13 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
             "No department with that ID found.",
             "alert-warning",
         )
-        return redirect(url_for('reports.submit_report_data'))
+        return redirect(url_for('reports.submit_report_data', report_id=report_id))
 
     LocalSubmitReportDataForm = SubmitReportDataForm.get_instance()
 
-    for field in department.fields:
-        LocalSubmitReportDataForm.add_field(field)
+    for field in report.fields:
+        if field.department_id == dept_id:
+            LocalSubmitReportDataForm.add_field(field)
 
     # *Now* the form is properly initialized
     form = LocalSubmitReportDataForm()
@@ -220,11 +237,13 @@ def submit_report_data(ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
             'reports/submit_data.html',
             change_form=change_form,
             form=form,
+            report=report,
             department=department,
             ds=ds,
         )
 
 
+@mod_reports.route('/view/<int:report_id>', methods=['GET', 'POST'])
 @mod_reports.route('/view/<int:report_id>/', methods=['GET', 'POST'])
 @mod_reports.route('/view/<int:report_id>/<ds>/', methods=['GET', 'POST'])
 @login_required
@@ -254,6 +273,7 @@ def view_report(report_id, ds=datetime.now().strftime('%Y-%m-%d')):
         ds=ds,
     )
 
+@mod_reports.route('/download/<int:report_id>/<ds>', methods=['GET'])
 @mod_reports.route('/download/<int:report_id>/<ds>/', methods=['GET'])
 @login_required
 def download_report(report_id, ds):
@@ -274,6 +294,7 @@ def download_report(report_id, ds):
 
 
 @mod_reports.route('/delete/<int:report_id>', methods=['POST'])
+@mod_reports.route('/delete/<int:report_id>/', methods=['POST'])
 @login_required
 def delete_report(report_id):
     """Delete the specified report"""

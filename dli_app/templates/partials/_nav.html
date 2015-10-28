@@ -14,6 +14,7 @@
       {% if current_user.is_active %}
         <li><a href="{{ url_for('reports.my_reports') }}">Reports</a></li>
         <li><a href="{{ url_for('reports.my_charts') }}">Charts</a></li>
+        <li><a href="{{ url_for('account.home') }}">My Account</a></li>
       {% endif %}
       {% if current_user.is_admin %}
         <li><a href="{{ url_for('admin.home') }}">Admin</a></li>
@@ -23,6 +24,7 @@
 
       {% if current_user.is_active %}
         <form method="POST" action="{{ url_for('auth.logout') }}" class="navbar-form navbar-right">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-link" type="submit">Log Out</button>
         </form>
         <ul class="nav navbar-right">

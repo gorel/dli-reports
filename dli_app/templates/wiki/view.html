@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <div class="btn-group btn-group-sm pull-right">
+    <div class="btn-group btn-group-sm pull-right header-buttons">
       <a href="{{ url_for('wiki.edit_page', page_name=page.name) }}" class="btn btn-primary">Edit this page</a>
       <a href="{{ url_for('wiki.edit_page') }}" class="btn btn-success">Create new page</a>
     </div>
@@ -9,6 +9,7 @@
   </div>
   <div class="pull-right">
     <form action="{{ url_for('wiki.delete_page', page_id=page.id) }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="btn btn-xs btn-danger">Delete this page</button>
     </form>
   </div>
@@ -18,4 +19,6 @@
   <hr>
 
   {{ html|safe }}
+
+  <small>Last modified: {{ page.modtime }} by {{ page.editor }}</small>
 {% endblock %}

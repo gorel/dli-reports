@@ -4,6 +4,8 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /wiki.
 """
 
+import datetime
+
 from markdown import (
     Markdown,
 )
@@ -24,6 +26,7 @@ from flask import (
 )
 
 from flask_login import (
+    current_user,
     login_required,
 )
 
@@ -38,6 +41,7 @@ from dli_app.mod_wiki.models import (
 
 from dli_app.mod_wiki.forms import (
     EditWikiPageForm,
+    SearchForm,
 )
 
 EXTENSIONS = [
@@ -55,29 +59,34 @@ mod_wiki = Blueprint('wiki', __name__, url_prefix='/wiki')
 
 # Set all routing for the module
 @mod_wiki.route('/', methods=['GET'])
+@mod_wiki.route('/home', methods=['GET'])
 @mod_wiki.route('/home/', methods=['GET'])
 def home():
     """Render the wiki homepage"""
+    pages = WikiPage.query.order_by(WikiPage.views.desc()).limit(10).all()
     page = WikiPage.query.filter_by(name='home').first()
     html = ''
-
     if page is not None:
         html = MD.convert(page.content)
 
-    return render_template('wiki/home.html', html=html)
+    form = SearchForm()
+    return render_template('wiki/home.html', form=form, html=html, page=page, pages=pages)
 
 
+@mod_wiki.route('/<page_name>', methods=['GET'])
 @mod_wiki.route('/<page_name>/', methods=['GET'])
 def view_page(page_name):
     """ Render a specific page of the wiki"""
     page = WikiPage.query.filter_by(name=page_name).first()
     if page is None:
         return render_template('wiki/404.html'), 404
-
+    page.views += 1
+    db.session.commit()
     html = MD.convert(page.content)
     return render_template('wiki/view.html', page=page, html=html, toc=MD.toc)
 
 
+@mod_wiki.route('/edit', methods=['GET', 'POST'])
 @mod_wiki.route('/edit/', methods=['GET', 'POST'])
 @mod_wiki.route('/edit/<page_name>/', methods=['GET', 'POST'])
 @login_required
@@ -93,7 +102,8 @@ def edit_page(page_name=''):
         if page is not None:
             page.name = form.page.name
             page.content = form.page.content
-            # TODO: Additional fields that need to be set here
+            page.modtime = datetime.datetime.now().strftime('%m/%d/%Y %I:%M %p')
+            page.editor = current_user.name
             flash(
                 "WikiPage updated successfully",
                 "alert-success",
@@ -116,6 +126,7 @@ def edit_page(page_name=''):
         return render_template('wiki/edit.html', form=form)
 
 
+@mod_wiki.route('/delete/<int:page_id>', methods=['POST'])
 @mod_wiki.route('/delete/<int:page_id>/', methods=['POST'])
 @login_required
 def delete_page(page_id):
@@ -135,3 +146,16 @@ def delete_page(page_id):
         db.session.commit()
 
     return redirect(url_for('wiki.home'))
+
+@mod_wiki.route('/search', methods=['POST', 'POST'])
+@mod_wiki.route('/search/', methods=['POST'])
+@login_required
+def search():
+    """Search for a specific wiki with keyword"""
+    form = SearchForm()
+    if form.validate_on_submit():
+        # Show the user the list of results (form.results maybe?)
+        return render_template('wiki/search.html', form=form, results=form.results)
+    else:
+        flash_form_errors(form)
+        return render_template('wiki/home.html', form=form)
