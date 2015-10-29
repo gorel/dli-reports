@@ -205,6 +205,11 @@ class LoginForm(Form):
 class ForgotForm(Form):
     """A form for recovering an account with a forgotten password"""
 
+    def __init__(self, *args, **kwargs):
+        """Initialize a ForgotForm"""
+        Form.__init__(self, *args, **kwargs)
+        self.user = None
+
     def validate(self):
         """Validate the form
 

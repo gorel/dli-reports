@@ -19,6 +19,7 @@ from werkzeug.security import (
 from dli_app import db, login_manager
 
 from dli_app.mod_reports.models import (
+    Chart,
     Field,
     Report,
 )
@@ -27,6 +28,13 @@ from dli_app.mod_reports.models import (
 report_users = db.Table(
     'report_users',
     db.Column('report_id', db.Integer, db.ForeignKey('report.id')),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+)
+
+
+chart_users = db.Table(
+    'chart_users',
+    db.Column('chart_id', db.Integer, db.ForeignKey('chart.id')),
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
 )
 
@@ -78,9 +86,18 @@ class User(db.Model):
         "Report",
         backref="user",
     )
+    charts = db.relationship(
+        "Chart",
+        backref="user",
+    )
     favorite_reports = db.relationship(
         'Report',
         secondary=report_users,
+        backref='favorite_users',
+    )
+    favorite_charts = db.relationship(
+        'Chart',
+        secondary=chart_users,
         backref='favorite_users',
     )
 
@@ -141,6 +158,16 @@ class User(db.Model):
         """Remove a report from the user's list of favorite reports"""
         if report in self.favorite_reports:
             self.favorite_reports.remove(report)
+
+    def favorite_chart(self, chart):
+        """Add a chart to the user's list of favorite charts"""
+        if chart not in self.favorite_charts:
+            self.favorite_charts.append(chart)
+
+    def unfavorite_chart(self, chart):
+        """Remove a chart from the user's list of favorite charts"""
+        if chart in self.favorite_charts:
+            self.favorite_charts.remove(chart)
 
     def __repr__(self):
         """Return a descriptive representation of a User"""
