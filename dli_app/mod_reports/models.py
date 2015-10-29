@@ -717,6 +717,15 @@ class FieldTypeConstants():
         self.STRING = FieldType.query.filter_by(name="string").first()
         self.TIME = FieldType.query.filter_by(name="time").first()
 
+    @classmethod
+    def reload(cls):
+        """Reload the class constants"""
+        cls.CURRENCY = FieldType.query.filter_by(name="currency").first()
+        cls.DOUBLE = FieldType.query.filter_by(name="double").first()
+        cls.INTEGER = FieldType.query.filter_by(name="integer").first()
+        cls.STRING = FieldType.query.filter_by(name="string").first()
+        cls.TIME = FieldType.query.filter_by(name="time").first()
+
 
 class ChartTypeConstants():
     """Constant ChartTypes used for easy type-checking in other modules"""
@@ -802,12 +811,3 @@ class FieldDataDummy():
     @property
     def pretty_value(self):
         return 'No data submitted on this date'
-
-    @classmethod
-    def reload(cls):
-        """Reload the class constants"""
-        cls.CURRENCY = FieldType.query.filter_by(name="currency").first()
-        cls.DOUBLE = FieldType.query.filter_by(name="double").first()
-        cls.INTEGER = FieldType.query.filter_by(name="integer").first()
-        cls.STRING = FieldType.query.filter_by(name="string").first()
-        cls.TIME = FieldType.query.filter_by(name="time").first()
