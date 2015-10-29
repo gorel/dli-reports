@@ -23,6 +23,7 @@
 
       {% if current_user.is_active %}
         <form method="POST" action="{{ url_for('auth.logout') }}" class="navbar-form navbar-right">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-link" type="submit">Log Out</button>
         </form>
         <ul class="nav navbar-right">

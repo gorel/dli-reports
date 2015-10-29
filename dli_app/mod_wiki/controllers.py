@@ -41,6 +41,7 @@ from dli_app.mod_wiki.models import (
 
 from dli_app.mod_wiki.forms import (
     EditWikiPageForm,
+    SearchForm,
 )
 
 EXTENSIONS = [
@@ -62,13 +63,14 @@ mod_wiki = Blueprint('wiki', __name__, url_prefix='/wiki')
 @mod_wiki.route('/home/', methods=['GET'])
 def home():
     """Render the wiki homepage"""
+    pages = WikiPage.query.order_by(WikiPage.views.desc()).limit(10).all()
     page = WikiPage.query.filter_by(name='home').first()
     html = ''
-
     if page is not None:
         html = MD.convert(page.content)
 
-    return render_template('wiki/home.html', html=html, page=page)
+    form = SearchForm()
+    return render_template('wiki/home.html', form=form, html=html, page=page, pages=pages)
 
 
 @mod_wiki.route('/<page_name>', methods=['GET'])
@@ -78,7 +80,8 @@ def view_page(page_name):
     page = WikiPage.query.filter_by(name=page_name).first()
     if page is None:
         return render_template('wiki/404.html'), 404
-
+    page.views += 1
+    db.session.commit()
     html = MD.convert(page.content)
     return render_template('wiki/view.html', page=page, html=html, toc=MD.toc)
 
@@ -143,3 +146,16 @@ def delete_page(page_id):
         db.session.commit()
 
     return redirect(url_for('wiki.home'))
+
+@mod_wiki.route('/search', methods=['POST', 'POST'])
+@mod_wiki.route('/search/', methods=['POST'])
+@login_required
+def search():
+    """Search for a specific wiki with keyword"""
+    form = SearchForm()
+    if form.validate_on_submit():
+        # Show the user the list of results (form.results maybe?)
+        return render_template('wiki/search.html', form=form, results=form.results)
+    else:
+        flash_form_errors(form)
+        return render_template('wiki/home.html', form=form)

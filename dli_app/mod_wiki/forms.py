@@ -8,6 +8,10 @@ from flask_wtf import (
     Form,
 )
 
+from sqlalchemy import (
+    or_,
+)
+
 from wtforms import (
     TextAreaField,
     TextField,
@@ -29,11 +33,12 @@ class EditWikiPageForm(Form):
 
     def validate(self):
         """Validate the form"""
+        res = True
         if not Form.validate(self):
-            return False
+            res = False
 
         self.page = WikiPage(name=self.name.data, content=self.content.data)
-        return True
+        return res
 
 
     name = TextField(
@@ -50,6 +55,39 @@ class EditWikiPageForm(Form):
         validators=[
             validators.Required(
                 message="Please enter the content for this Wiki Page",
+            ),
+        ],
+    )
+
+
+class SearchForm(Form):
+    """A form for searching WikiPages"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the SearchForm form"""
+        Form.__init__(self, *args, **kwargs)
+        self.results = []
+
+    def validate(self):
+        """Validate the form"""
+	res = True
+        if not Form.validate(self):
+	    res = False
+
+	query = '%{}%'.format(self.search_box.data)
+	self.results = WikiPage.query.filter(or_(
+	    WikiPage.name.like(query),
+	    WikiPage.content.like(query)
+	)).all()
+
+        return res
+
+
+    search_box = TextField(
+        "Wiki Search",
+        validators=[
+            validators.Required(
+                message="You must enter at least one keyword.",
             ),
         ],
     )

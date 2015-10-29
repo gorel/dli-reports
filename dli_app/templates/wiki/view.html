@@ -9,6 +9,7 @@
   </div>
   <div class="pull-right">
     <form action="{{ url_for('wiki.delete_page', page_id=page.id) }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="btn btn-xs btn-danger">Delete this page</button>
     </form>
   </div>
