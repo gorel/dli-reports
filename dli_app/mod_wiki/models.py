@@ -27,7 +27,10 @@ class WikiPage(db.Model):
         self.name = name
         self.content = content
         self.modtime = datetime.datetime.now().strftime('%m/%d/%Y %I:%M %p')
-        self.editor = current_user.name
+        if current_user:
+            self.editor = current_user.name
+        else:
+            self.editor = 'DLI'
         self.views = 0
 
     def __repr__(self):
