@@ -42,6 +42,7 @@ from dli_app.mod_wiki.models import (
 from dli_app.mod_wiki.forms import (
     EditWikiPageForm,
     SearchForm,
+    AskQuestionForm,
 )
 
 EXTENSIONS = [
@@ -159,3 +160,20 @@ def search():
     else:
         flash_form_errors(form)
         return render_template('wiki/home.html', form=form)
+
+@mod_wiki.route('/question', methods=['GET', 'POST'])
+@mod_wiki.route('/question/', methods=['GET', 'POST'])
+def question():
+    """ Email administrators"""
+    form = AskQuestionForm()
+    if form.validate_on_submit():
+        # Send email to administrators
+        #TODO: GET ALLL ADMINISTRATORS' EMAILS.
+        flash(
+            "Email Sent!",
+            "alert-success",
+        )
+        return render_template('wiki/question.html',form=form)
+    else:
+        flash_form_errors(form)
+        return render_template('wiki/question.html', form=form)

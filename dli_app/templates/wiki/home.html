@@ -4,6 +4,7 @@
     <div class="btn-group btn-group-sm pull-right header-buttons">
       <a href="{{ url_for('wiki.edit_page', page_name='home') }}" class="btn btn-primary">Edit this page</a>
       <a href="{{ url_for('wiki.edit_page') }}" class="btn btn-success">Create new page</a>
+      <a href="{{ url_for('wiki.edit_page', page_name='home') }}" class="btn btn-info">Question</a>
       <form method="POST" action="{{ url_for('wiki.search') }}" class="form-horizontal">
         {{ form.csrf_token }}
         <div class="form-group">
