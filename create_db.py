@@ -1274,7 +1274,9 @@ def populate_db_charts():
             with_table=False,
             ctype=ChartTypeConstants.PIE,
             cdtype=ChartDateTypeConstants.TODAY,
-            fields=Field.query.filter(Field.name.like('Orders on Press%')).all(),
+            fields=Field.query.filter(
+                Field.name.like('Orders on Press%')).filter(
+                ~Field.name.like('%Status')).all(),
             tags=Tag.query.all(),
         ),
     ]
