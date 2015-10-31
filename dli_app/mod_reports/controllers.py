@@ -332,6 +332,7 @@ def delete_report(report_id):
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
 
+<<<<<<< Updated upstream
 @mod_reports.route('/charts', methods=['GET'])
 @mod_reports.route('/charts/', methods=['GET'])
 @mod_reports.route('/charts/me', methods=['GET'])
@@ -477,4 +478,12 @@ def delete_chart(chart_id):
             db.session.delete(chart)
             db.session.commit()
             flash("Chart deleted", "alert-success")
-    return redirect(request.args.get('next') or url_for('reports.my_charts'))
+    return redirect(request.args.get('next') or url_for('reports.my_charts')
+
+@mod_reports.route('/predict', methods=['GET'])
+@mod_reports.route('/predict/', methods=['GET'])
+def predict():
+    one_month_ago = datetime.date.today() - datetime.timedelta(days=30)
+    one_month_ago = one_month_ago.strftime('%Y-%m-%d')
+    field_data = FieldData.query.filter(FieldData.ds>=one_month_ago).order_by(FieldData.ds.desc()).all() 
+    #TODO: Do prediction things here
