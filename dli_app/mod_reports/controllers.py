@@ -495,7 +495,7 @@ def edit_report(report_id):
         )
     elif not current_user.is_admin and not report.user.id == current_user.id:
         flash(
-            "You don't have permission to edit that.",
+            "You don't have permission to edit that. Contact the report owner.",
             "alert-warning",
         )
     else:
