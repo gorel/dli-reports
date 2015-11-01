@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <div class="page-header">
+    <h1>Search Results</h1>
+  </div>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Tags</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for report in reports %}
+        <tr>
+          <td>{{ report.id }}</td>
+          <td>{{ report.name }}</td>
+          <td>{{ ', '.join(report.tagnames) }}</td>
+          <td><a href="{{ url_for('reports.view_report', report_id=report.id) }}" class="btn btn-info btn-xs">View</a></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %}
