@@ -184,12 +184,9 @@ def question():
         content = form.content.data
         sender = 'cs490testing@gmail.com'
         msg = Message(emailtitle, sender=sender, recipients=users, reply_to=form.email.data)
-        msg.body = 'A new question was asked concerning the online DLI policies Wiki. Please reply this email to answer the question\n' + content
+        msg.body = 'A new question was asked concerning the online DLI policies Wiki. Please reply to this email to answer the question\n' + content
         mail.send(msg)
-        flash(
-            "Email Sent!",
-            "alert-success",
-        )
+        flash("Email Sent!", "alert-success")
         return redirect(url_for('wiki.home'))
     else:
         flash_form_errors(form)
