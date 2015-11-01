@@ -47,6 +47,7 @@ from dli_app.mod_reports.forms import (
     CreateChartForm,
     CreateReportForm,
     SubmitReportDataForm,
+    EditReportForm,
 )
 
 # Create a blueprint for this module
@@ -330,6 +331,43 @@ def delete_report(report_id):
                 "alert-success",
             )
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
+
+
+@mod_reports.route('/edit/<int:report_id>', methods=['GET','POST'])
+@mod_reports.route('/edit/<int:report_id>/', methods=['GET','POST'])
+@login_required
+def edit_report(report_id):
+    """Edit the specified report"""
+    report = Report.query.get(report_id)
+    if report is None:
+        flash(
+            "Report not found!",
+            "alert-warning",
+        )
+    elif not current_user.is_admin and not report.user.id == current_user.id:
+        flash(
+            "You don't have permission to edit that.",
+            "alert-warning",
+        )
+    else:
+        LocalEditReportForm = EditReportForm.get_instance()
+        for department in Department.query.all():
+            LocalEditReportForm.add_department(department)
+
+        form = LocalEditReportForm()
+        if form.validate_on_submit():
+            flash('Report: {name} has been updated'.format(name=form.report.name), 'alert-success')
+            db.session.commit()
+
+            return redirect(url_for('reports.my_reports'))
+        else:
+            flash_form_errors(form)
+            form.name.data = report.name
+            form.report_id.data = report_id
+            for department in Department.query.all():
+                set_fields = [field for field in report.fields if field.department.id == department.id]
+                getattr(form, department.name).data = [f.id for f in set_fields]
+            return render_template('reports/edit.html', form=form, report=report)
 
 
 @mod_reports.route('/charts', methods=['GET'])
