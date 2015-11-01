@@ -183,9 +183,8 @@ def question():
         emailtitle = form.emailtitle.data
         content = form.content.data
         sender = 'cs490testing@gmail.com'
-        senderinfo = '\nPlease reply to the following email address: ' + form.email.data
         msg = Message(emailtitle, sender=sender, recipients=users, reply_to=form.email.data)
-        msg.body = content + senderinfo
+        msg.body = 'A new question was asked concerning the online DLI policies Wiki. Please reply this email to answer the question\n' + content
         mail.send(msg)
         flash(
             "Email Sent!",
