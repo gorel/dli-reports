@@ -6,6 +6,7 @@ This file is responsible for defining models that belong in the reports module.
 
 import collections
 import datetime
+import glob
 import os
 
 import xlsxwriter
@@ -67,6 +68,131 @@ class Tag(db.Model):
         return tag
 
 
+class Report(db.Model):
+    """Model for a DLI Report"""
+    __tablename__ = "report"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    name = db.Column(db.String(64))
+    fields = db.relationship(
+        'Field',
+        secondary=report_fields,
+        backref='reports',
+    )
+    tags = db.relationship(
+        'Tag',
+        secondary=report_tags,
+        backref='reports',
+    )
+
+    def __init__(self, user, name, fields, tags):
+        """Initialize a Report model"""
+        self.user = user
+        self.name = name
+        self.fields = fields
+        self.tags = tags
+
+    def __repr__(self):
+        """Return a descriptive representation of a Report"""
+        return '<Report %r>' % self.name
+
+    @property
+    def tagnames(self):
+        """Helper function to get the names of the Report's tags"""
+        return [tag.name for tag in self.tags]
+
+    def generate_filename(self, start_ds, end_ds):
+        """Generate the filename for the Excel sheet for downloads"""
+        return "{filename}-{start}-to-{end}.xlsx".format(
+            filename=self.name,
+            start=start_ds,
+            end=end_ds,
+        )
+
+    def collect_dept_data_for_template(self, ds):
+        """Collect all of the department data for this Report
+
+        Collect department data for this Report on a given day in a format
+        that is easy to template for render_template functions in Jinja2
+        """
+
+        dept_data = collections.defaultdict(list)
+        for field in self.fields:
+            dept_data[field.department.name].append(
+                {
+                    'name': field.name,
+                    'value': field.get_data_for_date(ds, pretty=True),
+                }
+            )
+        return dept_data
+
+    def excel_filepath_for_ds(self, start_ds, end_ds):
+        """Return the absolute filepath for the Excel sheet on the given ds"""
+        return os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            EXCEL_FILE_DIR,
+            self.generate_filename(start_ds, end_ds),
+        )
+
+    def excel_file_exists(self, start_ds, end_ds):
+        """Determine whether or not an Excel file for this ds exists"""
+        return os.path.exists(self.excel_filepath_for_ds(start_ds, end_ds))
+
+    def create_excel_file(self, start_ds, end_ds):
+        """Generate an Excel sheet with this Report's data
+
+        Arguments:
+        start_ds - Date stamp for the start day of Report data to generate
+        end_ds - Date stamp for the end day of Report data to generate
+        """
+
+        excel_helper = ExcelSheetHelper(
+            filepath=self.excel_filepath_for_ds(start_ds, end_ds),
+            report=self,
+            start_ds=start_ds,
+            end_ds=end_ds,
+        )
+        excel_helper.write_all(self.collect_dept_fields())
+        excel_helper.finalize()
+
+    def remove_excel_files(self):
+        """Delete the Excel files for this Report"""
+        basepath = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            EXCEL_FILE_DIR,
+        )
+        globpath = os.path.join(basepath, self.name + '*.xlsx')
+
+        for filename in glob.glob(globpath):
+            os.remove(os.path.join(basepath, filename))
+
+    def collect_dept_fields(self):
+        """Collect all of the department data for this Report"""
+        dept_data = collections.defaultdict(list)
+        for field in self.fields:
+            dept_data[field.department.name].append(field)
+        return dept_data
+
+
+class Field(db.Model):
+    """Model for a Field within a Report"""
+    __tablename__ = "field"
+=======
+    def get_data_for_date(self, ds, pretty=False):
+        """Retrieve the FieldData instance for the given date stamp"""
+        data_point = self.data_points.filter_by(ds=ds).first()
+        if pretty:
+            if data_point:
+                return data_point.pretty_value
+            else:
+                return "No data submitted."
+        elif data_point:
+            return data_point.value
+        else:
+            return ''
+>>>>>>> Download data for a report over multiple days
+
+
 class FieldType(db.Model):
     """Model for the type of a Field"""
     __tablename__ = "field_type"
@@ -90,7 +216,7 @@ class FieldData(db.Model):
     """Model for the actual data stored in a Field"""
     __tablename__ = "field_data"
     id = db.Column(db.Integer, primary_key=True)
-    ds = db.Column(db.String(16))
+    ds = db.Column(db.String(16), index=True)
     field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
     ivalue = db.Column(db.BigInteger)
     dvalue = db.Column(db.Float)
@@ -587,10 +713,16 @@ class ExcelSheetHelper():
     row and column information.
     """
 
-    def __init__(self, filepath, report_name, ds):
+    def __init__(self, filepath, report, start_ds, end_ds):
         """Initialize an ExcelSheetHelper by creating an XLSX Workbook"""
-        self.report_name = report_name
-        self.ds = ds
+        self.report = report
+
+        # Convert the start and end ds to the more popular American style
+        self.start_date = datetime.datetime.strptime(start_ds, '%Y-%m-%d')
+        self.end_date = datetime.datetime.strptime(end_ds, '%Y-%m-%d')
+        self.start_ds = self.start_date.strftime('%m/%d/%Y')
+        self.end_ds = self.end_date.strftime('%m/%d/%Y')
+        self.timedelta = (self.end_date - self.start_date).days + 1
 
         self.workbook = xlsxwriter.Workbook(filepath)
         self.worksheet = self.workbook.add_worksheet()
@@ -644,7 +776,7 @@ class ExcelSheetHelper():
         self.worksheet.write(
             self.row,
             self.col,
-            "Report: {name}".format(name=self.report_name),
+            "Report: {name}".format(name=self.report.name),
             self.report_name_format,
         )
         self.row += 1
@@ -652,17 +784,32 @@ class ExcelSheetHelper():
         self.worksheet.write(
             self.row,
             self.col,
-            "Data for {ds}".format(ds=self.ds),
+            "Data between {start} and {end}".format(
+                start=self.start_ds,
+                end=self.end_ds,
+            ),
             self.ds_format,
         )
         self.row += 1
 
-    def write(self, dept_data):
-        """Write all of the department data for a Report"""
-        for dept in dept_data.keys():
+        self.col += 1
+        for num_days in range(self.timedelta):
+            # Write the ds headers
+            date = self.start_date + datetime.timedelta(days=num_days)
+            self.worksheet.write(
+                self.row,
+                self.col,
+                date.strftime('%m/%d/%Y'),
+            )
+            self.col += 1
+        self.col = 0
+
+    def write_all(self, dept_fields):
+        """Write all of the data for a Report"""
+        for dept in dept_fields.keys():
             self.write_dept_title(dept)
-            for field in dept_data[dept]:
-                self.write_field_data(field)
+            for field in dept_fields[dept]:
+                self.write_field(field)
 
     def write_dept_title(self, dept_name):
         """Write a Department title within a Report"""
@@ -675,22 +822,29 @@ class ExcelSheetHelper():
         )
         self.row += 1
 
-    def write_field_data(self, field_data):
+    def write_field(self, field):
         """Write a Field within a Report"""
         self.worksheet.write(
             self.row,
             self.col,
-            field_data.field.name,
+            field.name,
             self.field_format,
         )
         self.col += 1
 
-        self.worksheet.write(
-            self.row,
-            self.col,
-            field_data.value,
-            self.get_format(field_data.field),
-        )
+        for num_days in range(self.timedelta):
+            # Write the data for each ds
+            date = self.start_date + datetime.timedelta(days=num_days)
+            field_data = field.get_data_for_date(date.strftime('%Y-%m-%d'))
+            if field_data:
+                self.worksheet.write(
+                    self.row,
+                    self.col,
+                    field_data,
+                    self.get_format(field),
+                )
+            self.col += 1
+
         self.row += 1
         self.col = 0
 
