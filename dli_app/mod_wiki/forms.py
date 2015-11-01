@@ -106,11 +106,11 @@ class AskQuestionForm(Form):
         return True
 
     email = TextField(
-        'Email',
+        'Your Email',
         validators=[
             validators.Email(),
             validators.Required(
-                message='You must provide valid email address.',
+                message='You must provide a valid email address.',
             ),
        ],
    )

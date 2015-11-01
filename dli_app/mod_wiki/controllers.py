@@ -174,7 +174,7 @@ def search():
 @mod_wiki.route('/question', methods=['GET', 'POST'])
 @mod_wiki.route('/question/', methods=['GET', 'POST'])
 def question():
-    """ Email administrators"""
+    """Email administrators"""
     form = AskQuestionForm()
     if form.validate_on_submit():
         # Send email to administrators
@@ -184,7 +184,7 @@ def question():
         content = form.content.data
         sender = 'cs490testing@gmail.com'
         senderinfo = '\nPlease reply to the following email address: ' + form.email.data
-        msg = Message(emailtitle, sender=sender, recipients=users)
+        msg = Message(emailtitle, sender=sender, recipients=users, reply_to=form.email.data)
         msg.body = content + senderinfo
         mail.send(msg)
         flash(
