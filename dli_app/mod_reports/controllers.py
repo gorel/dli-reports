@@ -48,6 +48,7 @@ from dli_app.mod_reports.forms import (
 # Create a blueprint for this module
 mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 
+
 # Set all routing for the module
 @mod_reports.route('/me', methods=['GET'])
 @mod_reports.route('/me/', methods=['GET'])
