@@ -6,6 +6,7 @@ This file is responsible for defining models that belong in the reports module.
 
 import collections
 import datetime
+import glob
 import os
 
 import xlsxwriter
@@ -75,11 +76,12 @@ class Report(db.Model):
         """Helper function to get the names of the Report's tags"""
         return [tag.name for tag in self.tags]
 
-    def generate_filename(self, ds):
+    def generate_filename(self, start_ds, end_ds):
         """Generate the filename for the Excel sheet for downloads"""
-        return "{filename}-{ds}.xlsx".format(
+        return "{filename}-{start}-to-{end}.xlsx".format(
             filename=self.name,
-            ds=ds,
+            start=start_ds,
+            end=end_ds,
         )
 
     def collect_dept_data_for_template(self, ds):
@@ -99,44 +101,51 @@ class Report(db.Model):
             )
         return dept_data
 
-    def excel_filepath_for_ds(self, ds):
+    def excel_filepath_for_ds(self, start_ds, end_ds):
         """Return the absolute filepath for the Excel sheet on the given ds"""
         return os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
             EXCEL_FILE_DIR,
-            self.generate_filename(ds),
+            self.generate_filename(start_ds, end_ds),
         )
 
-    def excel_file_exists(self, ds):
+    def excel_file_exists(self, start_ds, end_ds):
         """Determine whether or not an Excel file for this ds exists"""
-        return os.path.exists(self.excel_filepath_for_ds(ds))
+        return os.path.exists(self.excel_filepath_for_ds(start_ds, end_ds))
 
-    def create_excel_file(self, ds):
+    def create_excel_file(self, start_ds, end_ds):
         """Generate an Excel sheet with this Report's data
 
         Arguments:
-        ds - Date stamp for which day of Report data to generate
+        start_ds - Date stamp for the start day of Report data to generate
+        end_ds - Date stamp for the end day of Report data to generate
         """
 
         excel_helper = ExcelSheetHelper(
-            filepath=self.excel_filepath_for_ds(ds),
-            report_name=self.name,
-            ds=ds,
+            filepath=self.excel_filepath_for_ds(start_ds, end_ds),
+            report=self,
+            start_ds=start_ds,
+            end_ds=end_ds,
         )
-        excel_helper.write(self.collect_dept_data(ds))
+        excel_helper.write_all(self.collect_dept_fields())
         excel_helper.finalize()
 
-    def remove_excel_file(self, ds):
-        """Delete the Excel file for the given ds"""
-        os.remove(self.excel_filepath_for_ds(ds))
+    def remove_excel_files(self):
+        """Delete the Excel files for this Report"""
+        basepath = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            EXCEL_FILE_DIR,
+        )
+        globpath = os.path.join(basepath, self.name + '*.xlsx')
 
-    def collect_dept_data(self, ds):
+        for filename in glob.glob(globpath):
+            os.remove(os.path.join(basepath, filename))
+
+    def collect_dept_fields(self):
         """Collect all of the department data for this Report"""
         dept_data = collections.defaultdict(list)
         for field in self.fields:
-            dept_data[field.department.name].append(
-                field.get_data_for_date(ds)
-            )
+            dept_data[field.department.name].append(field)
         return dept_data
 
 
@@ -168,11 +177,14 @@ class Field(db.Model):
         """Retrieve the FieldData instance for the given date stamp"""
         data_point = self.data_points.filter_by(ds=ds).first()
         if pretty:
-            if data_point is not None:
-                data_point = data_point.pretty_value
+            if data_point:
+                return data_point.pretty_value
             else:
-                data_point = ""
-        return data_point
+                return ''
+        elif data_point:
+            return data_point.value
+        else:
+            return ''
 
     @property
     def identifier(self):
@@ -202,7 +214,7 @@ class FieldData(db.Model):
     """Model for the actual data stored in a Field"""
     __tablename__ = "field_data"
     id = db.Column(db.Integer, primary_key=True)
-    ds = db.Column(db.String(16))
+    ds = db.Column(db.String(16), index=True)
     field_id = db.Column(db.Integer, db.ForeignKey("field.id"))
     ivalue = db.Column(db.BigInteger)
     dvalue = db.Column(db.Float)
@@ -586,10 +598,16 @@ class ExcelSheetHelper():
     row and column information.
     """
 
-    def __init__(self, filepath, report_name, ds):
+    def __init__(self, filepath, report, start_ds, end_ds):
         """Initialize an ExcelSheetHelper by creating an XLSX Workbook"""
-        self.report_name = report_name
-        self.ds = ds
+        self.report = report
+
+        # Convert the start and end ds to the more popular American style
+        self.start_date = datetime.datetime.strptime(start_ds, '%Y-%m-%d')
+        self.end_date = datetime.datetime.strptime(end_ds, '%Y-%m-%d')
+        self.start_ds = self.start_date.strftime('%m/%d/%Y')
+        self.end_ds = self.end_date.strftime('%m/%d/%Y')
+        self.timedelta = (self.end_date - self.start_date).days + 1
 
         self.workbook = xlsxwriter.Workbook(filepath)
         self.worksheet = self.workbook.add_worksheet()
@@ -643,7 +661,7 @@ class ExcelSheetHelper():
         self.worksheet.write(
             self.row,
             self.col,
-            "Report: {name}".format(name=self.report_name),
+            "Report: {name}".format(name=self.report.name),
             self.report_name_format,
         )
         self.row += 1
@@ -651,17 +669,32 @@ class ExcelSheetHelper():
         self.worksheet.write(
             self.row,
             self.col,
-            "Data for {ds}".format(ds=self.ds),
+            "Data between {start} and {end}".format(
+                start=self.start_ds,
+                end=self.end_ds,
+            ),
             self.ds_format,
         )
         self.row += 1
 
-    def write(self, dept_data):
-        """Write all of the department data for a Report"""
-        for dept in dept_data.keys():
+        self.col += 1
+        for num_days in range(self.timedelta):
+            # Write the ds headers
+            date = self.start_date + datetime.timedelta(days=num_days)
+            self.worksheet.write(
+                self.row,
+                self.col,
+                date.strftime('%m/%d/%Y'),
+            )
+            self.col += 1
+        self.col = 0
+
+    def write_all(self, dept_fields):
+        """Write all of the data for a Report"""
+        for dept in dept_fields.keys():
             self.write_dept_title(dept)
-            for field in dept_data[dept]:
-                self.write_field_data(field)
+            for field in dept_fields[dept]:
+                self.write_field(field)
 
     def write_dept_title(self, dept_name):
         """Write a Department title within a Report"""
@@ -674,22 +707,29 @@ class ExcelSheetHelper():
         )
         self.row += 1
 
-    def write_field_data(self, field_data):
+    def write_field(self, field):
         """Write a Field within a Report"""
         self.worksheet.write(
             self.row,
             self.col,
-            field_data.field.name,
+            field.name,
             self.field_format,
         )
         self.col += 1
 
-        self.worksheet.write(
-            self.row,
-            self.col,
-            field_data.value,
-            self.get_format(field_data.field),
-        )
+        for num_days in range(self.timedelta):
+            # Write the data for each ds
+            date = self.start_date + datetime.timedelta(days=num_days)
+            field_data = field.get_data_for_date(date.strftime('%Y-%m-%d'))
+            if field_data:
+                self.worksheet.write(
+                    self.row,
+                    self.col,
+                    field_data,
+                    self.get_format(field),
+                )
+            self.col += 1
+
         self.row += 1
         self.col = 0
 
