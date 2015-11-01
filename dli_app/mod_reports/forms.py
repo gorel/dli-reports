@@ -543,7 +543,7 @@ class EditReportForm(Form):
 
     @classmethod
     def generate_local_edit_report_form(cls):
-        """Dynamically generate a class for the SubmitReportDataForm"""
+        """Dynamically generate a class for the EditReportDataForm"""
         class LocalEditReportForm(EditReportForm):
             """Local copy of a EditReportForm
 

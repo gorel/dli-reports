@@ -41,6 +41,7 @@
               <div class="btn-group">
                 <a href="{{ url_for('reports.view_report', report_id=report.id) }}" class="btn btn-info btn-xs">View</a>
                 <a href="{{ url_for('reports.submit_report_data', report_id=report.id) }}" class="btn btn-default btn-xs">Submit Data</a>
+                <a href="{{ url_for('reports.edit_report', report_id=report.id) }}" class="btn btn-warning btn-xs">Edit Report</a>
               </div>
             {% else %}
               <form method="POST" action="{{ url_for('reports.unfavorite_report', report_id=report.id) }}">

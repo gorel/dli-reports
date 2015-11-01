@@ -504,11 +504,6 @@ def edit_report(report_id):
             LocalEditReportForm.add_department(department)
 
         form = LocalEditReportForm()
-        form.name.data = report.name
-        form.report_id.data = report_id
-        for department in Department.query.all():
-            set_fields = [field for field in report.fields if field.department.id == department.id]
-            getattr(form, department.name).data = [f.id for f in set_fields]
         if form.validate_on_submit():
             flash('Report: {name} has been updated'.format(name=form.report.name), 'alert-success')
             db.session.commit()
@@ -516,5 +511,10 @@ def edit_report(report_id):
             return redirect(url_for('reports.my_reports'))
         else:
             flash_form_errors(form)
+            form.name.data = report.name
+            form.report_id.data = report_id
+            for department in Department.query.all():
+                set_fields = [field for field in report.fields if field.department.id == department.id]
+                getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit.html', form=form, report=report)
 

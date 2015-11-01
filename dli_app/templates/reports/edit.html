@@ -7,7 +7,7 @@
   <div class="col-md-10">
     <form method="POST" action="{{ url_for('reports.edit_report', report_id=report.id) }}" class="form-horizontal">
       {{ form.csrf_token }}
-      {{ form.user_id }}
+      {{ form.report_id }}
       <div class="form-group">
         {{ form.name.label(class='control-label col-sm-2') }}
         <div class="col-sm-10">
