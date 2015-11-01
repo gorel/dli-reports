@@ -31,18 +31,19 @@ class EditAccountForm(Form):
 
     def validate(self):
         """Validate the form"""
+        res = True
         if not Form.validate(self):
-            return False
+            res = False
 
         user = User.query.get(self.user_id.data)
         if user is None:
             self.user_id.errors.append('User not found')
-            return False
+            res = False
 
         location = Location.query.get(self.location.data)
         if location is None:
             self.location.errors.append('Location not found')
-            return False
+            res = False
 
         department = Department.query.get(self.department.data)
         if department is None:
@@ -56,7 +57,7 @@ class EditAccountForm(Form):
         if self.password.data:
             user.set_password(self.password.data)
 
-        return True
+        return res
 
 
     user_id = HiddenField()

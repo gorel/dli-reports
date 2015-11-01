@@ -1,4 +1,16 @@
+"""A helper utility to automatically create a database for the DLI App
+
+Author: Logan Gore
+This file is responsible for (at the bare minimum) creating the database and
+all associated tables for the DLI App. It will import all appropriate models
+and ensure that a table for each model exists. If given the command-line
+option "--populate" though, it will even populate the database with common
+default values.
+"""
+
+import argparse
 import os
+import sys
 
 from dli_app import db
 
@@ -10,6 +22,9 @@ from dli_app.mod_auth.models import (
 )
 
 from dli_app.mod_reports.models import (
+    Chart,
+    ChartType,
+    ChartDateType,
     Field,
     FieldData,
     FieldType,
@@ -26,6 +41,27 @@ WIKIPAGE_HOME_CONTENT = """
 Welcome to DLI's Policies Wiki!
 """
 
+PARSER = argparse.ArgumentParser(description='DLI App DB Creation Tool')
+PARSER.add_argument(
+    '-d', '--drop', action='store_true',
+    help='Drop existing DB tables before recreation'
+)
+PARSER.add_argument(
+    '-p', '--populate', action='store_true',
+    help='Populate the DB with default values after creation'
+)
+PARSER.add_argument(
+    '-v', '--verbose', action='store_true',
+    help='Show extra output about which stage the script is executing'
+)
+ARGS = PARSER.parse_args()
+
+
+def vprint(s='', endl='\n'):
+    """Print a string if verbose mode is enabled"""
+    if ARGS.verbose:
+        sys.stderr.write('{s}{endl}'.format(s=s, endl=endl))
+
 
 def populate_db_departments():
     """Populate the database Department model"""
@@ -41,6 +77,7 @@ def populate_db_departments():
         Department('Shipping'),
     ]
     db.session.add_all(departments)
+    db.session.commit()
 
 
 def populate_db_locations():
@@ -50,6 +87,7 @@ def populate_db_locations():
         Location('Omaha'),
     ]
     db.session.add_all(locations)
+    db.session.commit()
 
 
 def populate_db_users():
@@ -63,7 +101,11 @@ def populate_db_users():
             department=Department.query.first(),
         ),
     ]
+
+    # Set the "Nobody" user to be an admin by default
+    users[0].is_admin = True
     db.session.add_all(users)
+    db.session.commit()
 
 
 def populate_db_fieldtypes():
@@ -76,6 +118,7 @@ def populate_db_fieldtypes():
         FieldType('time'),
     ]
     db.session.add_all(types)
+    db.session.commit()
 
 
 def populate_db_fields():
@@ -1144,6 +1187,7 @@ def populate_db_fields():
         ),
     ]
     db.session.add_all(fields)
+    db.session.commit()
 
 
 def populate_db_tags():
@@ -1154,20 +1198,88 @@ def populate_db_tags():
         Tag('morning'),
     ]
     db.session.add_all(tags)
+    db.session.commit()
 
 
 def populate_db_reports():
     """Populate the database Report model"""
     reports = [
         Report(
-            user_id=User.query.first().id,
+            user=User.query.first(),
             name='8:40 Report',
             fields=Field.query.all(),
             tags=Tag.query.all(),
         ),
     ]
     db.session.add_all(reports)
+    db.session.commit()
 
+def populate_db_charttypes():
+    """Populate the database ChartType model"""
+    ctypes = [
+        ChartType('line'),
+        ChartType('bar'),
+        ChartType('pie'),
+    ]
+    db.session.add_all(ctypes)
+    db.session.commit()
+
+def populate_db_chartdatetypes():
+    """Populate the database ChartDateType model"""
+    cdtypes = [
+        ChartDateType('today'),
+        ChartDateType('from_week'),
+        ChartDateType('rolling_week'),
+        ChartDateType('from_month'),
+        ChartDateType('rolling_month'),
+        ChartDateType('from_year'),
+        ChartDateType('rolling_year'),
+        ChartDateType('all_time'),
+    ]
+    db.session.add_all(cdtypes)
+    db.session.commit()
+
+def populate_db_charts():
+    """Populate the database Chart model"""
+    from dli_app.mod_reports.models import ChartTypeConstants
+    from dli_app.mod_reports.models import ChartDateTypeConstants
+    ChartTypeConstants.reload()
+    ChartDateTypeConstants.reload()
+
+    charts = [
+        Chart(
+            name='Adjusted Sales (from start of week)',
+            user=User.query.first(),
+            with_table=True,
+            ctype=ChartTypeConstants.LINE,
+            cdtype=ChartDateTypeConstants.FROM_WEEK,
+            fields=[Field.query.filter_by(name='Adjusted Sales').first()],
+            tags=Tag.query.all(),
+        ),
+        Chart(
+            name='Customer Service On Time Percentage (DLI vs. Omaha)',
+            user=User.query.first(),
+            with_table=True,
+            ctype=ChartTypeConstants.BAR,
+            cdtype=ChartDateTypeConstants.ROLLING_WEEK,
+            fields=[
+                Field.query.filter_by(name='DLI On Time Percentage').first(),
+                Field.query.filter_by(name='Omaha On Time Percentage').first(),
+            ],
+            tags=Tag.query.all(),
+        ),
+        Chart(
+            name='Press Breakdown',
+            user=User.query.first(),
+            with_table=False,
+            ctype=ChartTypeConstants.PIE,
+            cdtype=ChartDateTypeConstants.TODAY,
+            fields=Field.query.filter(Field.name.like('Orders on Press%')).all(),
+            tags=Tag.query.all(),
+        ),
+    ]
+    db.session.add_all(charts)
+    db.session.commit()
 
 def populate_db_wikipages():
     """Populate the database WikiPage model"""
@@ -1178,31 +1290,60 @@ def populate_db_wikipages():
         ),
     ]
     db.session.add_all(pages)
+    db.session.commit()
 
 
 def populate_db_all():
     """Completely populate a basic db for DLI"""
     if 'DLI_REPORTS_ADMIN_PASSWORD' not in os.environ:
         print('Please set env variable DLI_REPORTS_ADMIN_PASSWORD first.')
-        return
+        return False
 
+    vprint('Starting DB population script...')
     populate_db_departments()
-    db.session.commit()
+    vprint('Department model populated.')
     populate_db_locations()
-    db.session.commit()
+    vprint('Location model populated.')
     populate_db_users()
-    db.session.commit()
+    vprint('User model populated.')
     populate_db_fieldtypes()
-    db.session.commit()
+    vprint('FieldType model populated.')
     populate_db_fields()
-    db.session.commit()
+    vprint('Field model populated.')
     populate_db_tags()
-    db.session.commit()
+    vprint('Tag model populated.')
     populate_db_reports()
-    db.session.commit()
+    vprint('Report model populated.')
+    populate_db_charttypes()
+    vprint('ChartType model populated.')
+    populate_db_chartdatetypes()
+    vprint('ChartDateType model populated.')
+    populate_db_charts()
+    vprint('Chart model populated.')
     populate_db_wikipages()
-    db.session.commit()
+    vprint('Wikipage model populated.')
+
+    vprint()
+    vprint('DB population script complete.')
+    return True
 
 
 if __name__ == '__main__':
+    vprint('CreateDB script loaded.')
+
+    if ARGS.drop:
+        vprint('Dropping all existing data first!')
+        db.drop_all()
+        vprint('DB dropped.')
+
     db.create_all()
+    vprint('All database models created.')
+
+    res = True
+    if ARGS.populate:
+        res = populate_db_all()
+
+    if res:
+        vprint('CreateDB script exiting successfully.')
+    else:
+        vprint('CreateDB script exited with failure!')

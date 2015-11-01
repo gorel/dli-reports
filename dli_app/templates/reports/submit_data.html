@@ -1,11 +1,13 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <h1>Submit Report Data ({{ department.name }}, {{ ds }})</h1>
+    <h1>
+      Data Submission
+      <small>For {{ report.name }}, in {{ department.name}} on {{ ds }}</h1>
   </div>
 
   <div class="col-md-10">
-    <form method="POST" action="" url_for('reports.submit_report_data') }} class="form-horizontal">
+    <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id) }}" class="form-horizontal">
       {{ change_form.csrf_token }}
       <div class="form-group">
         {{ change_form.date.label(class='control-label col-sm-2') }}
@@ -30,7 +32,7 @@
 
 
   <div class="col-md-10">
-    <form method="POST" action="{{ url_for('reports.submit_report_data', ds=ds, dept_id=department.id) }}" class="form-horizontal">
+    <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id, ds=ds, dept_id=department.id) }}" class="form-horizontal">
       {{ form.csrf_token }}
       {{ form.ds }}
       {% for field in form.instance_fields %}
