@@ -23,6 +23,16 @@ from flask import (
     redirect,
     render_template,
     url_for,
+    current_app,
+)
+
+from flask_mail import (
+    Mail,
+    Message,
+)
+
+from dli_app.mod_auth.models import (
+    User,
 )
 
 from flask_login import (
@@ -168,12 +178,22 @@ def question():
     form = AskQuestionForm()
     if form.validate_on_submit():
         # Send email to administrators
-        #TODO: GET ALLL ADMINISTRATORS' EMAILS.
-        flash(
-            "Email Sent!",
-            "alert-success",
-        )
-        return render_template('wiki/question.html',form=form)
+        recipients = 'ji43@purdue.edu'
+	"""'grab all email addresses'"""
+        if recipients is not None:
+            mail = Mail(current_app)
+            emailtitle = form.emailtitle.data
+            content = form.content.data
+            sender = 'cs490testing@gmail.com'
+            senderinfo = '\nPlease reply to the following email address: '+form.email.data
+            msg = Message(emailtitle,sender=sender, recipients=[recipients])
+            msg.body = content + senderinfo
+            mail.send(msg)
+            flash(
+                "Email Sent!",
+                "alert-success",
+            )
+            return render_template('wiki/question.html',form=form)
     else:
         flash_form_errors(form)
         return render_template('wiki/question.html', form=form)
