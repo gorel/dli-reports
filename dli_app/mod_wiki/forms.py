@@ -81,7 +81,6 @@ class SearchForm(Form):
 
         return True
 
-
     search_box = TextField(
         "Wiki Search",
         validators=[
