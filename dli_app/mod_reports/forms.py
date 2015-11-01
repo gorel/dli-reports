@@ -610,16 +610,17 @@ class ChangeDateAndDepartmentForm(Form):
 
     def validate(self):
         """Ensure the given date is within reasonable bounds"""
+        res = True
         if not Form.validate(self):
             return False
 
         if self.date.data > datetime.now().date():
             self.date.errors.append("Error: date is in the future")
-            return False
+            res = False
 
         self.ds = self.date.data.strftime("%Y-%m-%d")
         self.dept_id = self.department.data
-        return True
+        return res
 
     date = html5.DateField(
         "Date",
@@ -775,4 +776,38 @@ class SearchForm(Form):
                 "Please enter a search term",
             ),
         ],
+    )
+
+
+class DownloadReportForm(Form):
+    """Form to download report data"""
+    def __init__(self, *args, **kwargs):
+        """Initialize the DownloadReportForm object"""
+        Form.__init__(self, *args, **kwargs)
+        self.start = None
+        self.end = None
+
+    def validate(self):
+        """Ensure the given dates are within reasonable bounds"""
+        res = True
+        if not Form.validate(self):
+            res = False
+
+        if self.start_date.data > self.end_date.data:
+            self.start_date.errors.append("Start date cannot be after end date")
+            res = False
+
+        if res:
+            self.start = self.start_date.data.strftime("%Y-%m-%d")
+            self.end = self.end_date.data.strftime("%Y-%m-%d")
+        return res
+
+    start_date = html5.DateField(
+        "Start Date",
+        format="%Y-%m-%d",
+    )
+
+    end_date = html5.DateField(
+        "End Date",
+        format="%Y-%m-%d",
     )
