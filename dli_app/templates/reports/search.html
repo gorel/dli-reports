@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <div class="page-header">
+    <h1>Search Reports</h1>
+  </div>
+
+  <div class="col-md-10">
+    <form method="POST" action="{{ url_for('reports.search') }}" class="form-horizontal">
+      {{ form.csrf_token }}
+      <div class="form-group">
+        {{ form.filter_choices.label(class='control-label col-sm-2') }}
+        <div class="col-sm-10">
+          {{ form.filter_choices(class='form-control') }}
+        </div>
+      </div>
+      <div class="form-group">
+        {{ form.search_text.label(class='control-label col-sm-2') }}
+        <div class="col-sm-10">
+          {{ form.search_text(class='form-control') }}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+{% endblock %}

@@ -48,6 +48,7 @@ from dli_app.mod_reports.forms import (
     CreateReportForm,
     SubmitReportDataForm,
     EditReportForm,
+    SearchForm,
 )
 
 # Create a blueprint for this module
@@ -370,6 +371,19 @@ def edit_report(report_id):
             return render_template('reports/edit.html', form=form, report=report)
 
 
+@mod_reports.route('/search', methods=['GET', 'POST'])
+@mod_reports.route('/search/', methods=['GET', 'POST'])
+@login_required
+def search():
+    """Search for reports that contains a keyword in owner,name,tag,department,location"""
+    form = SearchForm()
+    if form.validate_on_submit():
+        return render_template('reports/search_results.html', reports=form.reports)
+    else:
+        flash_form_errors(form)
+        return render_template('reports/search.html', form=form)
+
+
 @mod_reports.route('/charts', methods=['GET'])
 @mod_reports.route('/charts/', methods=['GET'])
 @mod_reports.route('/charts/me', methods=['GET'])
@@ -516,3 +530,4 @@ def delete_chart(chart_id):
             db.session.commit()
             flash("Chart deleted", "alert-success")
     return redirect(request.args.get('next') or url_for('reports.my_charts'))
+>>>>>>> master

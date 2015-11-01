@@ -509,6 +509,7 @@ class ChangeDateAndDepartmentForm(Form):
         coerce=int,
     )
 
+
 class EditReportForm(Form):
     """A form for creating a new report"""
 
@@ -604,4 +605,52 @@ class EditReportForm(Form):
         return LocalEditReportForm
 
 
+class SearchForm(Form):
+    """Form to search for a report"""
+    REPORTNAME_CHOICE = 0
+    OWNER_CHOICE = 1
+    EMAIL_CHOICE = 2
+    TAG_CHOICE = 3
 
+    def __init__(self, *args, **kwargs):
+        """Initialize the SearchForm object"""
+        Form.__init__(self, *args, **kwargs)
+        self.reports = []
+
+    def validate(self):
+        """Validate the form"""
+        res = True
+        if not Form.validate(self):
+            return False
+
+        choice = self.filter_choices.data
+        search_text = "%{}%".format(self.search_text.data)
+        if choice == self.OWNER_CHOICE:
+            self.reports = Report.query.filter(Report.user.name.ilike(search_text)).all()
+        elif choice == self.EMAIL_CHOICE:
+            self.reports = Report.query.filter(Report.user.email.ilike(search_text)).all()
+        elif choice == self.REPORTNAME_CHOICE:
+            print("Filter Report name like {}".format(search_text))
+            self.reports = Report.query.filter(Report.name.ilike(search_text)).all()
+        elif choice == self.TAG_CHOICE:
+            self.reports = Report.query.join(Tag, Report.tags).filter(Tag.name.ilike(search_text)).all()
+        else:
+            filter_choices.errors.append('Not a valid choice!')
+	    return False
+
+        return True
+
+    filter_choices = SelectField(
+        "Filter by",
+        choices=[(REPORTNAME_CHOICE, 'Report Name'), (OWNER_CHOICE, 'Owner Name'), (EMAIL_CHOICE, 'Owner Email'), (TAG_CHOICE, 'Tag')],
+        coerce=int,
+    )
+
+    search_text = TextField(
+        "Search",
+        validators=[
+            validators.Required(
+                "Please enter a search term",
+            ),
+        ],
+    )
