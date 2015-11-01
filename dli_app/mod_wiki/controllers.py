@@ -178,22 +178,20 @@ def question():
     form = AskQuestionForm()
     if form.validate_on_submit():
         # Send email to administrators
-        recipients = 'ji43@purdue.edu'
-	"""'grab all email addresses'"""
-        if recipients is not None:
-            mail = Mail(current_app)
-            emailtitle = form.emailtitle.data
-            content = form.content.data
-            sender = 'cs490testing@gmail.com'
-            senderinfo = '\nPlease reply to the following email address: '+form.email.data
-            msg = Message(emailtitle,sender=sender, recipients=[recipients])
-            msg.body = content + senderinfo
-            mail.send(msg)
-            flash(
-                "Email Sent!",
-                "alert-success",
-            )
-            return render_template('wiki/question.html',form=form)
+        users = [u.email for u in User.query.filter_by(is_admin=True)]
+        mail = Mail(current_app)
+        emailtitle = form.emailtitle.data
+        content = form.content.data
+        sender = 'cs490testing@gmail.com'
+        senderinfo = '\nPlease reply to the following email address: ' + form.email.data
+        msg = Message(emailtitle, sender=sender, recipients=users)
+        msg.body = content + senderinfo
+        mail.send(msg)
+        flash(
+            "Email Sent!",
+            "alert-success",
+        )
+        return redirect(url_for('wiki.home'))
     else:
         flash_form_errors(form)
         return render_template('wiki/question.html', form=form)
