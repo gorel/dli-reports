@@ -23,6 +23,16 @@ from flask import (
     redirect,
     render_template,
     url_for,
+    current_app,
+)
+
+from flask_mail import (
+    Mail,
+    Message,
+)
+
+from dli_app.mod_auth.models import (
+    User,
 )
 
 from flask_login import (
@@ -42,6 +52,7 @@ from dli_app.mod_wiki.models import (
 from dli_app.mod_wiki.forms import (
     EditWikiPageForm,
     SearchForm,
+    AskQuestionForm,
 )
 
 EXTENSIONS = [
@@ -159,3 +170,24 @@ def search():
     else:
         flash_form_errors(form)
         return render_template('wiki/home.html', form=form)
+
+@mod_wiki.route('/question', methods=['GET', 'POST'])
+@mod_wiki.route('/question/', methods=['GET', 'POST'])
+def question():
+    """Email administrators"""
+    form = AskQuestionForm()
+    if form.validate_on_submit():
+        # Send email to administrators
+        users = [u.email for u in User.query.filter_by(is_admin=True)]
+        mail = Mail(current_app)
+        emailtitle = form.emailtitle.data
+        content = form.content.data
+        sender = 'cs490testing@gmail.com'
+        msg = Message(emailtitle, sender=sender, recipients=users, reply_to=form.email.data)
+        msg.body = 'A new question was asked concerning the online DLI policies Wiki. Please reply to this email to answer the question\n' + content
+        mail.send(msg)
+        flash("Email Sent!", "alert-success")
+        return redirect(url_for('wiki.home'))
+    else:
+        flash_form_errors(form)
+        return render_template('wiki/question.html', form=form)
