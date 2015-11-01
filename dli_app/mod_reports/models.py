@@ -244,11 +244,12 @@ class Report(db.Model):
         """Helper function to get the names of the Report's tags"""
         return [tag.name for tag in self.tags]
 
-    def generate_filename(self, ds):
+    def generate_filename(self, start_ds, end_ds):
         """Generate the filename for the Excel sheet for downloads"""
-        return "{filename}-{ds}.xlsx".format(
+        return "{filename}-{start}-to-{end}.xlsx".format(
             filename=self.name,
-            ds=ds,
+            start=start_ds,
+            end=end_ds,
         )
 
     def collect_dept_data_for_template(self, ds):
@@ -268,44 +269,51 @@ class Report(db.Model):
             )
         return dept_data
 
-    def excel_filepath_for_ds(self, ds):
+    def excel_filepath_for_ds(self, start_ds, end_ds):
         """Return the absolute filepath for the Excel sheet on the given ds"""
         return os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
             EXCEL_FILE_DIR,
-            self.generate_filename(ds),
+            self.generate_filename(start_ds, end_ds),
         )
 
-    def excel_file_exists(self, ds):
+    def excel_file_exists(self, start_ds, end_ds):
         """Determine whether or not an Excel file for this ds exists"""
-        return os.path.exists(self.excel_filepath_for_ds(ds))
+        return os.path.exists(self.excel_filepath_for_ds(start_ds, end_ds))
 
-    def create_excel_file(self, ds):
+    def create_excel_file(self, start_ds, end_ds):
         """Generate an Excel sheet with this Report's data
 
         Arguments:
-        ds - Date stamp for which day of Report data to generate
+        start_ds - Date stamp for the start day of Report data to generate
+        end_ds - Date stamp for the end day of Report data to generate
         """
 
         excel_helper = ExcelSheetHelper(
-            filepath=self.excel_filepath_for_ds(ds),
-            report_name=self.name,
-            ds=ds,
+            filepath=self.excel_filepath_for_ds(start_ds, end_ds),
+            report=self,
+            start_ds=start_ds,
+            end_ds=end_ds,
         )
-        excel_helper.write(self.collect_dept_data(ds))
+        excel_helper.write_all(self.collect_dept_fields())
         excel_helper.finalize()
 
-    def remove_excel_file(self, ds):
-        """Delete the Excel file for the given ds"""
-        os.remove(self.excel_filepath_for_ds(ds))
+    def remove_excel_files(self):
+        """Delete the Excel files for this Report"""
+        basepath = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            EXCEL_FILE_DIR,
+        )
+        globpath = os.path.join(basepath, self.name + '*.xlsx')
 
-    def collect_dept_data(self, ds):
+        for filename in glob.glob(globpath):
+            os.remove(os.path.join(basepath, filename))
+
+    def collect_dept_fields(self):
         """Collect all of the department data for this Report"""
         dept_data = collections.defaultdict(list)
         for field in self.fields:
-            dept_data[field.department.name].append(
-                field.get_data_for_date(ds)
-            )
+            dept_data[field.department.name].append(field)
         return dept_data
 
 
@@ -327,6 +335,19 @@ class ChartType(db.Model):
         """Determine if two ChartTypes are equal"""
         return other is not None and self.id == other.id
 
+    def get_data_for_date(self, ds, pretty=False):
+        """Retrieve the FieldData instance for the given date stamp"""
+        data_point = self.data_points.filter_by(ds=ds).first()
+        if pretty:
+            if data_point:
+                return data_point.pretty_value
+            else:
+                return ''
+        elif data_point:
+            return data_point.value
+        else:
+            return ''
+
 
 class ChartDateType(db.Model):
     """Model for a ChartDateType (eg. From week, rolling week, etc.)"""
@@ -345,24 +366,6 @@ class ChartDateType(db.Model):
     def __eq__(self, other):
         """Determine if two ChartDateTypes are equal"""
         return other is not None and self.id == other.id
-
-    @property
-    def pretty_value(self):
-        """Return a more human-readable representation of this ChartDateType"""
-        if self == ChartDateTypeConstants.TODAY:
-            return 'Data from today only'
-        elif self == ChartDateTypeConstants.FROM_WEEK:
-            return 'Data submitted since Sunday'
-        elif self == ChartDateTypeConstants.ROLLING_WEEK:
-            return 'Data submitted in the last 7 days'
-        elif self == ChartDateTypeConstants.FROM_MONTH:
-            return 'Data submitted since the first of the month'
-        elif self == ChartDateTypeConstants.ROLLING_MONTH:
-            return 'Data submitted in the last 30 days'
-        elif self == ChartDateTypeConstants.FROM_YEAR:
-            return 'Data submitted since January 1st'
-        elif self == ChartDateTypeConstants.ROLLING_YEAR:
-            return 'Data submitted in the last 365 days'
 
 
 class Chart(db.Model):
