@@ -121,7 +121,7 @@ class AskQuestionForm(Form):
             ),
        ],
     )
-    
+
     content = TextAreaField(
        'Content',
        validators=[
