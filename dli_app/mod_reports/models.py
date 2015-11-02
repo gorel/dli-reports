@@ -124,8 +124,10 @@ class Report(db.Model):
         excel_helper = ExcelSheetHelper(
             filepath=self.excel_filepath_for_ds(start_ds, end_ds),
             report=self,
-            start_ds=start_ds,
-            end_ds=end_ds,
+            date_list=self.generate_date_list(
+                datetime.datetime.strptime(start_ds, '%Y-%m-%d'),
+                datetime.datetime.strptime(end_ds, '%Y-%m-%d'),
+            ),
         )
         excel_helper.write_all(self.collect_dept_fields())
         excel_helper.finalize()
@@ -176,15 +178,12 @@ class Field(db.Model):
     def get_data_for_date(self, ds, pretty=False):
         """Retrieve the FieldData instance for the given date stamp"""
         data_point = self.data_points.filter_by(ds=ds).first()
-        if pretty:
-            if data_point:
-                return data_point.pretty_value
-            else:
-                return "No data submitted."
-        elif data_point:
-            return data_point.value
-        else:
+        if not data_point:
             return ''
+        elif pretty:
+            return data_point.pretty_value
+        else:
+            return data_point.value
 
     @property
     def identifier(self):
@@ -374,18 +373,10 @@ class Chart(db.Model):
             date = datetime.date(today.year, 1, 1)
         elif self.cdtype == ChartDateTypeConstants.ROLLING_YEAR:
             date = today - datetime.timedelta(days=365)
-        elif self.cdtype == ChartDateTypeConstants.ALL_TIME:
-            weeks = today.year * 52
-            date = today - datetime.timedelta(weeks=weeks)
-            # Get the minimum date of the field's data points
-            min_ds = min(
-                p.ds for field in self.fields for p in field.data_points
-            )
-            date = datetime.datetime.strptime(min_ds, '%Y-%m-%d')
         else:
             raise NotImplementedError('Unexpected cdtype: %r' % self.cdtype)
 
-        ds_list = self.generate_date_list(date, today)
+        ds_list = [d.strftime('%Y-%m-%d') for d in self.generate_date_list(date, today)]
         return {
             field.identifier: [
                 field.data_points.filter_by(ds=ds).first() or FieldDataDummy(ds)
@@ -396,10 +387,19 @@ class Chart(db.Model):
 
     def generate_date_list(self, start, end):
         """Generate a ds list along an interval"""
-        return [
-            (start + datetime.timedelta(days=x)).strftime('%Y-%m-%d')
-            for x in range((end - start).days + 1)
-        ]
+        step = 1
+        if (end - start).days > 100:
+            step = 7
+        elif (end - start).days > 20:
+            step = 3
+        delta = datetime.timedelta(days=step)
+        dates = []
+
+        while start < end:
+            dates.append(start)
+            start += delta
+        dates.append(end)
+        return dates
 
     @property
     def tagnames(self):
@@ -579,16 +579,10 @@ class ExcelSheetHelper():
     row and column information.
     """
 
-    def __init__(self, filepath, report, start_ds, end_ds):
+    def __init__(self, filepath, report, date_list):
         """Initialize an ExcelSheetHelper by creating an XLSX Workbook"""
         self.report = report
-
-        # Convert the start and end ds to the more popular American style
-        self.start_date = datetime.datetime.strptime(start_ds, '%Y-%m-%d')
-        self.end_date = datetime.datetime.strptime(end_ds, '%Y-%m-%d')
-        self.start_ds = self.start_date.strftime('%m/%d/%Y')
-        self.end_ds = self.end_date.strftime('%m/%d/%Y')
-        self.timedelta = (self.end_date - self.start_date).days + 1
+        self.date_list = date_list
 
         self.workbook = xlsxwriter.Workbook(filepath)
         self.worksheet = self.workbook.add_worksheet()
@@ -651,17 +645,16 @@ class ExcelSheetHelper():
             self.row,
             self.col,
             "Data between {start} and {end}".format(
-                start=self.start_ds,
-                end=self.end_ds,
+                start=self.date_list[0].strftime('%m/%d/%Y'),
+                end=self.date_list[-1].strftime('%m/%d/%Y'),
             ),
             self.ds_format,
         )
         self.row += 1
 
         self.col += 1
-        for num_days in range(self.timedelta):
+        for date in date_list:
             # Write the ds headers
-            date = self.start_date + datetime.timedelta(days=num_days)
             self.worksheet.write(
                 self.row,
                 self.col,
@@ -698,9 +691,8 @@ class ExcelSheetHelper():
         )
         self.col += 1
 
-        for num_days in range(self.timedelta):
+        for date in date_list:
             # Write the data for each ds
-            date = self.start_date + datetime.timedelta(days=num_days)
             field_data = field.get_data_for_date(date.strftime('%Y-%m-%d'))
             if field_data:
                 self.worksheet.write(
@@ -802,7 +794,6 @@ class ChartDateTypeConstants():
         ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
         FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
         ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-        ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()
     except:
         TODAY = None
         FROM_WEEK = None
@@ -811,7 +802,6 @@ class ChartDateTypeConstants():
         ROLLING_MONTH = None
         FROM_YEAR = None
         ROLLING_YEAR = None
-        ALL_TIME = None
 
     def __init__(self):
         """Initialize a ChartDateTypeConstants instance"""
@@ -822,7 +812,6 @@ class ChartDateTypeConstants():
         self.ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
         self.FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
         self.ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-        self.ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()
 
     @classmethod
     def reload(cls):
@@ -834,7 +823,6 @@ class ChartDateTypeConstants():
         cls.ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
         cls.FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
         cls.ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-        cls.ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()
 
 
 class FieldDataDummy():
@@ -851,4 +839,4 @@ class FieldDataDummy():
     @property
     def pretty_value(self):
         """Return a human-readable representation of this FieldDataDummy"""
-        return 'No data submitted on this date'
+        return ''

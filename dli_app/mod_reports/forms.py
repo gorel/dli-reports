@@ -610,17 +610,16 @@ class ChangeDateAndDepartmentForm(Form):
 
     def validate(self):
         """Ensure the given date is within reasonable bounds"""
-        res = True
         if not Form.validate(self):
             return False
 
         if self.date.data > datetime.now().date():
             self.date.errors.append("Error: date is in the future")
-            res = False
+            return False
 
         self.ds = self.date.data.strftime("%Y-%m-%d")
         self.dept_id = self.department.data
-        return res
+        return True
 
     date = html5.DateField(
         "Date",
