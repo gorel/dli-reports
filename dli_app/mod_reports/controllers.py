@@ -591,4 +591,3 @@ def edit_chart(chart_id):
                 set_fields = [field for field in chart.fields if field.department.id == department.id]
                 getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit_chart.html', form=form, chart=chart)
-
