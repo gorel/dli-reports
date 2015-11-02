@@ -323,6 +323,128 @@ class CreateChartForm(Form):
         return LocalCreateChartForm
 
 
+class EditChartForm(Form):
+    """A form for editing new charts"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the edit chart form"""
+        Form.__init__(self, *args, **kwargs)
+        self.chart = None
+
+    chart_id = HiddenField()
+
+    name = TextField(
+        "Chart name",
+        validators=[
+            validators.Required(
+                message="Please give this chart a name.",
+            ),
+        ],
+    )
+
+    chart_type = SelectField(
+        "Chart Type",
+        coerce=int,
+    )
+
+    chart_date_type = SelectField(
+        "Date Range",
+        coerce=int,
+    )
+
+    with_table = BooleanField('Include table?')
+
+    tags = FieldList(
+        TextField(
+            'Tag',
+            filters=[lambda x: x or None],
+        ),
+        min_entries=5,
+    )
+
+    @classmethod
+    def get_instance(cls):
+        """Return a new class instance of a LocalEditChartForm"""
+        return cls.generate_local_edit_chart_form()
+
+    @classmethod
+    def generate_local_edit_chart_form(cls):
+        """Dynamically generate a class for the LocalEditChartForm"""
+        class LocalEditChartForm(EditChartForm):
+            """Local copy of a EditChartForm
+
+            This class represents a dynamic EditChartForm since we don't
+            know what fields are available until runtime. Form more info,
+            see LocalSubmitReportDataForm.
+            """
+
+            departments = []
+            def __init__(self, *args, **kwargs):
+                """Initialize the local form"""
+                EditChartForm.__init__(self, *args, **kwargs)
+                self.departments = [
+                    dept for dept in LocalEditChartForm.departments
+                ]
+                LocalEditChartForm.departments = []
+
+            def validate(self):
+                """Validate the form"""
+
+                if not Form.validate(self):
+                    return False
+
+                self.chart = Chart.query.get(self.chart_id.data)
+
+                chart_fields = []
+                for department in self.departments:
+                    multiselect = getattr(self, department.name)
+                    for field_id in multiselect.data:
+                        chart_fields.append(Field.query.get(field_id))
+
+                tags = [
+                    Tag.get_or_create(tag) for tag in self.tags.data
+                    if tag and tag.strip() != ''
+                ]
+
+                res = True
+                ctype = ChartType.query.get(self.chart_type.data)
+                if not ctype:
+                    self.chart_type.errors.append("Chart Type not found!")
+                    res = False
+
+                cdtype = ChartDateType.query.get(self.chart_date_type.data)
+                if not cdtype:
+                    self.chart_date_type.errors.append("Date Range not found!")
+                    res = False
+
+                self.chart.name = self.name.data
+                self.chart.with_table = self.with_table.data
+                self.chart.ctype = ctype
+                self.chart.cdtype = cdtype
+                self.chart.fields = chart_fields
+                self.chart.tags = tags
+
+                return res
+
+            @classmethod
+            def add_department(cls, department):
+                """Add the given department to this form dynamically"""
+                cls.departments.append(department)
+                formfield = SelectMultipleField(
+                    department.name,
+                    choices=[
+                        (field.id, field.name) for field in department.fields
+                    ],
+                    coerce=int,
+                    option_widget=widgets.CheckboxInput(),
+                    widget=widgets.ListWidget(prefix_label=False),
+                )
+
+                setattr(cls, department.name, formfield)
+
+        return LocalEditChartForm
+
+
 class SubmitReportDataForm(Form):
     """A form for submitting new report data"""
 
