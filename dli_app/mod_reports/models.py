@@ -439,9 +439,9 @@ class Chart(db.Model):
             step = 7
         elif (end - start).days > 20:
             step = 3
-
         delta = datetime.timedelta(days=step)
         dates = []
+
         while start < end:
             dates.append(start)
             start += delta
@@ -588,16 +588,10 @@ class ExcelSheetHelper():
     row and column information.
     """
 
-    def __init__(self, filepath, report, start_ds, end_ds):
+    def __init__(self, filepath, report, date_list):
         """Initialize an ExcelSheetHelper by creating an XLSX Workbook"""
         self.report = report
-
-        # Convert the start and end ds to the more popular American style
-        self.start_date = datetime.datetime.strptime(start_ds, '%Y-%m-%d')
-        self.end_date = datetime.datetime.strptime(end_ds, '%Y-%m-%d')
-        self.start_ds = self.start_date.strftime('%m/%d/%Y')
-        self.end_ds = self.end_date.strftime('%m/%d/%Y')
-        self.timedelta = (self.end_date - self.start_date).days + 1
+        self.date_list = date_list
 
         self.workbook = xlsxwriter.Workbook(filepath)
         self.worksheet = self.workbook.add_worksheet()
@@ -660,17 +654,16 @@ class ExcelSheetHelper():
             self.row,
             self.col,
             "Data between {start} and {end}".format(
-                start=self.start_ds,
-                end=self.end_ds,
+                start=self.date_list[0].strftime('%m/%d/%Y'),
+                end=self.date_list[-1].strftime('%m/%d/%Y'),
             ),
             self.ds_format,
         )
         self.row += 1
 
         self.col += 1
-        for num_days in range(self.timedelta):
+        for date in date_list:
             # Write the ds headers
-            date = self.start_date + datetime.timedelta(days=num_days)
             self.worksheet.write(
                 self.row,
                 self.col,
@@ -707,9 +700,8 @@ class ExcelSheetHelper():
         )
         self.col += 1
 
-        for num_days in range(self.timedelta):
+        for date in date_list:
             # Write the data for each ds
-            date = self.start_date + datetime.timedelta(days=num_days)
             field_data = field.get_data_for_date(date.strftime('%Y-%m-%d'))
             if field_data:
                 self.worksheet.write(
