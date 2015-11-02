@@ -70,15 +70,15 @@ class SearchForm(Form):
 
     def validate(self):
         """Validate the form"""
-	res = True
+        res = True
         if not Form.validate(self):
-	    res = False
+            res = False
 
-	query = '%{}%'.format(self.search_box.data)
-	self.results = WikiPage.query.filter(or_(
-	    WikiPage.name.like(query),
-	    WikiPage.content.like(query)
-	)).all()
+        query = '%{}%'.format(self.search_box.data)
+        self.results = WikiPage.query.filter(or_(
+            WikiPage.name.like(query),
+            WikiPage.content.like(query)
+        )).all()
 
         return res
 
