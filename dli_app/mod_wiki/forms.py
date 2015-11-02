@@ -90,6 +90,7 @@ class SearchForm(Form):
         ],
     )
 
+
 class AskQuestionForm(Form):
 
     """A form for asking questions to administrators"""
@@ -121,7 +122,7 @@ class AskQuestionForm(Form):
             ),
        ],
     )
-    
+
     content = TextAreaField(
        'Content',
        validators=[
@@ -130,4 +131,3 @@ class AskQuestionForm(Form):
            ),
        ],
     )
-
