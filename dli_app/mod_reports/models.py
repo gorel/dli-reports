@@ -292,8 +292,10 @@ class Report(db.Model):
         excel_helper = ExcelSheetHelper(
             filepath=self.excel_filepath_for_ds(start_ds, end_ds),
             report=self,
-            start_ds=start_ds,
-            end_ds=end_ds,
+            date_list=self.generate_date_list(
+                datetime.datetime.strptime(start_ds, '%Y-%m-%d'),
+                datetime.datetime.strptime(end_ds, '%Y-%m-%d'),
+            ),
         )
         excel_helper.write_all(self.collect_dept_fields())
         excel_helper.finalize()
@@ -305,17 +307,10 @@ class Report(db.Model):
             EXCEL_FILE_DIR,
         )
         globpath = os.path.join(basepath, self.name + '*.xlsx')
-<<<<<<< HEAD
 
         for filename in glob.glob(globpath):
             os.remove(os.path.join(basepath, filename))
 
-=======
-
-        for filename in glob.glob(globpath):
-            os.remove(os.path.join(basepath, filename))
-
->>>>>>> Fix merge conflicts
     def collect_dept_fields(self):
         """Collect all of the department data for this Report"""
         dept_data = collections.defaultdict(list)
@@ -345,15 +340,12 @@ class ChartType(db.Model):
     def get_data_for_date(self, ds, pretty=False):
         """Retrieve the FieldData instance for the given date stamp"""
         data_point = self.data_points.filter_by(ds=ds).first()
-        if pretty:
-            if data_point:
-                return data_point.pretty_value
-            else:
-                return ''
-        elif data_point:
-            return data_point.value
-        else:
+        if not data_point:
             return ''
+        elif pretty:
+            return data_point.pretty_value
+        else:
+            return data_point.value
 
 
 class ChartDateType(db.Model):
