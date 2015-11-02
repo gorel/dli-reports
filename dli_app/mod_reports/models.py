@@ -137,10 +137,17 @@ class Report(db.Model):
             EXCEL_FILE_DIR,
         )
         globpath = os.path.join(basepath, self.name + '*.xlsx')
+<<<<<<< HEAD
 
         for filename in glob.glob(globpath):
             os.remove(os.path.join(basepath, filename))
 
+=======
+
+        for filename in glob.glob(globpath):
+            os.remove(os.path.join(basepath, filename))
+
+>>>>>>> Fix merge conflicts
     def collect_dept_fields(self):
         """Collect all of the department data for this Report"""
         dept_data = collections.defaultdict(list)
