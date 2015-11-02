@@ -66,6 +66,9 @@
               <div class="btn-group">
                 <a href="{{ url_for('reports.view_chart', chart_id=chart.id) }}" class="btn btn-info btn-xs">View</a>
               </div>
+              <div class="btn-group">
+                <a href="{{ url_for('reports.edit_chart', chart_id=chart.id) }}" class="btn btn-warning btn-xs">Edit Chart</a>
+              </div>
             {% else %}
               <form method="POST" action="{{ url_for('reports.unfavorite_chart', chart_id=chart.id) }}">
                 <button type="submit" class="btn btn-warning btn-xs">
@@ -79,6 +82,9 @@
 
               <div class="btn-group">
                 <a href="{{ url_for('reports.view_chart', chart_id=chart.id) }}" class="btn btn-info btn-xs">View</a>
+              </div>
+              <div class="btn-group">
+                <a href="{{ url_for('reports.edit_chart', chart_id=chart.id) }}" class="btn btn-warning btn-xs">Edit Chart</a>
               </div>
             {% endif %}
           </td>
