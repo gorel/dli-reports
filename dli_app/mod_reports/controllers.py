@@ -578,7 +578,3 @@ def edit_chart(chart_id):
                 getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit_chart.html', form=form, chart=chart)
 
-<<<<<<< HEAD
->>>>>>> Added edit chart functionality
-=======
->>>>>>> 214d1e9a80137a3c4f725f7f39b08c98408abf2e
