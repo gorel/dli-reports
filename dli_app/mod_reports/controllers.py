@@ -45,6 +45,7 @@ from dli_app.mod_reports.forms import (
     ChangeDateForm,
     ChangeDateAndDepartmentForm,
     CreateChartForm,
+    EditChartForm,
     CreateReportForm,
     SubmitReportDataForm,
     EditReportForm,
@@ -516,3 +517,49 @@ def delete_chart(chart_id):
             db.session.commit()
             flash("Chart deleted", "alert-success")
     return redirect(request.args.get('next') or url_for('reports.my_charts'))
+
+@mod_reports.route('/charts/edit/<int:chart_id>', methods=['GET','POST'])
+@mod_reports.route('/charts/edit/<int:chart_id>/', methods=['GET','POST'])
+@login_required
+def edit_chart(chart_id):
+    """Edit the specified chart"""
+    chart = Chart.query.get(chart_id)
+    if chart is None:
+        flash(
+            "Error: Chart not found!",
+            "alert-warning",
+        )
+    elif not current_user.is_admin and not chart.user.id == current_user.id:
+        flash(
+            "You don't have permission to delete that.",
+            "alert-warning",
+        )
+    else:
+        LocalEditChartForm = EditChartForm.get_instance()
+        for department in Department.query.all():
+            LocalEditChartForm.add_department(department)
+
+        form = LocalEditChartForm()
+        form.chart_type.choices = [
+            (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
+        ]
+        form.chart_date_type.choices = [
+            (cdtype.id, cdtype.name.upper().replace('_', ' ')) for cdtype in ChartDateType.query.all()
+        ]
+        if form.validate_on_submit():
+            flash('Chart: {name} has been updated'.format(name=form.chart.name), 'alert-success')
+            db.session.commit()
+
+            return redirect(url_for('reports.my_charts'))
+        else:
+            flash_form_errors(form)
+            form.chart_id.data = chart_id
+            form.name.data = chart.name
+            form.chart_type.data = chart.ctype.id
+            form.chart_date_type.data = chart.cdtype.id
+            form.with_table.data = chart.with_table
+            for department in Department.query.all():
+                set_fields = [field for field in chart.fields if field.department.id == department.id]
+                getattr(form, department.name).data = [f.id for f in set_fields]
+            return render_template('reports/edit_chart.html', form=form, chart=chart)
+
