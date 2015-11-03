@@ -14,6 +14,12 @@
     <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 
+    <!-- Scripts for c3 charts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/c3/c3.min.css') }}">
+
+    <script src="{{ url_for('static', filename='js/d3/d3.min.js') }}" charset="utf-8"></script>
+    <script src="{{ url_for('static', filename='js/c3/c3.min.js') }}"></script>
+
     <link rel="apple-touch-icon" sizes="57x57" href="{{ url_for('static', filename='favicon/apple-icon-57x57.png') }}">
     <link rel="apple-touch-icon" sizes="60x60" href="{{ url_for('static', filename='favicon/apple-icon-60x60.png') }}">
     <link rel="apple-touch-icon" sizes="72x72" href="{{ url_for('static', filename='favicon/apple-icon-72x72.png') }}">
@@ -31,7 +37,6 @@
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{{ url_for('static', filename='favicon/ms-icon-144x144.png') }}">
     <meta name="theme-color" content="#ffffff">
-
   </head>
 
   <body>

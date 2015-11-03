@@ -91,3 +91,45 @@ class SearchForm(Form):
             ),
         ],
     )
+
+class AskQuestionForm(Form):
+
+    """A form for asking questions to administrators"""
+    def __init__(self, *args, **kwargs):
+        """Initialize a ForgotForm"""
+        Form.__init__(self, *args, **kwargs)
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+        return True
+
+    email = TextField(
+        'Your Email',
+        validators=[
+            validators.Email(),
+            validators.Required(
+                message='You must provide a valid email address.',
+            ),
+       ],
+   )
+
+    emailtitle = TextField(
+        'Title',
+        validators=[
+            validators.Required(
+                message='Please enter your email title.',
+            ),
+       ],
+    )
+    
+    content = TextAreaField(
+       'Content',
+       validators=[
+           validators.Required(
+               message='Please enter the content of your email.',
+           ),
+       ],
+    )
+

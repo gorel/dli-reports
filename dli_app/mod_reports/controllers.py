@@ -33,6 +33,9 @@ from dli_app.mod_auth.models import (
 )
 
 from dli_app.mod_reports.models import (
+    Chart,
+    ChartType,
+    ChartDateType,
     Report,
     Field
 )
@@ -41,8 +44,12 @@ from dli_app.mod_reports.models import (
 from dli_app.mod_reports.forms import (
     ChangeDateForm,
     ChangeDateAndDepartmentForm,
+    CreateChartForm,
+    EditChartForm,
     CreateReportForm,
     SubmitReportDataForm,
+    EditReportForm,
+    SearchForm,
 )
 
 # Create a blueprint for this module
@@ -326,3 +333,248 @@ def delete_report(report_id):
                 "alert-success",
             )
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
+
+
+@mod_reports.route('/edit/<int:report_id>', methods=['GET','POST'])
+@mod_reports.route('/edit/<int:report_id>/', methods=['GET','POST'])
+@login_required
+def edit_report(report_id):
+    """Edit the specified report"""
+    report = Report.query.get(report_id)
+    if report is None:
+        flash(
+            "Report not found!",
+            "alert-warning",
+        )
+    elif not current_user.is_admin and not report.user.id == current_user.id:
+        flash(
+            "You don't have permission to edit that.",
+            "alert-warning",
+        )
+    else:
+        LocalEditReportForm = EditReportForm.get_instance()
+        for department in Department.query.all():
+            LocalEditReportForm.add_department(department)
+
+        form = LocalEditReportForm()
+        if form.validate_on_submit():
+            flash('Report: {name} has been updated'.format(name=form.report.name), 'alert-success')
+            db.session.commit()
+
+            return redirect(url_for('reports.my_reports'))
+        else:
+            flash_form_errors(form)
+            form.name.data = report.name
+            form.report_id.data = report_id
+            for department in Department.query.all():
+                set_fields = [field for field in report.fields if field.department.id == department.id]
+                getattr(form, department.name).data = [f.id for f in set_fields]
+            return render_template('reports/edit.html', form=form, report=report)
+
+
+@mod_reports.route('/search', methods=['GET', 'POST'])
+@mod_reports.route('/search/', methods=['GET', 'POST'])
+@login_required
+def search():
+    """Search for reports that contains a keyword in owner,name,tag,department,location"""
+    form = SearchForm()
+    if form.validate_on_submit():
+        return render_template('reports/search_results.html', reports=form.reports)
+    else:
+        flash_form_errors(form)
+        return render_template('reports/search.html', form=form)
+
+
+@mod_reports.route('/charts', methods=['GET'])
+@mod_reports.route('/charts/', methods=['GET'])
+@mod_reports.route('/charts/me', methods=['GET'])
+@mod_reports.route('/charts/me/', methods=['GET'])
+@mod_reports.route('/charts/me/<int:page_num>', methods=['GET'])
+@mod_reports.route('/charts/me/<int:page_num>/', methods=['GET'])
+@login_required
+def my_charts(page_num=1):
+    """View the current user's charts"""
+    # Download charts that belong to the current user
+    charts = Chart.query.filter_by(owner_id=current_user.id).paginate(page_num)
+    return render_template('reports/my_charts.html', charts=charts)
+
+
+@mod_reports.route('/charts/all', methods=['GET'])
+@mod_reports.route('/charts/all/', methods=['GET'])
+@mod_reports.route('/charts/all/<int:page_num>', methods=['GET'])
+@mod_reports.route('/charts/all/<int:page_num>/', methods=['GET'])
+@login_required
+def all_charts(page_num=1):
+    """View all charts"""
+    # Download all charts in the database
+    charts = Chart.query.paginate(page_num)
+    return render_template('reports/all_charts.html', charts=charts)
+
+
+@mod_reports.route('/charts/view/<int:chart_id>', methods=['GET'])
+@mod_reports.route('/charts/view/<int:chart_id>/', methods=['GET'])
+@login_required
+def view_chart(chart_id):
+    """View a specific chart"""
+    chart = Chart.query.get(chart_id)
+    if chart is None:
+        flash('Error: Chart not found', 'alert-warning')
+        return redirect(url_for('reports.my_charts'))
+    else:
+        return render_template('reports/view_chart.html', chart=chart)
+
+
+@mod_reports.route('/charts/favorite/<int:chart_id>', methods=['POST'])
+@mod_reports.route('/charts/favorite/<int:chart_id>/', methods=['POST'])
+@login_required
+def favorite_chart(chart_id):
+    """Add a chart to the user's favorite charts"""
+    chart = Chart.query.get(chart_id)
+    if chart is None:
+        flash(
+            "No chart with that chart_id found!",
+            "alert-warning",
+        )
+    else:
+        current_user.favorite_chart(chart)
+        db.session.commit()
+        flash(
+            "Added Chart: {name} to favorites list".format(name=chart.name),
+            "alert-success",
+        )
+    return redirect(request.args.get('next') or url_for('reports.my_charts'))
+
+
+@mod_reports.route('/charts/unfavorite/<int:chart_id>', methods=['POST'])
+@mod_reports.route('/charts/unfavorite/<int:chart_id>/', methods=['POST'])
+@login_required
+def unfavorite_chart(chart_id):
+    """Remove a chart from the user's favorite charts"""
+    chart = Chart.query.get(chart_id)
+    if chart is None:
+        flash(
+            "No chart with that chart_id found!",
+            "alert-warning",
+        )
+    else:
+        current_user.unfavorite_chart(chart)
+        db.session.commit()
+        flash(
+            "Removed Chart: {name} from favorites list".format(name=chart.name),
+            "alert-success",
+        )
+    return redirect(request.args.get('next') or url_for('reports.my_charts'))
+
+
+@mod_reports.route('/charts/create', methods=['GET', 'POST'])
+@mod_reports.route('/charts/create/', methods=['GET', 'POST'])
+@login_required
+def create_chart():
+    """Create a new chart
+
+    If the user successfully submitted the form, add the new chart to the db,
+    commit the session, and redirect the user to the list of their charts.
+    Otherwise, render the template to show the user the create chart page.
+    """
+
+    LocalCreateChartForm = CreateChartForm.get_instance()
+    for department in Department.query.all():
+        LocalCreateChartForm.add_department(department)
+
+    form = LocalCreateChartForm()
+    form.user_id.data = current_user.id
+    form.chart_type.choices = [
+        (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
+    ]
+    form.chart_date_type.choices = [
+        (cdtype.id, cdtype.name.upper().replace('_', ' ')) for cdtype in ChartDateType.query.all()
+    ]
+    if form.validate_on_submit():
+        # Add the new chart to the database
+        db.session.add(form.chart)
+        db.session.commit()
+
+        return redirect(url_for('reports.my_charts'))
+    else:
+        flash_form_errors(form)
+        return render_template('reports/create_chart.html', form=form)
+
+
+@mod_reports.route('charts/delete/<int:chart_id>', methods=['POST'])
+@mod_reports.route('charts/delete/<int:chart_id>/', methods=['POST'])
+@login_required
+def delete_chart(chart_id):
+    """Delete the specified chart"""
+    chart = Chart.query.get(chart_id)
+    if chart is None:
+        flash("Error: Chart not found!", "alert-warning")
+    elif not current_user.is_admin and not chart.user.id == current_user.id:
+        flash(
+            "You don't have permission to delete that.",
+            "alert-warning",
+        )
+    else:
+        # Before deleting the chart, check to see if any other users have
+        # favorited this chart. If so, simply transfer ownership to them
+        current_user.unfavorite_chart(chart)
+        if chart.favorite_users:
+            user = chart.favorite_users[0]
+            chart.user = user
+            db.session.commit()
+            flash(
+                "Chart ownership was transferred to {{ user.name }} since "
+                "the chart was in that user's favorites list.",
+                "alert-success",
+            )
+        else:
+            db.session.delete(chart)
+            db.session.commit()
+            flash("Chart deleted", "alert-success")
+    return redirect(request.args.get('next') or url_for('reports.my_charts'))
+
+
+@mod_reports.route('/charts/edit/<int:chart_id>', methods=['GET','POST'])
+@mod_reports.route('/charts/edit/<int:chart_id>/', methods=['GET','POST'])
+@login_required
+def edit_chart(chart_id):
+    """Edit the specified chart"""
+    chart = Chart.query.get(chart_id)
+    if chart is None:
+        flash(
+            "Error: Chart not found!",
+            "alert-warning",
+        )
+    elif not current_user.is_admin and not chart.user.id == current_user.id:
+        flash(
+            "You don't have permission to delete that.",
+            "alert-warning",
+        )
+    else:
+        LocalEditChartForm = EditChartForm.get_instance()
+        for department in Department.query.all():
+            LocalEditChartForm.add_department(department)
+
+        form = LocalEditChartForm()
+        form.chart_type.choices = [
+            (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
+        ]
+        form.chart_date_type.choices = [
+            (cdtype.id, cdtype.name.upper().replace('_', ' ')) for cdtype in ChartDateType.query.all()
+        ]
+        if form.validate_on_submit():
+            flash('Chart: {name} has been updated'.format(name=form.chart.name), 'alert-success')
+            db.session.commit()
+
+            return redirect(url_for('reports.my_charts'))
+        else:
+            flash_form_errors(form)
+            form.chart_id.data = chart_id
+            form.name.data = chart.name
+            form.chart_type.data = chart.ctype.id
+            form.chart_date_type.data = chart.cdtype.id
+            form.with_table.data = chart.with_table
+            for department in Department.query.all():
+                set_fields = [field for field in chart.fields if field.department.id == department.id]
+                getattr(form, department.name).data = [f.id for f in set_fields]
+            return render_template('reports/edit_chart.html', form=form, chart=chart)
+

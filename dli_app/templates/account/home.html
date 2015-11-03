@@ -1,6 +1,41 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <h1>My Account</h1>
+    <h1>
+      My Account
+      <a class="btn btn-primary pull-right" href="{{ url_for('account.edit') }}">Edit Account</a>
+    </h1>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-6">
+      <div class="well well-sm">
+        <div class="row">
+          <div class="col-sm-12 col-md-12">
+            <h3>Name: {{ current_user.name }}</h3>
+            <p>
+                Email: {{ current_user.email }}
+                <br>
+                Location: {{ current_user.location.name }}
+                <br>
+                Department: {{ current_user.department.name }}
+                {% if current_user.is_admin %}
+                <br>
+                <b><font color="red">Admin account</font></b>
+                {% endif %}
+            </p>
+            <hr>
+            <p>
+                {% if current_user.reports %}
+                  <a href="{{ url_for('reports.my_reports') }}">My Reports</a>
+                {% endif %}
+                {% if current_user.charts %}
+                  <a class="pull-right" href="{{ url_for('reports.my_charts') }}">My Charts</a>
+                {% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}

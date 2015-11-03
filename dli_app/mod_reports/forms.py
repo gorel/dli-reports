@@ -12,6 +12,7 @@ from flask_wtf import (
 )
 
 from wtforms import (
+    BooleanField,
     DecimalField,
     FieldList,
     HiddenField,
@@ -26,9 +27,13 @@ from wtforms import (
 
 from dli_app.mod_auth.models import (
     Department,
+    User,
 )
 
 from dli_app.mod_reports.models import (
+    Chart,
+    ChartType,
+    ChartDateType,
     Field,
     FieldData,
     FieldTypeConstants,
@@ -143,8 +148,9 @@ class CreateReportForm(Form):
 
             def validate(self):
                 """Validate the form"""
+                res = True
                 if not Form.validate(self):
-                    return False
+                    res = False
 
                 report_fields = []
                 for department in self.departments:
@@ -157,14 +163,19 @@ class CreateReportForm(Form):
                     if tag and tag.strip() != ''
                 ]
 
+                user = User.query.get(self.user_id.data)
+                if not user:
+                    self.user_id.errors.append("User not found!")
+                    res = False
+
                 self.report = Report(
-                    user_id=self.user_id.data,
+                    user=user,
                     name=self.name.data,
                     fields=report_fields,
                     tags=tags,
                 )
 
-                return True
+                return res
 
             @classmethod
             def add_department(cls, department):
@@ -183,6 +194,255 @@ class CreateReportForm(Form):
                 setattr(cls, department.name, formfield)
 
         return LocalCreateReportForm
+
+
+class CreateChartForm(Form):
+    """A form for creating new charts"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the create chart form"""
+        Form.__init__(self, *args, **kwargs)
+        self.chart = None
+
+    user_id = HiddenField()
+
+    name = TextField(
+        "Chart name",
+        validators=[
+            validators.Required(
+                message="Please give this chart a name.",
+            ),
+        ],
+    )
+
+    chart_type = SelectField(
+        "Chart Type",
+        coerce=int,
+    )
+
+    chart_date_type = SelectField(
+        "Date Range",
+        coerce=int,
+    )
+
+    with_table = BooleanField('Include table?')
+
+    tags = FieldList(
+        TextField(
+            'Tag',
+            filters=[lambda x: x or None],
+        ),
+        min_entries=5,
+    )
+
+    @classmethod
+    def get_instance(cls):
+        """Return a new class instance of a LocalCreateChartForm"""
+        return cls.generate_local_create_chart_form()
+
+    @classmethod
+    def generate_local_create_chart_form(cls):
+        """Dynamically generate a class for the LocalCreateChartForm"""
+        class LocalCreateChartForm(CreateChartForm):
+            """Local copy of a CreateChartForm
+
+            This class represents a dynamic CreateChartForm since we don't
+            know what fields are available until runtime. Form more info,
+            see LocalSubmitReportDataForm.
+            """
+
+            departments = []
+            def __init__(self, *args, **kwargs):
+                """Initialize the local form"""
+                CreateChartForm.__init__(self, *args, **kwargs)
+                self.departments = [
+                    dept for dept in LocalCreateChartForm.departments
+                ]
+                LocalCreateChartForm.departments = []
+
+            def validate(self):
+                """Validate the form"""
+                res = True
+                if not Form.validate(self):
+                    res = False
+
+                chart_fields = []
+                for department in self.departments:
+                    multiselect = getattr(self, department.name)
+                    for field_id in multiselect.data:
+                        chart_fields.append(Field.query.get(field_id))
+
+                tags = [
+                    Tag.get_or_create(tag) for tag in self.tags.data
+                    if tag and tag.strip() != ''
+                ]
+
+                user = User.query.get(self.user_id.data)
+                if not user:
+                    self.user_id.errors.append("User not found!")
+                    res = False
+
+                ctype = ChartType.query.get(self.chart_type.data)
+                if not ctype:
+                    self.chart_type.errors.append("Chart Type not found!")
+                    res = False
+
+                cdtype = ChartDateType.query.get(self.chart_date_type.data)
+                if not cdtype:
+                    self.chart_date_type.errors.append("Date Range not found!")
+                    res = False
+
+                self.chart = Chart(
+                    name=self.name.data,
+                    with_table=self.with_table.data,
+                    user=user,
+                    ctype=ctype,
+                    cdtype=cdtype,
+                    fields=chart_fields,
+                    tags=tags,
+                )
+
+                return res
+
+            @classmethod
+            def add_department(cls, department):
+                """Add the given department to this form dynamically"""
+                cls.departments.append(department)
+                formfield = SelectMultipleField(
+                    department.name,
+                    choices=[
+                        (field.id, field.name) for field in department.fields
+                    ],
+                    coerce=int,
+                    option_widget=widgets.CheckboxInput(),
+                    widget=widgets.ListWidget(prefix_label=False),
+                )
+
+                setattr(cls, department.name, formfield)
+
+        return LocalCreateChartForm
+
+
+class EditChartForm(Form):
+    """A form for editing new charts"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the edit chart form"""
+        Form.__init__(self, *args, **kwargs)
+        self.chart = None
+
+    chart_id = HiddenField()
+
+    name = TextField(
+        "Chart name",
+        validators=[
+            validators.Required(
+                message="Please give this chart a name.",
+            ),
+        ],
+    )
+
+    chart_type = SelectField(
+        "Chart Type",
+        coerce=int,
+    )
+
+    chart_date_type = SelectField(
+        "Date Range",
+        coerce=int,
+    )
+
+    with_table = BooleanField('Include table?')
+
+    tags = FieldList(
+        TextField(
+            'Tag',
+            filters=[lambda x: x or None],
+        ),
+        min_entries=5,
+    )
+
+    @classmethod
+    def get_instance(cls):
+        """Return a new class instance of a LocalEditChartForm"""
+        return cls.generate_local_edit_chart_form()
+
+    @classmethod
+    def generate_local_edit_chart_form(cls):
+        """Dynamically generate a class for the LocalEditChartForm"""
+        class LocalEditChartForm(EditChartForm):
+            """Local copy of a EditChartForm
+
+            This class represents a dynamic EditChartForm since we don't
+            know what fields are available until runtime. Form more info,
+            see LocalSubmitReportDataForm.
+            """
+
+            departments = []
+            def __init__(self, *args, **kwargs):
+                """Initialize the local form"""
+                EditChartForm.__init__(self, *args, **kwargs)
+                self.departments = [
+                    dept for dept in LocalEditChartForm.departments
+                ]
+                LocalEditChartForm.departments = []
+
+            def validate(self):
+                """Validate the form"""
+
+                if not Form.validate(self):
+                    return False
+
+                self.chart = Chart.query.get(self.chart_id.data)
+
+                chart_fields = []
+                for department in self.departments:
+                    multiselect = getattr(self, department.name)
+                    for field_id in multiselect.data:
+                        chart_fields.append(Field.query.get(field_id))
+
+                tags = [
+                    Tag.get_or_create(tag) for tag in self.tags.data
+                    if tag and tag.strip() != ''
+                ]
+
+                res = True
+                ctype = ChartType.query.get(self.chart_type.data)
+                if not ctype:
+                    self.chart_type.errors.append("Chart Type not found!")
+                    res = False
+
+                cdtype = ChartDateType.query.get(self.chart_date_type.data)
+                if not cdtype:
+                    self.chart_date_type.errors.append("Date Range not found!")
+                    res = False
+
+                self.chart.name = self.name.data
+                self.chart.with_table = self.with_table.data
+                self.chart.ctype = ctype
+                self.chart.cdtype = cdtype
+                self.chart.fields = chart_fields
+                self.chart.tags = tags
+
+                return res
+
+            @classmethod
+            def add_department(cls, department):
+                """Add the given department to this form dynamically"""
+                cls.departments.append(department)
+                formfield = SelectMultipleField(
+                    department.name,
+                    choices=[
+                        (field.id, field.name) for field in department.fields
+                    ],
+                    coerce=int,
+                    option_widget=widgets.CheckboxInput(),
+                    widget=widgets.ListWidget(prefix_label=False),
+                )
+
+                setattr(cls, department.name, formfield)
+
+        return LocalEditChartForm
 
 
 class SubmitReportDataForm(Form):
@@ -260,6 +520,7 @@ class SubmitReportDataForm(Form):
                     formfield = TextField(
                         field.name,
                         validators=[
+                            validators.Optional(),
                             SplitNumValidator(
                                 split='.',
                                 filter_chars="$,",
@@ -275,22 +536,26 @@ class SubmitReportDataForm(Form):
                 elif field.ftype == FieldTypeConstants.DOUBLE:
                     formfield = DecimalField(
                         field.name,
+                        validators=[validators.Optional()],
                         filters=[lambda x: x or None],
                     )
                 elif field.ftype == FieldTypeConstants.INTEGER:
                     formfield = IntegerField(
                         field.name,
+                        validators=[validators.Optional()],
                         filters=[lambda x: x or None],
                     )
                 elif field.ftype == FieldTypeConstants.STRING:
                     formfield = TextField(
                         field.name,
+                        validators=[validators.Optional()],
                         filters=[lambda x: x or None],
                     )
                 elif field.ftype == FieldTypeConstants.TIME:
                     formfield = TextField(
                         field.name,
                         validators=[
+                            validators.Optional(),
                             SplitNumValidator(
                                 split=':',
                                 filter_chars="ms",
@@ -364,4 +629,150 @@ class ChangeDateAndDepartmentForm(Form):
     department = SelectField(
         "Department",
         coerce=int,
+    )
+
+
+class EditReportForm(Form):
+    """A form for creating a new report"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the edit report form"""
+        Form.__init__(self, *args, **kwargs)
+        self.report = None
+
+    report_id = HiddenField()
+
+    name = TextField(
+        "Report name",
+        validators=[
+            validators.Required(
+                message="Please give this report a name.",
+            ),
+        ],
+    )
+
+    tags = FieldList(
+        TextField(
+            'Tag',
+            filters=[lambda x: x or None],
+        ),
+        min_entries=5,
+    )
+
+    @classmethod
+    def get_instance(cls):
+        """Return a new class instance of a LocalEditReportForm"""
+        return cls.generate_local_edit_report_form()
+
+    @classmethod
+    def generate_local_edit_report_form(cls):
+        """Dynamically generate a class for the EditReportDataForm"""
+        class LocalEditReportForm(EditReportForm):
+            """Local copy of a EditReportForm
+
+            This class represents a dynamic EditReportForm since we don't
+            know what fields are available until runtime. For more info,
+            see LocalSubmitReportDataForm.
+            """
+
+            departments = []
+            def __init__(self, *args, **kwargs):
+                """Initialize the local form"""
+                EditReportForm.__init__(self, *args, **kwargs)
+                self.departments = [
+                    dept for dept in LocalEditReportForm.departments
+                ]
+                LocalEditReportForm.departments = []
+
+            def validate(self):
+                """Validate the form"""
+                if not Form.validate(self):
+                    return False
+
+                self.report = Report.query.get(self.report_id.data)
+
+                report_fields = []
+                for department in self.departments:
+                    multiselect = getattr(self, department.name)
+                    for field_id in multiselect.data:
+                        report_fields.append(Field.query.get(field_id))
+
+                tags = [
+                    Tag.get_or_create(tag) for tag in self.tags.data
+                    if tag and tag.strip() != ''
+                ]
+
+                self.report.name = self.name.data
+                self.report.fields = report_fields
+                self.report.tags = tags
+
+                return True
+
+            @classmethod
+            def add_department(cls, department):
+                """Add the given department to this form dynamically"""
+                cls.departments.append(department)
+                formfield = SelectMultipleField(
+                    department.name,
+                    choices=[
+                        (field.id, field.name) for field in department.fields
+                    ],
+                    coerce=int,
+                    option_widget=widgets.CheckboxInput(),
+                    widget=widgets.ListWidget(prefix_label=False),
+                )
+
+                setattr(cls, department.name, formfield)
+
+        return LocalEditReportForm
+
+
+class SearchForm(Form):
+    """Form to search for a report"""
+    REPORTNAME_CHOICE = 0
+    OWNER_CHOICE = 1
+    EMAIL_CHOICE = 2
+    TAG_CHOICE = 3
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the SearchForm object"""
+        Form.__init__(self, *args, **kwargs)
+        self.reports = []
+
+    def validate(self):
+        """Validate the form"""
+        res = True
+        if not Form.validate(self):
+            return False
+
+        choice = self.filter_choices.data
+        search_text = "%{}%".format(self.search_text.data)
+        if choice == self.OWNER_CHOICE:
+            self.reports = Report.query.filter(Report.user.name.ilike(search_text)).all()
+        elif choice == self.EMAIL_CHOICE:
+            self.reports = Report.query.filter(Report.user.email.ilike(search_text)).all()
+        elif choice == self.REPORTNAME_CHOICE:
+            print("Filter Report name like {}".format(search_text))
+            self.reports = Report.query.filter(Report.name.ilike(search_text)).all()
+        elif choice == self.TAG_CHOICE:
+            self.reports = Report.query.join(Tag, Report.tags).filter(Tag.name.ilike(search_text)).all()
+        else:
+            filter_choices.errors.append('Not a valid choice!')
+	    return False
+
+        return True
+
+    filter_choices = SelectField(
+        "Filter by",
+        choices=[(REPORTNAME_CHOICE, 'Report Name'), (OWNER_CHOICE, 'Owner Name'), (EMAIL_CHOICE, 'Owner Email'), (TAG_CHOICE, 'Tag')],
+        coerce=int,
+    )
+
+    search_text = TextField(
+        "Search",
+        validators=[
+            validators.Required(
+                "Please enter a search term",
+            ),
+        ],
     )

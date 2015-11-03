@@ -1,0 +1,14 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <div class="page-header">
+    <h1>Chart: {{chart.name }}</h1>
+  </div>
+
+  <p>Tags: {{ chart.tagnames|join(', ') }}</p>
+
+  <div id="chart"></div>
+
+  <script>
+  {{ chart.generated_js|safe }}
+  </script>
+{% endblock %}
