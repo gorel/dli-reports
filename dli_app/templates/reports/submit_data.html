@@ -12,25 +12,27 @@
       For "{{ report.name }}"
       in {{ change_form.department(class='form-control') }}
       on {{ change_form.date(class='form-control') }}
-      <button type="submit" class="btn btn-sm btn-primary">Update</button>
+      <button type="submit" class="btn btn-sm btn-default">Update</button>
     </p>
   </form>
 
 
-  <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id, ds=ds, dept_id=department.id) }}" class="form-horizontal">
+  <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id, ds=ds, dept_id=department.id) }}">
     {{ form.csrf_token }}
     {{ form.ds }}
-    {% for field_set in zip(*[iter(form.instance_fields)]*10) %}
-      <div class="col-md-3">
+    {% for field_set in chunked_fields %}
+      <div class="col-sm-4 field-set">
         {% for field in field_set %}
-          <div class="form-group">
-            {{ form[field.name].label(class='control-label col-sm-2') }}
-            <div class="col-sm-10">
-              {{ form[field.name](class='form-control') }}
-            </div>
+          <div class="field">
+            <span class="field-cell field-label">{{ form[field.name].label() }}</span>
+            <span class="field-cell field-input">{{ form[field.name] }}</span>
           </div>
         {% endfor %}
       </div>
+
+      {% if loop.index % 3 == 0 %}
+        <div class="clearfix"></div>
+      {% endif %}
     {% endfor %}
 
     <div class="form-group">

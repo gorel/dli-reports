@@ -236,10 +236,15 @@ def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_i
                 if existing_value is not None:
                     formfield.data = existing_value.value
 
+        chunk_size = 10
+        field_list = form.instance_fields
+        chunked_fields = [field_list[n:n+chunk_size] for n in range(0, len(field_list), chunk_size)]
+
         return render_template(
             'reports/submit_data.html',
             change_form=change_form,
             form=form,
+            chunked_fields=chunked_fields,
             report=report,
             department=department,
             ds=ds,
