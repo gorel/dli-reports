@@ -248,7 +248,7 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.INTEGER:
             return self.ivalue
         elif ftype == FieldTypeConstants.STRING:
-            return "'{}'".format(self.svalue)
+            return '"{}"'.format(self.svalue)
         elif ftype == FieldTypeConstants.TIME:
             return self.ivalue
         else:
