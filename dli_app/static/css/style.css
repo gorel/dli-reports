@@ -32,6 +32,10 @@ h1, h2, h3, h4, h5, h6 {
   height: 400px;
 }
 
+/*
+ * General Bootstrap improvements
+ */
+
 input[type=text] {
   border: none;
   border-radius: 0;
@@ -60,6 +64,33 @@ select:not([multiple]) {
   padding-right: 1.5em
 }
 
+.form-inline {
+  display: inline;
+}
+
+.btn.btn-blank {
+  background: none;
+  padding: 0 4px;
+}
+
+/*
+ * Design Language Styles
+ */
+
+.fa-heart-o:hover, .fa-heart-o:active { color: #FF3D6A; }
+.fa-heart-o:hover::before, .fa-heart-o:active::before { content: '\f004'; }
+
+.fa-heart { color: #FF3D6A; }
+.fa-heart:hover, .fa-heart:active { color: inherit; }
+.fa-heart:hover::before, .fa-heart:active::before { content: '\f08a'; }
+
+.fa-trash-o:hover, .fa-trash-o:active { color: #a8342d; }
+.fa-trash-o:hover::before, .fa-trash-o:active::before { content: '\f1f8'; }
+
+.fa-pencil { color: #f9a41b; }
+.fa-pencil:hover, .fa-pencil:active { color: #C18016; }
+
+
 
 /*
  * Wiki Styles
@@ -75,7 +106,7 @@ select:not([multiple]) {
 
 
 /*
- * Report Data Submission Styles
+ * Report Styles
  */
 
 .submit_data_change_form .form-control {
