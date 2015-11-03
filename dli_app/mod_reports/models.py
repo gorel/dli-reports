@@ -248,7 +248,7 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.INTEGER:
             return self.ivalue
         elif ftype == FieldTypeConstants.STRING:
-            return self.svalue
+            return '"{}"'.format(self.svalue)
         elif ftype == FieldTypeConstants.TIME:
             return self.ivalue
         else:
@@ -270,7 +270,7 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.INTEGER:
             return str(self.ivalue)
         elif ftype == FieldTypeConstants.STRING:
-            return self.svalue
+            return '"{}"'.format(self.svalue)
         elif ftype == FieldTypeConstants.TIME:
             mins = self.ivalue / 60
             secs = self.ivalue % 60
@@ -435,7 +435,7 @@ class Chart(db.Model):
         """.format(
             time_series_sequence=self.get_time_series_sequence(),
             data_sequences=self.get_data_sequences(),
-            chart_type="'{}'".format(str(self.ctype.name)),
+            chart_type='"{}"'.format(str(self.ctype.name)),
             table=self.generated_table(),
         )
 
@@ -470,15 +470,15 @@ class Chart(db.Model):
         )
 
         return """
-            var table = "\
-                <table class='table table-striped'> \
+            var table = '\
+                <table class="table table-striped"> \
                     <thead> \
                         {table_header} \
                     </thead> \
                     <tbody> \
                         {table_data} \
                     </tbody> \
-                </table>";
+                </table>';
             document.write(table);
         """.format(
             table_header=table_header,
@@ -500,7 +500,7 @@ class Chart(db.Model):
         field = self.data_points.itervalues().next()
         return "['x', {ds_list}]".format(
             ds_list=', '.join(
-                sorted(["'{}'".format(str(p.ds)) for p in field])
+                sorted(['"{}"'.format(str(p.ds)) for p in field])
             ),
         )
 
