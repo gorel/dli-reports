@@ -3,52 +3,40 @@
   <div class="page-header">
     <h1>
       Data Submission
-      <small>For {{ report.name }}, in {{ department.name}} on {{ ds }}</h1>
+    </h1>
   </div>
 
-  <div class="col-md-10">
-    <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id) }}" class="form-horizontal">
-      {{ change_form.csrf_token }}
-      <div class="form-group">
-        {{ change_form.date.label(class='control-label col-sm-2') }}
-        <div class="col-sm-10">
-          {{ change_form.date(class='form-control') }}
-        </div>
-      </div>
-      <div class="form-group">
-        {{ change_form.department.label(class='control-label col-sm-2') }}
-        <div class="col-sm-10">
-          {{ change_form.department(class='form-control') }}
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-primary">Change Date/Department</button>
-        </div>
-      </div>
-    </form>
-  </div>
+  <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id) }}" class="form-inline submit_data_change_form">
+    {{ change_form.csrf_token }}
+    <p class="lead">
+      For "{{ report.name }}"
+      in {{ change_form.department(class='form-control') }}
+      on {{ change_form.date(class='form-control') }}
+      <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </p>
+  </form>
 
 
-  <div class="col-md-10">
-    <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id, ds=ds, dept_id=department.id) }}" class="form-horizontal">
-      {{ form.csrf_token }}
-      {{ form.ds }}
-      {% for field in form.instance_fields %}
-      <div class="form-group">
-        {{ form[field.name].label(class='control-label col-sm-2') }}
-        <div class="col-sm-10">
-          {{ form[field.name](class='form-control') }}
-        </div>
+  <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id, ds=ds, dept_id=department.id) }}" class="form-horizontal">
+    {{ form.csrf_token }}
+    {{ form.ds }}
+    {% for field_set in zip(*[iter(form.instance_fields)]*10) %}
+      <div class="col-md-3">
+        {% for field in field_set %}
+          <div class="form-group">
+            {{ form[field.name].label(class='control-label col-sm-2') }}
+            <div class="col-sm-10">
+              {{ form[field.name](class='form-control') }}
+            </div>
+          </div>
+        {% endfor %}
       </div>
-      {% endfor %}
+    {% endfor %}
 
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-primary">Submit Data</button>
-        </div>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button type="submit" class="btn btn-primary">Submit Data</button>
       </div>
-    </form>
-  </div>
+    </div>
+  </form>
 {% endblock %}
