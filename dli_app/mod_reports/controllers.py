@@ -487,7 +487,7 @@ def create_chart():
         (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
     ]
     form.chart_date_type.choices = [
-        (cdtype.id, cdtype.name.upper().replace('_', ' ')) for cdtype in ChartDateType.query.all()
+        (cdtype.id, cdtype.pretty_value) for cdtype in ChartDateType.query.all()
     ]
     if form.validate_on_submit():
         # Add the new chart to the database
