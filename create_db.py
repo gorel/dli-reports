@@ -508,12 +508,12 @@ def populate_db_fields():
             department=op,
         ),
         Field(
-            name='OP Catelog Requests Given',
+            name='OP Catalog Requests Given',
             ftype=FieldTypeConstants.INTEGER,
             department=op,
         ),
         Field(
-            name='OP Catelog Requests Pending',
+            name='OP Catalog Requests Pending',
             ftype=FieldTypeConstants.INTEGER,
             department=op,
         ),
