@@ -29,6 +29,7 @@ from flask_mail import (
 from dli_app.mod_auth.forms import (
     LoginForm,
     RegistrationForm,
+    RegisterCandidate,
     ForgotForm,
     NewPassForm,
 )
@@ -74,6 +75,10 @@ def register(registration_key):
     if form.validate_on_submit():
         db.session.add(form.user)
         db.session.commit()
+        candidate =  RegisterCandidate.query.filter_by(email=form.user.email).first()
+        if candidate is not None:
+            db.session.delete(candidate)
+            db.session.commit()
 
         # Log the user in and redirect to the homepage
         login_user(form.user, form.remember.data)
