@@ -13,14 +13,14 @@ from flask import (
     flash,
     render_template,
 )
+from flask_mail import (
+    Mail,
+)
 from flask_sqlalchemy import (
     SQLAlchemy,
 )
 from flask_login import (
     LoginManager,
-    current_user,
-    login_user,
-    logout_user,
 )
 from flask_wtf.csrf import (
     CsrfProtect,
@@ -50,6 +50,13 @@ sys.stdout.flush()
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "/auth/login"
+sys.stdout.write('Done\n')
+
+# Configure Flask-Mail
+sys.stdout.write('Configuring Mail Server...')
+sys.stdout.flush()
+mail = Mail()
+mail.init_app(app)
 sys.stdout.write('Done\n')
 
 # Enable CSRF protection

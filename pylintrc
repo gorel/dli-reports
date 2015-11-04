@@ -143,7 +143,7 @@ zope=no
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E0201 when accessed. Python regular
 # expressions are accepted.
-generated-members=REQUEST,acl_users,aq_parent,commit,query,add,delete,get,relationship,validate_on_submit,BigInteger,Boolean,Column,DateTime,Float,ForeignKey,Integer,String,Table,Text,toc
+generated-members=REQUEST,acl_users,aq_parent,commit,query,add,delete,get,relationship,validate_on_submit,BigInteger,Boolean,Column,DateTime,Float,ForeignKey,Integer,String,Table,Text,toc,user
 
 
 [MISCELLANEOUS]

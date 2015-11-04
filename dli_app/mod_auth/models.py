@@ -79,24 +79,24 @@ class User(db.Model):
     location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
     dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
     pw_reset = db.relationship(
-	"PasswordReset",
+	PasswordReset,
 	backref="user",
     )
     reports = db.relationship(
-        "Report",
+        Report,
         backref="user",
     )
     charts = db.relationship(
-        "Chart",
+        Chart,
         backref="user",
     )
     favorite_reports = db.relationship(
-        'Report',
+        Report,
         secondary=report_users,
         backref='favorite_users',
     )
     favorite_charts = db.relationship(
-        'Chart',
+        Chart,
         secondary=chart_users,
         backref='favorite_users',
     )
@@ -214,7 +214,7 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     users = db.relationship(
-        "User",
+        User,
         backref="location",
     )
 
@@ -233,12 +233,12 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     users = db.relationship(
-        "User",
+        User,
         backref="department",
         lazy="dynamic",
     )
     fields = db.relationship(
-        "Field",
+        Field,
         backref="department",
     )
 
