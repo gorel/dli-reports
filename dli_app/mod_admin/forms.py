@@ -9,9 +9,15 @@ from flask_wtf import (
 )
 
 from wtforms import (
+    HiddenField,
     SelectField,
     TextField,
+    TextAreaField,
     validators,
+)
+
+from dli_app.mod_admin.models import (
+    ErrorReport,
 )
 
 from dli_app.mod_auth.models import (
@@ -182,4 +188,41 @@ class AddUserForm(Form):
                 message='Please confirm your email address.',
             ),
         ],
+    )
+
+
+class ErrorReportForm(Form):
+    """A form for submitting site error reports"""
+    def __init__(self, *args, **kwargs):
+        """Inititalize the ErrorReportForm"""
+        Form.__init__(self, *args, **kwargs)
+        self.error_report = None
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+
+        self.error_report = ErrorReport(
+            error_text=self.error.data,
+            user_text=self.textbox.data,
+            is_bug=self.report_type.data,
+        )
+        return True
+
+    report_type = SelectField(
+        'Is this a bug?',
+        choices=[
+            (True, "Yes, I'm reporting a bug"),
+            (False, "No, I'm asking for a feature"),
+        ],
+        coerce=bool,
+        validators=[validators.Required()],
+    )
+
+    error = HiddenField()
+
+    textbox = TextAreaField(
+        'Description',
+        validators=[validators.Required()],
     )

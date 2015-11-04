@@ -36,6 +36,7 @@ from dli_app.mod_admin.forms import (
     AddFieldForm,
     AddLocationForm,
     AddUserForm,
+    ReportErrorForm,
 )
 
 # Import models
@@ -436,3 +437,28 @@ def delete_candidate(candidate_id):
         )
 
     return redirect(url_for('admin.edit_users'))
+
+
+@mod_admin.route('/bugsplat', methods=['GET', 'POST'])
+@mod_admin.route('/bugsplat/', methods=['GET', 'POST'])
+@mod_admin.route('/bugsplat/<error>', methods=['GET', 'POST'])
+@mod_admin.route('/bugsplat/<error>/', methods=['GET', 'POST'])
+@login_required
+def bugsplat(error=None):
+    """Default handler page for reporting bugs or feature requests"""
+
+    form = ReportErrorForm()
+    if form.validate_on_submit():
+        db.session.add(form.error_report)
+        db.session.commit()
+        flash(
+            "Thank you for your report! We will look at this as soon as possible.",
+            "alert-success",
+        )
+        return redirect(url_for('default.home'))
+    else:
+        flash_form_errors(form)
+        form.error.data = error
+        if error:
+            form.report_type.data = True
+        return render_template('admin/bugsplat.html', form=form)

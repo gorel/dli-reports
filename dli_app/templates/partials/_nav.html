@@ -30,6 +30,7 @@
         <ul class="nav navbar-right">
           <p class="navbar-text">Hi, {{ current_user.name }}</p>
         </ul>
+        <a class="nav navbar-right btn btn-danger" href="{{ url_for('admin.bugsplat') }}">Report Bug/Feature</a>
       {% else %}
         <ul class="nav navbar-nav navbar-right">
           <li><a href="{{ url_for('auth.login') }}">Login</a></li>

@@ -11,7 +11,9 @@ import sys
 from flask import (
     Flask,
     flash,
+    redirect,
     render_template,
+    url_for,
 )
 from flask_mail import (
     Mail,
@@ -73,6 +75,10 @@ sys.stdout.flush()
 def not_found(error):
     """Render the default 404 template"""
     return render_template('404.html', error=error), 404
+@app.errorhandler(500)
+def server_error(error):
+    """Redirect to the bugsplat page"""
+    return redirect(url_for('admin.bugsplat', error=error))
 sys.stdout.write('Done\n')
 
 # Define form error handler
