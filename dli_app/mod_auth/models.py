@@ -18,6 +18,10 @@ from werkzeug.security import (
 
 from dli_app import db, login_manager
 
+from dli_app.mod_admin.models import (
+    ErrorReport,
+)
+
 from dli_app.mod_reports.models import (
     Chart,
     Field,
@@ -117,6 +121,10 @@ class User(db.Model):
     )
     charts = db.relationship(
         Chart,
+        backref="user",
+    )
+    error_reports = db.relationship(
+        ErrorReport,
         backref="user",
     )
     favorite_reports = db.relationship(

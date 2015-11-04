@@ -1,18 +1,26 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <h1>500 <small>Internal Server Error</small></h1>
+      <h1>
+      {% if form.error.data %}
+        <span class="glyphicon glyphicon-remove-sign"></span>
+        Oh no! <small>Something went wrong</small>
+      {% else %}
+        Bug Reports and Feature Requests<br><small>What's on your mind?</small>
+      {% endif %}
+      </h1>
   </div>
-  {% if form.error.data %}
-  <p>Oh no! Something went wrong with the server!</p>
-  <p>A detailed message about this event will be sent to the site owners.</p>
-  <p>In the mean time, if you could send a short message about what you were doing right before this error occurred, it would be very beneficial to us!</p>
-  {% endif %}
 
   <div class="col-md-6">
-    <form method="POST" action="{{ url_for('default.submit_error_report') }}" class="form-horizontal">
+    <form method="POST" action="{{ url_for('admin.bugsplat') }}" class="form-horizontal">
       {{ form.csrf_token }}
       {{ form.error }}
+
+      {% if form.error.data %}
+      <div class="form-group">
+      <p>A detailed message about this event will be sent to the site owners. In the mean time, if you could send a short message about what you were doing right before this error occurred, it would be very beneficial to us!</p>
+      </div>
+      {% endif %}
 
       <div class="form-group">
         {{ form.report_type.label(class='control-label col-sm-2') }}
@@ -20,12 +28,15 @@
           {{ form.report_type(class='form-control') }}
         </div>
       </div>
-      <div class="col-sm-10">
-        {{ form.textbox(class='form-control') }}
+      <div class="form-group">
+        {{ form.textbox.label(class='control-label col-sm-2') }}
+        <div class="col-sm-10">
+          {{ form.textbox(class='form-control') }}
+        </div>
       </div>
       <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-primary">Send Error Report</button>
+          <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </div>
     </form>

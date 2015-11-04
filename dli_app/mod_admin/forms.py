@@ -24,6 +24,7 @@ from dli_app.mod_auth.models import (
     Department,
     Location,
     RegisterCandidate,
+    User,
 )
 
 from dli_app.mod_reports.models import (
@@ -203,24 +204,31 @@ class ErrorReportForm(Form):
         if not Form.validate(self):
             return False
 
+        user = User.query.get(int(self.user_id.data))
+        if not user:
+            self.user_id.errors.append('Something went wrong internally. Please try again later.')
+            return False
+
         self.error_report = ErrorReport(
             error_text=self.error.data,
             user_text=self.textbox.data,
-            is_bug=self.report_type.data,
+            is_bug=bool(self.report_type.data),
+            user=user,
         )
         return True
 
     report_type = SelectField(
         'Is this a bug?',
         choices=[
-            (True, "Yes, I'm reporting a bug"),
-            (False, "No, I'm asking for a feature"),
+            (1, "Yes, I'm reporting a bug"),
+            (0, "No, I'm asking for a feature"),
         ],
-        coerce=bool,
-        validators=[validators.Required()],
+        coerce=int,
+        validators=[validators.InputRequired()],
     )
 
     error = HiddenField()
+    user_id = HiddenField()
 
     textbox = TextAreaField(
         'Description',

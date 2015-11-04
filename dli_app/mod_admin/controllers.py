@@ -36,7 +36,7 @@ from dli_app.mod_admin.forms import (
     AddFieldForm,
     AddLocationForm,
     AddUserForm,
-    ReportErrorForm,
+    ErrorReportForm,
 )
 
 # Import models
@@ -447,7 +447,8 @@ def delete_candidate(candidate_id):
 def bugsplat(error=None):
     """Default handler page for reporting bugs or feature requests"""
 
-    form = ReportErrorForm()
+    form = ErrorReportForm()
+    form.user_id.data = current_user.id
     if form.validate_on_submit():
         db.session.add(form.error_report)
         db.session.commit()
@@ -459,6 +460,7 @@ def bugsplat(error=None):
     else:
         flash_form_errors(form)
         form.error.data = error
+        form.report_type.data = 0
         if error:
-            form.report_type.data = True
+            form.report_type.data = 1
         return render_template('admin/bugsplat.html', form=form)
