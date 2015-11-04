@@ -741,7 +741,6 @@ class SearchForm(Form):
 
     def validate(self):
         """Validate the form"""
-        res = True
         if not Form.validate(self):
             return False
 
@@ -757,14 +756,19 @@ class SearchForm(Form):
         elif choice == self.TAG_CHOICE:
             self.reports = Report.query.join(Tag, Report.tags).filter(Tag.name.ilike(search_text)).all()
         else:
-            filter_choices.errors.append('Not a valid choice!')
-	    return False
+            self.filter_choices.errors.append('Not a valid choice!')
+            return False
 
         return True
 
     filter_choices = SelectField(
         "Filter by",
-        choices=[(REPORTNAME_CHOICE, 'Report Name'), (OWNER_CHOICE, 'Owner Name'), (EMAIL_CHOICE, 'Owner Email'), (TAG_CHOICE, 'Tag')],
+        choices=[
+            (REPORTNAME_CHOICE, 'Report Name'),
+            (OWNER_CHOICE, 'Owner Name'),
+            (EMAIL_CHOICE, 'Owner Email'),
+            (TAG_CHOICE, 'Tag')
+        ],
         coerce=int,
     )
 

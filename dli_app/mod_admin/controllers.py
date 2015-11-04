@@ -4,17 +4,17 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /admin.
 """
 
+import os
+
 from flask import (
     Blueprint,
     flash,
     redirect,
     render_template,
     url_for,
-    current_app,
 )
 
 from flask_mail import (
-    Mail,
     Message,
 )
 
@@ -26,6 +26,7 @@ from flask_login import (
 # Import main db and form error handler for app
 from dli_app import (
     db,
+    mail,
     flash_form_errors,
 )
 
@@ -326,22 +327,20 @@ def edit_users(page_num=1):
         return redirect(url_for('default.home'))
 
     form = AddUserForm()
-    if form.validate_on_submit(): 
+    if form.validate_on_submit():
         db.session.add(form.user)
         db.session.commit()
         candidate = RegisterCandidate.query.filter_by(email=form.user.email).first()
         if candidate is not None:
             key = candidate.registration_key
-            mail = Mail(current_app)
             title = 'Activate your account'
             content = 'Please go to the link: '
             url = '{site}/auth/register/{key}'.format(
-                site='68.234.146.84:PORT',
+                site=os.environ['DLI_REPORTS_SITE_URL'],
                 key=key,
             )
-            sender = 'cs490testing@gmail.com'
             recipient = candidate.email
-            msg = Message(title, sender=sender, recipients=[recipient])
+            msg = Message(title, recipients=[recipient])
             msg.body = content + url
             mail.send(msg)
             flash(

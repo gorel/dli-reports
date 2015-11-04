@@ -825,4 +825,5 @@ class FieldDataDummy():
 
     @property
     def pretty_value(self):
+        """Return an empty string, this is needed since we call .pretty_value elsewhere"""
         return ''

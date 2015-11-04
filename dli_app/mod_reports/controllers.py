@@ -37,7 +37,6 @@ from dli_app.mod_reports.models import (
     ChartType,
     ChartDateType,
     Report,
-    Field
 )
 
 # Import forms

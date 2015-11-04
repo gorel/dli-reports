@@ -4,6 +4,8 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /auth.
 """
 
+import os
+
 from flask import (
     Blueprint,
     flash,
@@ -11,7 +13,6 @@ from flask import (
     render_template,
     request,
     url_for,
-    current_app,
 )
 
 from flask_login import (
@@ -21,7 +22,6 @@ from flask_login import (
 )
 
 from flask_mail import (
-    Mail,
     Message,
 )
 
@@ -39,11 +39,13 @@ from dli_app.mod_auth.models import (
     Department,
     Location,
     PasswordReset,
+    RegisterCandidate,
     User,
 )
 
 from dli_app import (
     db,
+    mail,
     flash_form_errors,
 )
 
@@ -63,6 +65,11 @@ def register(registration_key):
     Arguments:
     registration_key - the unique key for registering the user's account
     """
+
+    candidate = RegisterCandidate.query.filter_by(registration_key=registration_key).first()
+    if not candidate:
+        flash("Sorry, you aren't allowed to register at this time.", "alert-warning")
+        return redirect(url_for('default.home'))
 
     form = RegistrationForm()
     form.registration_key.data = registration_key
@@ -86,6 +93,7 @@ def register(registration_key):
         return redirect(request.args.get('next') or url_for('default.home'))
     else:
         flash_form_errors(form)
+        form.email.data = candidate.email
         return render_template('auth/register.html', form=form, registration_key=registration_key)
 
 
@@ -143,12 +151,13 @@ def resetpass():
         db.session.add(pw_reset)
         db.session.commit()
         #Send email here
-        mail = Mail(current_app)
         title = 'Reset your Password'
-        url = "http://68.234.146.84:PORT /auth/setnewpass/" + pw_reset.key
+        url = "{site}/auth/setnewpass/{key}".format(
+            site=os.environ['DLI_REPORTS_SITE_URL'],
+            key=pw_reset.key,
+        )
         content = 'Click this link to reset your password: ' + url
-        sender = 'cs490testing@gmail.com'
-        msg = Message(title, sender=sender, recipients=[email])
+        msg = Message(title, recipients=[email])
         msg.body = content
         mail.send(msg)
         flash("Email sent!", "alert-success")

@@ -68,6 +68,35 @@ class RegisterCandidate(db.Model):
         return '<Register Candidate %r>' % self.email
 
 
+class PasswordReset(db.Model):
+    """Model for password reset key"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    key = db.Column(db.String(64))
+
+    def __init__(self, user, key=None):
+        """Initialize a  model"""
+        if key is None:
+            key = ''.join(random.choice(
+                string.ascii_letters
+                + string.digits) for _ in range(60))
+        self.user = user
+        self.key = key
+
+    def __repr__(self):
+        """Return a descriptive representation of password reset"""
+        return '<Reset password for user %r>' % self.user
+
+    @classmethod
+    def get_by_key(cls, key):
+        """Retrieve a user by the associated password reset key"""
+        pw_reset = PasswordReset.query.filter_by(key=key).first()
+        if pw_reset is not None:
+            return pw_reset.user
+        else:
+            return None
+
+
 class User(db.Model):
     """Model for users of the site"""
     __tablename__ = 'user'
@@ -79,24 +108,24 @@ class User(db.Model):
     location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
     dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
     pw_reset = db.relationship(
-	"PasswordReset",
+	PasswordReset,
 	backref="user",
     )
     reports = db.relationship(
-        "Report",
+        Report,
         backref="user",
     )
     charts = db.relationship(
-        "Chart",
+        Chart,
         backref="user",
     )
     favorite_reports = db.relationship(
-        'Report',
+        Report,
         secondary=report_users,
         backref='favorite_users',
     )
     favorite_charts = db.relationship(
-        'Chart',
+        Chart,
         secondary=chart_users,
         backref='favorite_users',
     )
@@ -179,42 +208,13 @@ class User(db.Model):
         return User.query.filter_by(email=email).first()
 
 
-class PasswordReset(db.Model):
-    """Model for password reset key"""
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    key = db.Column(db.String(64))
-
-    def __init__(self, user, key=None):
-        """Initialize a  model"""
-        if key is None:
-            key = ''.join(random.choice(
-                string.ascii_letters
-                + string.digits) for _ in range(60))
-        self.user = user
-        self.key = key
-
-    def __repr__(self):
-        """Return a descriptive representation of password reset"""
-        return '<Reset password for user %r>' % self.user
-
-    @classmethod
-    def get_by_key(cls, key):
-        """Retrieve a user by the associated password reset key"""
-        pw_reset = PasswordReset.query.filter_by(key=key).first()
-        if pw_reset is not None:
-            return pw_reset.user
-        else:
-            return None
-
-
 class Location(db.Model):
     """Model for DLI's physical locations"""
     __tablename__ = "location"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     users = db.relationship(
-        "User",
+        User,
         backref="location",
     )
 
@@ -233,12 +233,12 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64), index=True, unique=True)
     users = db.relationship(
-        "User",
+        User,
         backref="department",
         lazy="dynamic",
     )
     fields = db.relationship(
-        "Field",
+        Field,
         backref="department",
     )
 
