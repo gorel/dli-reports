@@ -76,7 +76,7 @@ def register(registration_key):
         db.session.add(form.user)
         db.session.commit()
         candidate =  RegisterCandidate.query.filter_by(email=form.user.email).first()
-        if candidate is not None:
+        if candidate:
             db.session.delete(candidate)
             db.session.commit()
 
