@@ -68,6 +68,35 @@ class RegisterCandidate(db.Model):
         return '<Register Candidate %r>' % self.email
 
 
+class PasswordReset(db.Model):
+    """Model for password reset key"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    key = db.Column(db.String(64))
+
+    def __init__(self, user, key=None):
+        """Initialize a  model"""
+        if key is None:
+            key = ''.join(random.choice(
+                string.ascii_letters
+                + string.digits) for _ in range(60))
+        self.user = user
+        self.key = key
+
+    def __repr__(self):
+        """Return a descriptive representation of password reset"""
+        return '<Reset password for user %r>' % self.user
+
+    @classmethod
+    def get_by_key(cls, key):
+        """Retrieve a user by the associated password reset key"""
+        pw_reset = PasswordReset.query.filter_by(key=key).first()
+        if pw_reset is not None:
+            return pw_reset.user
+        else:
+            return None
+
+
 class User(db.Model):
     """Model for users of the site"""
     __tablename__ = 'user'
@@ -177,35 +206,6 @@ class User(db.Model):
     def get_by_email(cls, email):
         """Retrieve a user by their email address"""
         return User.query.filter_by(email=email).first()
-
-
-class PasswordReset(db.Model):
-    """Model for password reset key"""
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    key = db.Column(db.String(64))
-
-    def __init__(self, user, key=None):
-        """Initialize a  model"""
-        if key is None:
-            key = ''.join(random.choice(
-                string.ascii_letters
-                + string.digits) for _ in range(60))
-        self.user = user
-        self.key = key
-
-    def __repr__(self):
-        """Return a descriptive representation of password reset"""
-        return '<Reset password for user %r>' % self.user
-
-    @classmethod
-    def get_by_key(cls, key):
-        """Retrieve a user by the associated password reset key"""
-        pw_reset = PasswordReset.query.filter_by(key=key).first()
-        if pw_reset is not None:
-            return pw_reset.user
-        else:
-            return None
 
 
 class Location(db.Model):
