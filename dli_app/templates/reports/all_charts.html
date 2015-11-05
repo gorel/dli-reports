@@ -16,6 +16,7 @@
         <th>ID</th>
         <th>Name</th>
         <th></th>
+        <th>Owner</th>
         <th>Tags</th>
       </tr>
     </thead>
@@ -53,6 +54,9 @@
                 <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
               </button>
             </form>
+          </td>
+          <td>
+            <a href="mailto:{{ chart.user.email }}">{{ chart.user.name }}</a>
           </td>
           <td>{{ ', '.join(chart.tagnames) }}</td>
         </tr>
