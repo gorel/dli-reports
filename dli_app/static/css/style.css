@@ -57,7 +57,7 @@ table tbody + thead>tr>th.super-th {
   background: transparent;
 }
 
-input[type=text] {
+input[type=text]:not(.normal) {
   border: none;
   border-radius: 0;
   border-bottom: 1px solid #ccc;
@@ -100,6 +100,7 @@ select:not([multiple]) {
   border: 1px solid #d7d7d7;
   -webkit-appearance: none;
   background-color: transparent;
+  border-radius: 2px;
   box-shadow: none;
   padding: 2px 5px;
 }
