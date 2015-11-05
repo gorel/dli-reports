@@ -3,14 +3,14 @@
   <div class="page-header">
     <h1>
       Data Submission
+      <small>{{ report.name }}</small>
     </h1>
   </div>
 
   <form method="POST" action="{{ url_for('reports.submit_report_data', report_id=report.id) }}" class="form-inline submit_data_change_form">
     {{ change_form.csrf_token }}
-    <p class="lead">
-      For "{{ report.name }}"
-      in {{ change_form.department(class='form-control') }}
+    <p class="">
+      Switch to {{ change_form.department(class='form-control') }}
       on {{ change_form.date(class='form-control normal datepicker', type='text') }}
       <button type="submit" class="btn btn-sm btn-default">Update</button>
     </p>

@@ -11,14 +11,24 @@
 
     <div class="collapse navbar-collapse" id="main_nav_collapse">
       <ul class="nav navbar-nav">
-      {% if current_user.is_active %}
-        <li><a href="{{ url_for('reports.my_reports') }}">Reports</a></li>
-        <li><a href="{{ url_for('reports.my_charts') }}">Charts</a></li>
-        <li><a href="{{ url_for('account.home') }}">My Account</a></li>
-      {% endif %}
-      {% if current_user.is_admin %}
-        <li><a href="{{ url_for('admin.home') }}">Admin</a></li>
-      {% endif %}
+        {% if current_user.is_active %}
+          <li><a href="{{ url_for('reports.my_reports') }}">Reports</a></li>
+          <li><a href="{{ url_for('reports.my_charts') }}">Charts</a></li>
+          <li><a href="{{ url_for('account.home') }}">My Account</a></li>
+        {% endif %}
+        {% if current_user.is_admin %}
+          <li role="presentation" class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+              Admin <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('admin.edit_departments') }}">Departments</a></li>
+              <li><a href="{{ url_for('admin.edit_fields') }}">Fields</a></li>
+              <li><a href="{{ url_for('admin.edit_locations') }}">Locations</a></li>
+              <li><a href="{{ url_for('admin.edit_users') }}">Users</a></li>
+            </ul>
+          </li>
+        {% endif %}
         <li><a href="{{ url_for('wiki.home') }}">Wiki</a></li>
       </ul>
 
