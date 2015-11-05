@@ -1,12 +1,26 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <div class="btn-group btn-group-lg pull-right">
-      <a href="{{ url_for('reports.create_report') }}" class="btn btn-primary">Create Report</a>
-      <a href="{{ url_for('reports.all_reports') }}" class="btn btn-default">View All Reports</a>
-      <a href="{{ url_for('reports.search') }}" class="btn btn-warning">Search Report</a>
-    </div>
-    <h1>My Reports</h1>
+    <h1>
+      My Reports
+      <small>
+        <a href="{{ url_for('reports.all_reports') }}" class="btn btn-default">All Reports</a>
+        <a href="{{ url_for('reports.create_report') }}" class="btn btn-primary"><span class="fa fa-plus"></span> New</a>
+
+        <form method="POST" action="{{ url_for('reports.search') }}" class="form-inline">
+          {{ form.csrf_token }}
+          <span class="input-group">
+            <span class="input-group-btn">
+              {{ form.filter_choices(class='form-control') }}
+            </span>
+            {{ form.search_text(class='form-control') }}
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-default"><span class="fa fa-search"></span></button>
+            </span>
+          </span>
+        </form>
+      </small>
+    </h1>
   </div>
 
   {% if current_user.favorite_reports|length > 0 %}

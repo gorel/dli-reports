@@ -70,7 +70,6 @@ def my_reports(page_num=1):
     form = SearchForm()
     return render_template('reports/me.html', reports=reports, form=form)
 
-
 @mod_reports.route('/all', methods=['GET'])
 @mod_reports.route('/all/', methods=['GET'])
 @mod_reports.route('/all/<int:page_num>', methods=['GET'])
