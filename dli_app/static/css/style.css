@@ -37,6 +37,18 @@ body {
  * General Bootstrap improvements
  */
 
+table>thead>tr>th.super-th {
+  font-weight: 500;
+  color: #999;
+  font-size: 0.8em;
+  padding-bottom: 5px;
+  text-transform: uppercase;
+}
+
+table tbody + thead>tr>th.super-th {
+  padding-top: 30px;
+}
+
 .btn {
   border-radius: 2px;
 }
