@@ -67,7 +67,8 @@ def my_reports(page_num=1):
     reports = Report.query.filter_by(
         user_id=current_user.id,
     ).paginate(page_num)
-    return render_template('reports/me.html', reports=reports)
+    form = SearchForm()
+    return render_template('reports/me.html', reports=reports, form=form)
 
 
 @mod_reports.route('/all', methods=['GET'])
@@ -77,7 +78,8 @@ def my_reports(page_num=1):
 def all_reports(page_num=1):
     """Show the user all reports (made by anyone"""
     reports = Report.query.paginate(page_num)
-    return render_template('reports/all.html', reports=reports)
+    form = SearchForm()
+    return render_template('reports/all.html', reports=reports, form=form)
 
 
 @mod_reports.route('/favorite/<int:report_id>', methods=['POST'])
