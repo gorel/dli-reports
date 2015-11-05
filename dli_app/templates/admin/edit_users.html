@@ -21,7 +21,7 @@
           {% for user in users.items %}
             <tr>
               <td>{{ user.name }}</td>
-              <td>{{ user.email }}</td>             
+              <td>{{ user.email }}</td>
               {% if user.email == current_user.email %}
                   <td>Yes</td>
               {% else %}
@@ -44,7 +44,7 @@
                 <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-xs btn-danger">Delete</button>
-                </form>                
+                </form>
           {% endif %}
             </tr>
           {% endfor %}
