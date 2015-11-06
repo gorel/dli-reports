@@ -5,6 +5,7 @@ This file is responsible for loading all site pages under /reports.
 """
 
 from datetime import datetime
+from datetime import timedelta
 
 from flask import (
     Blueprint,
@@ -37,7 +38,9 @@ from dli_app.mod_reports.models import (
     ChartType,
     ChartDateType,
     Report,
-    Field
+    Field,
+    FieldData,
+    FieldTypeConstants
 )
 
 # Import forms
@@ -331,8 +334,6 @@ def delete_report(report_id):
             )
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
-
-<<<<<<< Updated upstream
 @mod_reports.route('/charts', methods=['GET'])
 @mod_reports.route('/charts/', methods=['GET'])
 @mod_reports.route('/charts/me', methods=['GET'])
@@ -478,12 +479,57 @@ def delete_chart(chart_id):
             db.session.delete(chart)
             db.session.commit()
             flash("Chart deleted", "alert-success")
-    return redirect(request.args.get('next') or url_for('reports.my_charts')
+    return redirect(request.args.get('next') or url_for('reports.my_charts'))
+
 
 @mod_reports.route('/predict', methods=['GET'])
 @mod_reports.route('/predict/', methods=['GET'])
+@login_required
 def predict():
-    one_month_ago = datetime.date.today() - datetime.timedelta(days=30)
+    one_month_ago = datetime.today() - timedelta(days=30)
     one_month_ago = one_month_ago.strftime('%Y-%m-%d')
-    field_data = FieldData.query.filter(FieldData.ds>=one_month_ago).order_by(FieldData.ds.desc()).all() 
-    #TODO: Do prediction things here
+    fields = Field.query.all()
+    data_points = {
+        field: [
+            field.data_points.filter(
+                FieldData.ds >= one_month_ago
+            ).order_by(
+                FieldData.ds.desc()
+            ).all()
+        ]
+        for field in fields
+    }
+    print fields
+    for field in data_points.keys():
+        values = data_points[field]
+        print field
+        predictions = {}
+        if field.ftype != FieldTypeConstants.STRING and values:
+            #Run regression on values
+            avgx = 0
+            i=0
+            lvalue = 0
+            print 'hello'
+            print values
+            for value in values:
+                print 'ni hao'
+                print value
+                print 'zai jian'
+                if value:
+                    avgx = avgx + value[0].value
+                i += 1
+            avgx = avgx / 30
+            m = 0
+            i = 0
+            mx = 0
+            for value in values:
+                if value:
+                    mx += (value[0].value * avgx) * (value[0].value * avgx)
+            for value in values:
+                if value:
+                    m += (value[0].value-avgx) * (i - 1) / mx
+                    lvalue = value[0].value
+                    i +=1
+            predictions[field] = m + lvalue
+    return render_template("reports/predict.html",predictions=predictions)
+
