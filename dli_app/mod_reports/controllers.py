@@ -490,46 +490,37 @@ def predict():
     one_month_ago = one_month_ago.strftime('%Y-%m-%d')
     fields = Field.query.all()
     data_points = {
-        field: [
+        field:
             field.data_points.filter(
                 FieldData.ds >= one_month_ago
             ).order_by(
                 FieldData.ds.desc()
             ).all()
-        ]
         for field in fields
     }
     print fields
     for field in data_points.keys():
         values = data_points[field]
-        print field
         predictions = {}
         if field.ftype != FieldTypeConstants.STRING and values:
             #Run regression on values
             avgx = 0
             i=0
             lvalue = 0
-            print 'hello'
-            print values
             for value in values:
-                print 'ni hao'
-                print value
-                print 'zai jian'
-                if value:
-                    avgx = avgx + value[0].value
+                avgx = avgx + value.value
                 i += 1
             avgx = avgx / 30
             m = 0
             i = 0
             mx = 0
             for value in values:
-                if value:
-                    mx += (value[0].value * avgx) * (value[0].value * avgx)
+                mx += (value.value * avgx) * (value.value * avgx)
             for value in values:
-                if value:
-                    m += (value[0].value-avgx) * (i - 1) / mx
-                    lvalue = value[0].value
-                    i +=1
+                if i==0:
+                    lvalue = value.value
+                m += (value.value-avgx) * (i - 1) / mx
+                i +=1
             predictions[field] = m + lvalue
     return render_template("reports/predict.html",predictions=predictions)
 
