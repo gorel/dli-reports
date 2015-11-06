@@ -498,10 +498,9 @@ def predict():
             ).all()
         for field in fields
     }
-    print fields
+    predictions = {}
     for field in data_points.keys():
         values = data_points[field]
-        predictions = {}
         if field.ftype != FieldTypeConstants.STRING and values:
             #Run regression on values
             avgx = 0
