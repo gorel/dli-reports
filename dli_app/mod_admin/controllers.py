@@ -4,17 +4,17 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /admin.
 """
 
+import os
+
 from flask import (
     Blueprint,
     flash,
     redirect,
     render_template,
     url_for,
-    current_app,
 )
 
 from flask_mail import (
-    Mail,
     Message,
 )
 
@@ -26,6 +26,7 @@ from flask_login import (
 # Import main db and form error handler for app
 from dli_app import (
     db,
+    mail,
     flash_form_errors,
 )
 
@@ -326,22 +327,20 @@ def edit_users(page_num=1):
         return redirect(url_for('default.home'))
 
     form = AddUserForm()
-    if form.validate_on_submit(): 
+    if form.validate_on_submit():
         db.session.add(form.user)
         db.session.commit()
         candidate = RegisterCandidate.query.filter_by(email=form.user.email).first()
         if candidate is not None:
             key = candidate.registration_key
-            mail = Mail(current_app)
             title = 'Activate your account'
             content = 'Please go to the link: '
             url = '{site}/auth/register/{key}'.format(
-                site='68.234.146.84:PORT',
+                site=os.environ['DLI_REPORTS_SITE_URL'],
                 key=key,
             )
-            sender = 'cs490testing@gmail.com'
             recipient = candidate.email
-            msg = Message(title, sender=sender, recipients=[recipient])
+            msg = Message(title, recipients=[recipient])
             msg.body = content + url
             mail.send(msg)
             flash(
@@ -407,6 +406,81 @@ def delete_user(user_id):
 
     return redirect(url_for('admin.edit_users'))
 
+
+@mod_admin.route('/edit_users/promote/<int:user_id>', methods=['POST'])
+@mod_admin.route('/edit_users/promote/<int:user_id>/', methods=['POST'])
+@login_required
+def promote_user(user_id):
+    """Promote a user to admin
+
+    First, perform a check that the user is an admin.
+    Arguments:
+    user_id - The id of the user to be promoted, as defined in the db
+    """
+
+    if not current_user.is_admin:
+        flash(
+            "Sorry! You don't have permission to access that page.",
+            "alert-warning",
+        )
+        return redirect(url_for('default.home'))
+
+    if current_user.id == user_id:
+        flash(
+            "Now why would you try to promote your own account?",
+            "alert-danger",
+        )
+        return redirect(url_for('admin.home'))
+
+    user = User.query.get(user_id)
+    if user is not None:
+        user.is_admin = True
+        db.session.commit()
+
+        flash(
+            "User promoted successfully.",
+            "alert-success",
+        )
+
+    return redirect(url_for('admin.edit_users'))
+
+
+@mod_admin.route('/edit_users/demote/<int:user_id>', methods=['POST'])
+@mod_admin.route('/edit_users/demote/<int:user_id>/', methods=['POST'])
+@login_required
+def demote_user(user_id):
+    """Demote a user from admin
+
+    First, perform a check that the user is an admin.
+    Arguments:
+    user_id - The id of the user to be demoted, as defined in the db
+    """
+
+    if not current_user.is_admin:
+        flash(
+            "Sorry! You don't have permission to access that page.",
+            "alert-warning",
+        )
+        return redirect(url_for('default.home'))
+
+    if current_user.id == user_id:
+        flash(
+            "Now why would you try to demote your own account?",
+            "alert-danger",
+        )
+        return redirect(url_for('admin.home'))
+
+    user = User.query.get(user_id)
+    if user is not None:
+        user.is_admin = False
+        db.session.commit()
+
+        flash(
+            "User demoted successfully.",
+            "alert-success",
+        )
+
+    return redirect(url_for('admin.edit_users'))
 
 @mod_admin.route('/edit_users/delete_candidate/<int:candidate_id>', methods=['POST'])
 @mod_admin.route('/edit_users/delete_candidate/<int:candidate_id>/', methods=['POST'])

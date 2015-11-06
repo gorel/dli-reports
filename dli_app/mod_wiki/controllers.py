@@ -23,11 +23,9 @@ from flask import (
     redirect,
     render_template,
     url_for,
-    current_app,
 )
 
 from flask_mail import (
-    Mail,
     Message,
 )
 
@@ -42,6 +40,7 @@ from flask_login import (
 
 from dli_app import (
     db,
+    mail,
     flash_form_errors,
 )
 
@@ -179,12 +178,16 @@ def question():
     if form.validate_on_submit():
         # Send email to administrators
         users = [u.email for u in User.query.filter_by(is_admin=True)]
-        mail = Mail(current_app)
         emailtitle = form.emailtitle.data
         content = form.content.data
-        sender = 'cs490testing@gmail.com'
-        msg = Message(emailtitle, sender=sender, recipients=users, reply_to=form.email.data)
-        msg.body = 'A new question was asked concerning the online DLI policies Wiki. Please reply to this email to answer the question\n' + content
+        msg = Message(emailtitle, recipients=users, reply_to=form.email.data)
+        msg.body = '{notice}\n{content}'.format(
+            notice=(
+                'A new question was asked concerning the online DLI policies Wiki. '
+                'Please reply to this email to answer the question.'
+            ),
+            content=content,
+        )
         mail.send(msg)
         flash("Email Sent!", "alert-success")
         return redirect(url_for('wiki.home'))

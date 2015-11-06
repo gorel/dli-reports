@@ -171,7 +171,7 @@ class Field(db.Model):
             if data_point is not None:
                 data_point = data_point.pretty_value
             else:
-                data_point = "No data submitted."
+                data_point = ""
         return data_point
 
     @property
@@ -248,7 +248,7 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.INTEGER:
             return self.ivalue
         elif ftype == FieldTypeConstants.STRING:
-            return self.svalue
+            return '"{}"'.format(self.svalue)
         elif ftype == FieldTypeConstants.TIME:
             return self.ivalue
         else:
@@ -270,7 +270,7 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.INTEGER:
             return str(self.ivalue)
         elif ftype == FieldTypeConstants.STRING:
-            return self.svalue
+            return '"{}"'.format(self.svalue)
         elif ftype == FieldTypeConstants.TIME:
             mins = self.ivalue / 60
             secs = self.ivalue % 60
@@ -362,18 +362,10 @@ class Chart(db.Model):
             date = datetime.date(today.year, 1, 1)
         elif self.cdtype == ChartDateTypeConstants.ROLLING_YEAR:
             date = today - datetime.timedelta(days=365)
-        elif self.cdtype == ChartDateTypeConstants.ALL_TIME:
-            weeks = today.year * 52
-            date = today - datetime.timedelta(weeks=weeks)
-            # Get the minimum date of the field's data points
-            min_ds = min(
-                p.ds for field in self.fields for p in field.data_points
-            )
-            date = datetime.strptime(min_ds, '%Y-%m-%d')
         else:
             raise NotImplementedError('Unexpected cdtype: %r' % self.cdtype)
 
-        ds_list = self.generate_date_list(date, today)
+        ds_list = [d.strftime('%Y-%m-%d') for d in self.generate_date_list(date, today)]
         return {
             field.identifier: [
                 field.data_points.filter_by(ds=ds).first() or FieldDataDummy(ds)
@@ -384,10 +376,19 @@ class Chart(db.Model):
 
     def generate_date_list(self, start, end):
         """Generate a ds list along an interval"""
-        return [
-            (start + datetime.timedelta(days=x)).strftime('%Y-%m-%d')
-            for x in range((end - start).days + 1)
-        ]
+        step = 1
+        if (end - start).days > 100:
+            step = 7
+        elif (end - start).days > 20:
+            step = 3
+
+        delta = datetime.timedelta(days=step)
+        dates = []
+        while start < end:
+            dates.append(start)
+            start += delta
+        dates.append(end)
+        return dates
 
     @property
     def tagnames(self):
@@ -434,7 +435,7 @@ class Chart(db.Model):
         """.format(
             time_series_sequence=self.get_time_series_sequence(),
             data_sequences=self.get_data_sequences(),
-            chart_type="'{}'".format(str(self.ctype.name)),
+            chart_type='"{}"'.format(str(self.ctype.name)),
             table=self.generated_table(),
         )
 
@@ -469,15 +470,15 @@ class Chart(db.Model):
         )
 
         return """
-            var table = "\
-                <table class='table table-striped'> \
+            var table = '\
+                <table class="table table-striped"> \
                     <thead> \
                         {table_header} \
                     </thead> \
                     <tbody> \
                         {table_data} \
                     </tbody> \
-                </table>";
+                </table>';
             document.write(table);
         """.format(
             table_header=table_header,
@@ -499,7 +500,7 @@ class Chart(db.Model):
         field = self.data_points.itervalues().next()
         return "['x', {ds_list}]".format(
             ds_list=', '.join(
-                sorted(["'{}'".format(str(p.ds)) for p in field])
+                sorted(['"{}"'.format(str(p.ds)) for p in field])
             ),
         )
 
@@ -557,6 +558,24 @@ class ChartDateType(db.Model):
     def __eq__(self, other):
         """Determine if two ChartDateTypes are equal"""
         return other is not None and self.id == other.id
+
+    @property
+    def pretty_value(self):
+        """Return a more human-readable representation of this ChartDateType"""
+        if self == ChartDateTypeConstants.TODAY:
+            return 'Data from today only'
+        elif self == ChartDateTypeConstants.FROM_WEEK:
+            return 'Data submitted since Sunday'
+        elif self == ChartDateTypeConstants.ROLLING_WEEK:
+            return 'Data submitted in the last 7 days'
+        elif self == ChartDateTypeConstants.FROM_MONTH:
+            return 'Data submitted since the first of the month'
+        elif self == ChartDateTypeConstants.ROLLING_MONTH:
+            return 'Data submitted in the last 30 days'
+        elif self == ChartDateTypeConstants.FROM_YEAR:
+            return 'Data submitted since January 1st'
+        elif self == ChartDateTypeConstants.ROLLING_YEAR:
+            return 'Data submitted in the last 365 days'
 
 
 class ExcelSheetHelper():
@@ -762,7 +781,6 @@ class ChartDateTypeConstants():
         ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
         FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
         ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-        ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()
     except:
         TODAY = None
         FROM_WEEK = None
@@ -771,7 +789,6 @@ class ChartDateTypeConstants():
         ROLLING_MONTH = None
         FROM_YEAR = None
         ROLLING_YEAR = None
-        ALL_TIME = None
 
     def __init__(self):
         """Initialize a ChartDateTypeConstants instance"""
@@ -782,7 +799,6 @@ class ChartDateTypeConstants():
         self.ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
         self.FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
         self.ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-        self.ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()
 
     @classmethod
     def reload(cls):
@@ -794,7 +810,6 @@ class ChartDateTypeConstants():
         cls.ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
         cls.FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
         cls.ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-        cls.ALL_TIME = ChartDateType.query.filter_by(name="all_time").first()
 
 
 class FieldDataDummy():
@@ -810,4 +825,5 @@ class FieldDataDummy():
 
     @property
     def pretty_value(self):
-        return 'No data submitted on this date'
+        """Return an empty string, this is needed since we call .pretty_value elsewhere"""
+        return ''

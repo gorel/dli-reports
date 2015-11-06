@@ -24,14 +24,32 @@
             <tr>
               <td>{{ user.name }}</td>
               <td>{{ user.email }}</td>
-              <td>{{ 'Yes' if user.is_admin else 'No' }}</td>
+              {% if user.email == current_user.email %}
+                <td>
+                  <button class="btn btn-xs btn-danger" disabled>Remove Admin</button>
+                </td>
+              {% else %}
+                {% if user.is_admin %}
+                    <td><form action="{{ url_for('admin.demote_user', user_id=user.id) }}" method="POST">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="btn btn-xs btn-danger">Remove Admin</button>
+                    </form></td>
+                {% else %}
+                    <td><form action="{{ url_for('admin.promote_user', user_id=user.id) }}" method="POST">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="btn btn-xs btn-warning">Make Admin</button>
+                    </form></td>
+                {% endif %}
+              {% endif %}
               <td>{{ user.location.name }}</td>
               <td>{{ user.department.name }}</td>
               <td>
+          {% if user.email != current_user.email %}
                 <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-xs btn-danger">Delete</button>
                 </form>
+          {% endif %}
             </tr>
           {% endfor %}
         </tbody>
