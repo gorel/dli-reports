@@ -18,12 +18,183 @@ body {
   width: 400px;
 }
 
-.page-header .header-buttons {
-  margin-top: 13px;
+ h1,  h2,  h3,  h4,  h5,  h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-weight: 300;
+}
+
+.page-header .btn, .page-header .form-inline > * {
+  vertical-align: bottom;
 }
 
 #content_editor {
   position: relative;
   width: 100%;
   height: 400px;
+}
+
+/*
+ * General Bootstrap improvements
+ */
+
+table>thead>tr>th.super-th {
+  font-weight: 500;
+  color: #999;
+  font-size: 0.8em;
+  padding-bottom: 5px;
+  text-transform: uppercase;
+}
+
+table tbody + thead>tr>th.super-th {
+  padding-top: 30px;
+}
+
+.btn {
+  border-radius: 2px;
+}
+
+.btn.btn-default {
+  background: transparent;
+}
+
+input[type=text]:not(.normal) {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid #ccc;
+  background: none;
+  box-shadow: none;
+}
+
+input[type=text]:focus, input[type=text]:active {
+  outline: none;
+  box-shadow: none;
+}
+
+input[type=text].input-lg {
+  font-size: 24px;
+  font-weight: 300;
+}
+
+select:not([multiple]) {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-position: right 50%;
+  background-repeat: no-repeat;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAMCAYAAABSgIzaAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNSBNYWNpbnRvc2giIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NDZFNDEwNjlGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NDZFNDEwNkFGNzFEMTFFMkJEQ0VDRTM1N0RCMzMyMkIiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo0NkU0MTA2N0Y3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo0NkU0MTA2OEY3MUQxMUUyQkRDRUNFMzU3REIzMzIyQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PuGsgwQAAAA5SURBVHjaYvz//z8DOYCJgUxAf42MQIzTk0D/M+KzkRGPoQSdykiKJrBGpOhgJFYTWNEIiEeAAAMAzNENEOH+do8AAAAASUVORK5CYII=);
+  padding: .5em;
+  padding-top: .45em;
+  padding-right: 1.5em;
+}
+
+.input-group-btn select:not([multiple]).form-control {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.input-group input[type=text].form-control {
+  border-top: 1px solid #d7d7d7;
+  border-bottom: 1px solid #d7d7d7;
+}
+
+.form-control {
+  border: 1px solid #d7d7d7;
+  -webkit-appearance: none;
+  background-color: transparent;
+  border-radius: 2px;
+  box-shadow: none;
+  padding: 2px 5px;
+}
+
+select.form-control {
+  padding-right: 20px;
+}
+
+.form-control:focus,
+.form-control:active {
+  outline: none;
+  box-shadow: none;
+}
+
+
+.form-inline {
+  display: inline;
+}
+
+.btn.btn-blank {
+  background: none;
+  padding: 0 4px;
+}
+
+/*
+ * Design Language Styles
+ */
+
+.fa-heart-o:hover, .fa-heart-o:active { color: #FF3D6A; }
+.fa-heart-o:hover::before, .fa-heart-o:active::before { content: '\f004'; }
+
+.fa-heart { color: #FF3D6A; }
+.fa-heart:hover, .fa-heart:active { color: inherit; }
+.fa-heart:hover::before, .fa-heart:active::before { content: '\f08a'; }
+
+.fa-trash-o:hover, .fa-trash-o:active { color: #a8342d; }
+.fa-trash-o:hover::before, .fa-trash-o:active::before { content: '\f1f8'; }
+
+.fa-pencil { color: #f9a41b; }
+.fa-pencil:hover, .fa-pencil:active { color: #C18016; }
+
+
+
+/*
+ * Wiki Styles
+ */
+
+.form-control#wiki_title {
+  border-bottom: 1px solid #aaa;
+}
+
+#content_editor {
+  padding: 10px 0;
+}
+
+
+/*
+ * Report Styles
+ */
+
+.field-set {
+  padding: 10px 0;
+}
+
+.field {
+  display: table;
+  line-height: 1.2em;
+  width: 100%;
+}
+
+.field-cell {
+  display: table-cell;
+  width: 50%;
+  padding: 2px 0;
+}
+
+.field:hover, .field:active, .field:focus {
+  background-color: #FFFDE5;
+}
+
+.field .field-label {
+  display: table-cell;
+  padding-right: 10px;
+  padding-left: 5px;
+}
+
+.field .field-label label {
+  font-weight: 500;
+}
+
+.field .field-input {
+  padding: 8px 5px 6px 0;
+}
+
+.field .field-input > input {
+  width: 100%;
 }

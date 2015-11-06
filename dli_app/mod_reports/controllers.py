@@ -66,8 +66,8 @@ def my_reports(page_num=1):
     reports = Report.query.filter_by(
         user_id=current_user.id,
     ).paginate(page_num)
-    return render_template('reports/me.html', reports=reports)
-
+    form = SearchForm()
+    return render_template('reports/me.html', reports=reports, form=form)
 
 @mod_reports.route('/all', methods=['GET'])
 @mod_reports.route('/all/', methods=['GET'])
@@ -76,7 +76,8 @@ def my_reports(page_num=1):
 def all_reports(page_num=1):
     """Show the user all reports (made by anyone"""
     reports = Report.query.paginate(page_num)
-    return render_template('reports/all.html', reports=reports)
+    form = SearchForm()
+    return render_template('reports/all.html', reports=reports, form=form)
 
 
 @mod_reports.route('/favorite/<int:report_id>', methods=['POST'])
@@ -235,10 +236,15 @@ def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_i
                 if existing_value is not None:
                     formfield.data = existing_value.value
 
+        chunk_size = 10
+        field_list = form.instance_fields
+        chunked_fields = [field_list[n:n+chunk_size] for n in range(0, len(field_list), chunk_size)]
+
         return render_template(
             'reports/submit_data.html',
             change_form=change_form,
             form=form,
+            chunked_fields=chunked_fields,
             report=report,
             department=department,
             ds=ds,
