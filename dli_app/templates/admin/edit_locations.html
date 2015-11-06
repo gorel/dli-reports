@@ -5,7 +5,7 @@
   </div>
 
   <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-9">
       <table class="table table-striped">
         <thead>
           <tr>
@@ -30,18 +30,15 @@
         </tbody>
       </table>
     </div>
-  </div>
 
-  <div>
-    <div class="col-md-4">
+    <div class="col-md-3">
       <h3>Add a new Location</h3>
       <form method="POST" action="{{ url_for('admin.edit_locations', next='/') }}">
         {{ form.csrf_token }}
-        {{ form.name.label }}
         <div class="input-group">
-          {{ form.name(class='form-control') }}
+          {{ form.name(class='form-control', placeholder='Location Name') }}
           <span class="input-group-btn">
-            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="submit" class="btn btn-primary"><span class="fa fa-plus"></span></button>
           </span>
         </div>
       </form>
