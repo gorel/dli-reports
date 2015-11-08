@@ -79,6 +79,7 @@ def populate_db_departments():
         Department('Press'),
         Department('Process Color'),
         Department('Shipping'),
+        Department('General Administrative / Other'),
     ]
     db.session.add_all(departments)
     db.session.commit()
