@@ -59,6 +59,7 @@
           <td class="hover-options">
             <a href="{{ url_for('reports.submit_report_data', report_id=report.id) }}" class="btn btn-default btn-xs">Submit Data</a>
 
+            {% if current_user.is_admin or report in current_user.reports %}
             <a href="{{ url_for('reports.edit_report', report_id=report.id) }}" class="btn btn-blank">
               <span class="fa fa-pencil" aria-hidden="true"></span>
             </a>
@@ -69,6 +70,7 @@
                 <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
               </button>
             </form>
+            {% endif %}
           </td>
           <td>
             <a href="mailto:{{ report.user.email }}">{{ report.user.name }}</a>

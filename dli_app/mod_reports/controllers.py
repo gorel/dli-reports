@@ -218,7 +218,7 @@ def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_i
             "Report data successfully submitted.",
             "alert-success",
         )
-        return redirect(url_for('reports.my_reports'))
+        return redirect(url_for('reports.all_reports'))
     else:
         flash_form_errors(change_form)
         flash_form_errors(form)
