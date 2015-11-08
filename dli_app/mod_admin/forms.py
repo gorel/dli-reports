@@ -9,15 +9,22 @@ from flask_wtf import (
 )
 
 from wtforms import (
+    HiddenField,
     SelectField,
     TextField,
+    TextAreaField,
     validators,
+)
+
+from dli_app.mod_admin.models import (
+    ErrorReport,
 )
 
 from dli_app.mod_auth.models import (
     Department,
     Location,
     RegisterCandidate,
+    User,
 )
 
 from dli_app.mod_reports.models import (
@@ -182,4 +189,48 @@ class AddUserForm(Form):
                 message='Please confirm your email address.',
             ),
         ],
+    )
+
+
+class ErrorReportForm(Form):
+    """A form for submitting site error reports"""
+    def __init__(self, *args, **kwargs):
+        """Inititalize the ErrorReportForm"""
+        Form.__init__(self, *args, **kwargs)
+        self.error_report = None
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+
+        user = User.query.get(int(self.user_id.data))
+        if not user:
+            self.user_id.errors.append('Something went wrong internally. Please try again later.')
+            return False
+
+        self.error_report = ErrorReport(
+            error_text=self.error.data,
+            user_text=self.textbox.data,
+            is_bug=bool(self.report_type.data),
+            user=user,
+        )
+        return True
+
+    report_type = SelectField(
+        'Is this a bug?',
+        choices=[
+            (1, "Yes, I'm reporting a bug"),
+            (0, "No, I'm asking for a feature"),
+        ],
+        coerce=int,
+        validators=[validators.InputRequired()],
+    )
+
+    error = HiddenField()
+    user_id = HiddenField()
+
+    textbox = TextAreaField(
+        'Description',
+        validators=[validators.Required()],
     )
