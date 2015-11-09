@@ -42,142 +42,30 @@ chart_tags = db.Table(
 )
 
 
-class Report(db.Model):
-    """Model for a DLI Report"""
-    __tablename__ = "report"
+class Tag(db.Model):
+    """Model for a Tag associated with a Report"""
+    __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
-    name = db.Column(db.String(128))
-    fields = db.relationship(
-        'Field',
-        secondary=report_fields,
-        backref='reports',
-    )
-    tags = db.relationship(
-        'Tag',
-        secondary=report_tags,
-        backref='reports',
-    )
+    name = db.Column(db.String(64), index=True, unique=True)
 
-    def __init__(self, user, name, fields, tags):
-        """Initialize a Report model"""
-        self.user = user
+    def __init__(self, name):
+        """Initialize a Tag model"""
         self.name = name
-        self.fields = fields
-        self.tags = tags
 
     def __repr__(self):
-        """Return a descriptive representation of a Report"""
-        return '<Report %r>' % self.name
+        """Return a descriptive representation of a Tag"""
+        return '<Tag %r>' % self.name
 
-    @property
-    def tagnames(self):
-        """Helper function to get the names of the Report's tags"""
-        return [tag.name for tag in self.tags]
+    @classmethod
+    def get_or_create(cls, name):
+        """Either retrieve a tag or create it if it doesn't exist"""
+        tag = Tag.query.filter_by(name=name).first()
+        if tag is None:
+            tag = Tag(name)
+            db.session.add(tag)
+            db.session.commit()
+        return tag
 
-    def generate_filename(self, ds):
-        """Generate the filename for the Excel sheet for downloads"""
-        return "{filename}-{ds}.xlsx".format(
-            filename=self.name,
-            ds=ds,
-        )
-
-    def collect_dept_data_for_template(self, ds):
-        """Collect all of the department data for this Report
-
-        Collect department data for this Report on a given day in a format
-        that is easy to template for render_template functions in Jinja2
-        """
-
-        dept_data = collections.defaultdict(list)
-        for field in self.fields:
-            dept_data[field.department.name].append(
-                {
-                    'name': field.name,
-                    'value': field.get_data_for_date(ds, pretty=True),
-                }
-            )
-        return dept_data
-
-    def excel_filepath_for_ds(self, ds):
-        """Return the absolute filepath for the Excel sheet on the given ds"""
-        return os.path.join(
-            os.path.abspath(os.path.dirname(__file__)),
-            EXCEL_FILE_DIR,
-            self.generate_filename(ds),
-        )
-
-    def excel_file_exists(self, ds):
-        """Determine whether or not an Excel file for this ds exists"""
-        return os.path.exists(self.excel_filepath_for_ds(ds))
-
-    def create_excel_file(self, ds):
-        """Generate an Excel sheet with this Report's data
-
-        Arguments:
-        ds - Date stamp for which day of Report data to generate
-        """
-
-        excel_helper = ExcelSheetHelper(
-            filepath=self.excel_filepath_for_ds(ds),
-            report_name=self.name,
-            ds=ds,
-        )
-        excel_helper.write(self.collect_dept_data(ds))
-        excel_helper.finalize()
-
-    def remove_excel_file(self, ds):
-        """Delete the Excel file for the given ds"""
-        os.remove(self.excel_filepath_for_ds(ds))
-
-    def collect_dept_data(self, ds):
-        """Collect all of the department data for this Report"""
-        dept_data = collections.defaultdict(list)
-        for field in self.fields:
-            dept_data[field.department.name].append(
-                field.get_data_for_date(ds)
-            )
-        return dept_data
-
-
-class Field(db.Model):
-    """Model for a Field within a Report"""
-    __tablename__ = "field"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32))
-    ftype_id = db.Column(db.Integer, db.ForeignKey("field_type.id"))
-    ftype = db.relationship("FieldType")
-    department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
-    data_points = db.relationship(
-        'FieldData',
-        backref='field',
-        lazy='dynamic',
-    )
-
-    def __init__(self, name, ftype, department):
-        """Initialize a Field model"""
-        self.name = name
-        self.ftype = ftype
-        self.department = department
-
-    def __repr__(self):
-        """Return a descriptive representation of a Field"""
-        return '<Field %r>' % self.name
-
-    def get_data_for_date(self, ds, pretty=False):
-        """Retrieve the FieldData instance for the given date stamp"""
-        data_point = self.data_points.filter_by(ds=ds).first()
-        if pretty:
-            if data_point is not None:
-                data_point = data_point.pretty_value
-            else:
-                data_point = ""
-        return data_point
-
-    @property
-    def identifier(self):
-        """Property to uniquely identify this Field"""
-        return '{}: {}'.format(self.department.name, self.name)
 
 class FieldType(db.Model):
     """Model for the type of a Field"""
@@ -282,29 +170,198 @@ class FieldData(db.Model):
             raise NotImplementedError("ERROR: Type %s not supported!" % ftype)
 
 
-class Tag(db.Model):
-    """Model for a Tag associated with a Report"""
-    __tablename__ = "tag"
+class Field(db.Model):
+    """Model for a Field within a Report"""
+    __tablename__ = "field"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True, unique=True)
+    name = db.Column(db.String(32))
+    ftype_id = db.Column(db.Integer, db.ForeignKey("field_type.id"))
+    ftype = db.relationship(FieldType)
+    department_id = db.Column(db.Integer, db.ForeignKey("department.id"))
+    data_points = db.relationship(
+        FieldData,
+        backref='field',
+        lazy='dynamic',
+    )
+
+    def __init__(self, name, ftype, department):
+        """Initialize a Field model"""
+        self.name = name
+        self.ftype = ftype
+        self.department = department
+
+    def __repr__(self):
+        """Return a descriptive representation of a Field"""
+        return '<Field %r>' % self.name
+
+    def get_data_for_date(self, ds, pretty=False):
+        """Retrieve the FieldData instance for the given date stamp"""
+        data_point = self.data_points.filter_by(ds=ds).first()
+        if pretty:
+            if data_point is not None:
+                data_point = data_point.pretty_value
+            else:
+                data_point = ""
+        return data_point
+
+    @property
+    def identifier(self):
+        """Property to uniquely identify this Field"""
+        return '{}: {}'.format(self.department.name, self.name)
+
+
+class Report(db.Model):
+    """Model for a DLI Report"""
+    __tablename__ = "report"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    name = db.Column(db.String(128))
+    fields = db.relationship(
+        Field,
+        secondary=report_fields,
+        backref='reports',
+    )
+    tags = db.relationship(
+        Tag,
+        secondary=report_tags,
+        backref='reports',
+    )
+
+    def __init__(self, user, name, fields, tags):
+        """Initialize a Report model"""
+        self.user = user
+        self.name = name
+        self.fields = fields
+        self.tags = tags
+
+    def __repr__(self):
+        """Return a descriptive representation of a Report"""
+        return '<Report %r>' % self.name
+
+    @property
+    def tagnames(self):
+        """Helper function to get the names of the Report's tags"""
+        return [tag.name for tag in self.tags]
+
+    def generate_filename(self, ds):
+        """Generate the filename for the Excel sheet for downloads"""
+        return "{filename}-{ds}.xlsx".format(
+            filename=self.name,
+            ds=ds,
+        )
+
+    def collect_dept_data_for_template(self, ds):
+        """Collect all of the department data for this Report
+
+        Collect department data for this Report on a given day in a format
+        that is easy to template for render_template functions in Jinja2
+        """
+
+        dept_data = collections.defaultdict(list)
+        for field in self.fields:
+            dept_data[field.department.name].append(
+                {
+                    'name': field.name,
+                    'value': field.get_data_for_date(ds, pretty=True),
+                }
+            )
+        return dept_data
+
+    def excel_filepath_for_ds(self, ds):
+        """Return the absolute filepath for the Excel sheet on the given ds"""
+        return os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            EXCEL_FILE_DIR,
+            self.generate_filename(ds),
+        )
+
+    def excel_file_exists(self, ds):
+        """Determine whether or not an Excel file for this ds exists"""
+        return os.path.exists(self.excel_filepath_for_ds(ds))
+
+    def create_excel_file(self, ds):
+        """Generate an Excel sheet with this Report's data
+
+        Arguments:
+        ds - Date stamp for which day of Report data to generate
+        """
+
+        excel_helper = ExcelSheetHelper(
+            filepath=self.excel_filepath_for_ds(ds),
+            report_name=self.name,
+            ds=ds,
+        )
+        excel_helper.write(self.collect_dept_data(ds))
+        excel_helper.finalize()
+
+    def remove_excel_file(self, ds):
+        """Delete the Excel file for the given ds"""
+        os.remove(self.excel_filepath_for_ds(ds))
+
+    def collect_dept_data(self, ds):
+        """Collect all of the department data for this Report"""
+        dept_data = collections.defaultdict(list)
+        for field in self.fields:
+            dept_data[field.department.name].append(
+                field.get_data_for_date(ds)
+            )
+        return dept_data
+
+
+class ChartType(db.Model):
+    """Model for a ChartType (eg. Line, Bar, etc.)"""
+    __tablename__ = 'chart_type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), index=True)
 
     def __init__(self, name):
-        """Initialize a Tag model"""
+        """Initialize a ChartType model"""
         self.name = name
 
     def __repr__(self):
-        """Return a descriptive representation of a Tag"""
-        return '<Tag %r>' % self.name
+        """Return a descriptive representation of a ChartType"""
+        return '<Chart Type %r>' % self.name
 
-    @classmethod
-    def get_or_create(cls, name):
-        """Either retrieve a tag or create it if it doesn't exist"""
-        tag = Tag.query.filter_by(name=name).first()
-        if tag is None:
-            tag = Tag(name)
-            db.session.add(tag)
-            db.session.commit()
-        return tag
+    def __eq__(self, other):
+        """Determine if two ChartTypes are equal"""
+        return other is not None and self.id == other.id
+
+
+class ChartDateType(db.Model):
+    """Model for a ChartDateType (eg. From week, rolling week, etc.)"""
+    __tablename__ = 'chart_date_type'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), index=True)
+
+    def __init__(self, name):
+        """Initialize a ChartDateType model"""
+        self.name = name
+
+    def __repr__(self):
+        """Return a descriptive representation of a ChartDateType"""
+        return '<Chart Date Type %r>' % self.name
+
+    def __eq__(self, other):
+        """Determine if two ChartDateTypes are equal"""
+        return other is not None and self.id == other.id
+
+    @property
+    def pretty_value(self):
+        """Return a more human-readable representation of this ChartDateType"""
+        if self == ChartDateTypeConstants.TODAY:
+            return 'Data from today only'
+        elif self == ChartDateTypeConstants.FROM_WEEK:
+            return 'Data submitted since Sunday'
+        elif self == ChartDateTypeConstants.ROLLING_WEEK:
+            return 'Data submitted in the last 7 days'
+        elif self == ChartDateTypeConstants.FROM_MONTH:
+            return 'Data submitted since the first of the month'
+        elif self == ChartDateTypeConstants.ROLLING_MONTH:
+            return 'Data submitted in the last 30 days'
+        elif self == ChartDateTypeConstants.FROM_YEAR:
+            return 'Data submitted since January 1st'
+        elif self == ChartDateTypeConstants.ROLLING_YEAR:
+            return 'Data submitted in the last 365 days'
 
 
 class Chart(db.Model):
@@ -315,16 +372,16 @@ class Chart(db.Model):
     with_table = db.Column(db.Boolean)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     ctype_id = db.Column(db.Integer, db.ForeignKey("chart_type.id"))
-    ctype = db.relationship("ChartType", backref="charts")
+    ctype = db.relationship(ChartType, backref="charts")
     cdtype_id = db.Column(db.Integer, db.ForeignKey("chart_date_type.id"))
-    cdtype = db.relationship("ChartDateType", backref="charts")
+    cdtype = db.relationship(ChartDateType, backref="charts")
     fields = db.relationship(
-        'Field',
+        Field,
         secondary=chart_fields,
         backref='charts',
     )
     tags = db.relationship(
-        'Tag',
+        Tag,
         secondary=chart_tags,
         backref='charts',
     )
@@ -520,62 +577,6 @@ class Chart(db.Model):
             )
             for field in self.fields
         ])
-
-
-class ChartType(db.Model):
-    """Model for a ChartType (eg. Line, Bar, etc.)"""
-    __tablename__ = 'chart_type'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), index=True)
-
-    def __init__(self, name):
-        """Initialize a ChartType model"""
-        self.name = name
-
-    def __repr__(self):
-        """Return a descriptive representation of a ChartType"""
-        return '<Chart Type %r>' % self.name
-
-    def __eq__(self, other):
-        """Determine if two ChartTypes are equal"""
-        return other is not None and self.id == other.id
-
-
-class ChartDateType(db.Model):
-    """Model for a ChartDateType (eg. From week, rolling week, etc.)"""
-    __tablename__ = 'chart_date_type'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), index=True)
-
-    def __init__(self, name):
-        """Initialize a ChartDateType model"""
-        self.name = name
-
-    def __repr__(self):
-        """Return a descriptive representation of a ChartDateType"""
-        return '<Chart Date Type %r>' % self.name
-
-    def __eq__(self, other):
-        """Determine if two ChartDateTypes are equal"""
-        return other is not None and self.id == other.id
-
-    @property
-    def pretty_value(self):
-        """Return a more human-readable representation of this ChartDateType"""
-        if self == ChartDateTypeConstants.TODAY:
-            return 'Data from today only'
-        elif self == ChartDateTypeConstants.FROM_WEEK:
-            return 'Data submitted since Sunday'
-        elif self == ChartDateTypeConstants.ROLLING_WEEK:
-            return 'Data submitted in the last 7 days'
-        elif self == ChartDateTypeConstants.FROM_MONTH:
-            return 'Data submitted since the first of the month'
-        elif self == ChartDateTypeConstants.ROLLING_MONTH:
-            return 'Data submitted in the last 30 days'
-        elif self == ChartDateTypeConstants.FROM_YEAR:
-            return 'Data submitted since January 1st'
-        elif self == ChartDateTypeConstants.ROLLING_YEAR:
-            return 'Data submitted in the last 365 days'
 
 
 class ExcelSheetHelper():
