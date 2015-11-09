@@ -255,8 +255,10 @@ def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_i
 @mod_reports.route('/view/<int:report_id>/', methods=['GET', 'POST'])
 @mod_reports.route('/view/<int:report_id>/<ds>/', methods=['GET', 'POST'])
 @login_required
-def view_report(report_id, ds=datetime.now().strftime('%Y-%m-%d')):
+def view_report(report_id, ds=None):
     """Show the user a specific report"""
+    if ds is None:
+        ds = datetime.now().strftime('%Y-%m-%d')
 
     form = ChangeDateForm()
     if form.validate_on_submit():
