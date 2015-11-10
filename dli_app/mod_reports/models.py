@@ -139,7 +139,6 @@ class Report(db.Model):
             EXCEL_FILE_DIR,
         )
         globpath = os.path.join(basepath, self.name + '*.xlsx')
-
         for filename in glob.glob(globpath):
             os.remove(os.path.join(basepath, filename))
 
