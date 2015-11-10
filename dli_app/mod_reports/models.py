@@ -248,7 +248,7 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.INTEGER:
             return self.ivalue
         elif ftype == FieldTypeConstants.STRING:
-            return '"{}"'.format(self.svalue)
+            return self.svalue
         elif ftype == FieldTypeConstants.TIME:
             return self.ivalue
         else:
@@ -270,7 +270,7 @@ class FieldData(db.Model):
         elif ftype == FieldTypeConstants.INTEGER:
             return str(self.ivalue)
         elif ftype == FieldTypeConstants.STRING:
-            return '"{}"'.format(self.svalue)
+            return self.svalue
         elif ftype == FieldTypeConstants.TIME:
             mins = self.ivalue / 60
             secs = self.ivalue % 60
