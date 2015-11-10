@@ -74,18 +74,27 @@
         <thead>
           <tr>
             <th>Email</th>
+            <th>Invited on</th>
           </tr>
         </thead>
 
         <tbody>
           {% for candidate in candidates %}
             <tr>
-                <td>{{ candidate.email }}</td>
+              <td>{{ candidate.email }}</td>
+              <td>{{ candidate.send_time }}</td>
+              <td>
+                <form action="{{ url_for('admin.resend_candidate_email', candidate_id=candidate.id) }}" method="POST">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-xs btn-warning">Resend Invitation</button>
+                </form>
+              </td>
               <td>
                 <form action="{{ url_for('admin.delete_candidate', candidate_id=candidate.id) }}" method="POST">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-xs btn-danger">Delete</button>
                 </form>
+              </td>
             </tr>
           {% endfor %}
         </tbody>
