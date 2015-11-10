@@ -4,18 +4,12 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /admin.
 """
 
-import os
-
 from flask import (
     Blueprint,
     flash,
     redirect,
     render_template,
     url_for,
-)
-
-from flask_mail import (
-    Message,
 )
 
 from flask_login import (
@@ -26,7 +20,6 @@ from flask_login import (
 # Import main db and form error handler for app
 from dli_app import (
     db,
-    mail,
     flash_form_errors,
 )
 

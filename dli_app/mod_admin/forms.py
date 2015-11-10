@@ -172,7 +172,7 @@ class AddUserForm(Form):
         validators=[
             validators.Email(),
             validators.Required(
-                message='You must provide your school email address.',
+                message='You must provide an email address.',
             ),
             validators.EqualTo(
                 'confirm_email',

@@ -13,6 +13,10 @@ from flask_sqlalchemy import (
     orm,
 )
 
+from flask_mail import (
+    Message,
+)
+
 from werkzeug.security import (
     check_password_hash,
     generate_password_hash,
@@ -84,7 +88,7 @@ class RegisterCandidate(db.Model):
             site=os.environ['DLI_REPORTS_SITE_URL'],
             key=key,
         )
-        recipient = candidate.email
+        recipient = self.email
         msg = Message(title, recipients=[recipient])
         msg.body = content + url
         mail.send(msg)

@@ -58,6 +58,7 @@ class ErrorReport(db.Model):
 
     @classmethod
     def send_new(cls):
+        """Send new ErrorReports to the project developers"""
         error_reports = cls.query.filter_by(sent=False).all()
         today = datetime.datetime.today().strftime('%Y-%m-%d')
         title = 'Bug Reports and Feature Requests {}'.format(today)
