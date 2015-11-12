@@ -9,7 +9,7 @@
     <form method="POST" action="" url_for('reports.view_report') }} class="form-horizontal">
       {{ form.csrf_token }}
       <div class="col-sm-4">
-        {{ form.date(class='form-control normal datepicker', type='text') }}
+        {{ form.date(class='form-control normal datepicker', type='text', placeholder='Click here to choose a date') }}
         <button type="submit" class="btn btn-primary">Change Date</button>
       </div>
     </form>
