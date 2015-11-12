@@ -43,6 +43,24 @@ chart_tags = db.Table(
 )
 
 
+def generate_date_list(start, end, step=None):
+    """Generate a ds list along an interval"""
+    if not step:
+        step = 1
+        if (end - start).days > 100:
+            step = 7
+        elif (end - start).days > 20:
+            step = 3
+    delta = datetime.timedelta(days=step)
+    dates = []
+
+    while start < end:
+        dates.append(start)
+        start += delta
+    dates.append(end)
+    return dates
+
+
 class Report(db.Model):
     """Model for a DLI Report"""
     __tablename__ = "report"
@@ -124,12 +142,13 @@ class Report(db.Model):
         excel_helper = ExcelSheetHelper(
             filepath=self.excel_filepath_for_ds(start_ds, end_ds),
             report=self,
-            date_list=self.generate_date_list(
+            date_list=generate_date_list(
                 datetime.datetime.strptime(start_ds, '%Y-%m-%d'),
                 datetime.datetime.strptime(end_ds, '%Y-%m-%d'),
+                step=1,
             ),
         )
-        excel_helper.write_all(self.collect_dept_fields())
+        excel_helper.write_all(self.collect_dept_fields(start_ds, end_ds))
         excel_helper.finalize()
 
     def remove_excel_files(self):
@@ -142,11 +161,25 @@ class Report(db.Model):
         for filename in glob.glob(globpath):
             os.remove(os.path.join(basepath, filename))
 
-    def collect_dept_fields(self):
-        """Collect all of the department data for this Report"""
-        dept_data = collections.defaultdict(list)
+    def collect_dept_fields(self, start_ds, end_ds):
+        """Collect all of the department data for this Report
+
+        The best way we can do this is to create a complex dict:
+        {dept : {field : {ds : value}}}
+
+        Arguments:
+        start_ds - the beginning ds for data to collect
+        end_ds - the ending ds for data to collect
+        """
+        dept_data = {}
         for field in self.fields:
-            dept_data[field.department.name].append(field)
+            field_data = {
+                pt.ds: pt.value
+                for pt in field.data_points.filter(FieldData.ds >= start_ds).filter(FieldData.ds <= end_ds)
+            }
+            if not dept_data.get(field.department.name):
+                dept_data[field.department.name] = {}
+            dept_data[field.department.name][field.name] = field_data
         return dept_data
 
 
@@ -375,7 +408,7 @@ class Chart(db.Model):
         else:
             raise NotImplementedError('Unexpected cdtype: %r' % self.cdtype)
 
-        ds_list = [d.strftime('%Y-%m-%d') for d in self.generate_date_list(date, today)]
+        ds_list = [d.strftime('%Y-%m-%d') for d in generate_date_list(date, today)]
         return {
             field.identifier: [
                 field.data_points.filter_by(ds=ds).first() or FieldDataDummy(ds)
@@ -383,22 +416,6 @@ class Chart(db.Model):
             ]
             for field in self.fields
         }
-
-    def generate_date_list(self, start, end):
-        """Generate a ds list along an interval"""
-        step = 1
-        if (end - start).days > 100:
-            step = 7
-        elif (end - start).days > 20:
-            step = 3
-        delta = datetime.timedelta(days=step)
-        dates = []
-
-        while start < end:
-            dates.append(start)
-            start += delta
-        dates.append(end)
-        return dates
 
     @property
     def tagnames(self):
@@ -670,7 +687,7 @@ class ExcelSheetHelper():
         self.row += 1
 
         self.col += 1
-        for date in date_list:
+        for date in self.date_list:
             # Write the ds headers
             self.worksheet.write(
                 self.row,
@@ -681,11 +698,15 @@ class ExcelSheetHelper():
         self.col = 0
 
     def write_all(self, dept_fields):
-        """Write all of the data for a Report"""
+        """Write all of the data for a Report
+
+        dept_fields is of the form:
+        {dept : {field : {ds : value}}}
+        """
         for dept in dept_fields.keys():
             self.write_dept_title(dept)
-            for field in dept_fields[dept]:
-                self.write_field(field)
+            for field in sorted(dept_fields[dept].keys()):
+                self.write_field(field, dept_fields[dept][field])
 
     def write_dept_title(self, dept_name):
         """Write a Department title within a Report"""
@@ -698,19 +719,19 @@ class ExcelSheetHelper():
         )
         self.row += 1
 
-    def write_field(self, field):
+    def write_field(self, field_name, values):
         """Write a Field within a Report"""
         self.worksheet.write(
             self.row,
             self.col,
-            field.name,
+            field_name,
             self.field_format,
         )
         self.col += 1
 
-        for date in date_list:
+        for date in self.date_list:
             # Write the data for each ds
-            field_data = field.get_data_for_date(date.strftime('%Y-%m-%d'))
+            field_data = values.get(date)
             if field_data:
                 self.worksheet.write(
                     self.row,
