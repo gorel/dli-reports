@@ -427,8 +427,6 @@ class Chart(db.Model):
             field.identifier: {
                 str(fdata.ds): str(fdata.value)
                 for fdata in field.data_points.filter(FieldData.ds >= min_ds).filter(FieldData.ds <= max_ds)
-            }
-            for field in self.fields
         }
 
     @property

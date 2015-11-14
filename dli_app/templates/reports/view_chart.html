@@ -34,6 +34,10 @@
     {% endif %}
   </div>
 
+  {% if chart.with_table %}
+  <table class="table table-striped" id="table"></table>
+  {% endif %}
+
   <script>
   {{ chart.generated_js()|safe }}
 
