@@ -30,26 +30,18 @@
                 </td>
               {% else %}
                 {% if user.is_admin %}
-                    <td><form action="{{ url_for('admin.demote_user', user_id=user.id) }}" method="POST">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button class="btn btn-xs btn-danger">Remove Admin</button>
-                    </form></td>
+                    <td><a href="{{ url_for('admin.demote_user', user_id=user.id) }}" data-method="post" class="btn btn-xs btn-danger">Remove Admin</a></td>
                 {% else %}
-                    <td><form action="{{ url_for('admin.promote_user', user_id=user.id) }}" method="POST">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                      <button class="btn btn-xs btn-warning">Make Admin</button>
-                    </form></td>
+                    <td><a href="{{ url_for('admin.promote_user', user_id=user.id) }}" data-method="post" class="btn btn-xs btn-warning">Make Admin</a></td>
                 {% endif %}
               {% endif %}
               <td>{{ user.location.name }}</td>
               <td>{{ user.department.name }}</td>
               <td>
-          {% if user.email != current_user.email %}
-                <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-xs btn-danger">Delete</button>
-                </form>
-          {% endif %}
+                {% if user.email != current_user.email %}
+                  <a href="{{ url_for('admin.delete_user', user_id=user.id) }}" data-method="post" class="btn btn-xs btn-danger">Delete</a>
+                {% endif %}
+              </td>
             </tr>
           {% endfor %}
         </tbody>
@@ -83,16 +75,10 @@
               <td>{{ candidate.email }}</td>
               <td>{{ candidate.send_time }}</td>
               <td>
-                <form action="{{ url_for('admin.resend_candidate_email', candidate_id=candidate.id) }}" method="POST">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-xs btn-warning">Resend Invitation</button>
-                </form>
+                <a href="{{ url_for('admin.resend_candidate_email', candidate_id=candidate.id) }}" data-method="post" class="btn btn-xs btn-warning">Resend Invitation</a>
               </td>
               <td>
-                <form action="{{ url_for('admin.delete_candidate', candidate_id=candidate.id) }}" method="POST">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-xs btn-danger">Delete</button>
-                </form>
+                <a href="{{ url_for('admin.delete_candidate', candidate_id=candidate.id) }}" data-method="post" class="btn btn-xs btn-danger">Delete</a>
               </td>
             </tr>
           {% endfor %}

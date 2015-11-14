@@ -33,18 +33,15 @@
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
-      {% if current_user.is_active %}
-        <form method="POST" action="{{ url_for('auth.logout') }}" class="navbar-form navbar-right">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn btn-link" type="submit">Log Out</button>
-        </form>
-        <li><p class="navbar-text">Hi, {{ current_user.name }}</p></li>
-        <form method="GET" action="{{ url_for('admin.bugsplat') }}" class="navbar-form navbar-right">
-          <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-edit"></span> Report Bug/Feature</button>
-        </form>
-      {% else %}
-        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-      {% endif %}
+        {% if current_user.is_active %}
+          <li><p class="navbar-text">Hi, {{ current_user.name }}</p></li>
+          <li><a href="{{ url_for('auth.logout') }}" data-method="post">Logout</a></li>
+        {% else %}
+          <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+        {% endif %}
+        <li><p class="navbar-btn">
+          <a href="{{ url_for('admin.bugsplat') }}" class="btn btn-danger"><span class="glyphicon glyphicon-edit"></span> Report Bug/Feature</a>
+        </p></li>
       </ul>
     </div>
   </div>

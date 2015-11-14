@@ -21,10 +21,8 @@
               <td>{{ location.id }}</td>
               <td>{{ location.name }}</td>
               <td>
-                <form action="{{ url_for('admin.delete_location', loc_id=location.id) }}" method="POST">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-xs btn-danger">Delete</button>
-                </form>
+                <a href="{{ url_for('admin.delete_location', loc_id=location.id) }}" data-method="post" class="btn btn-danger btn-xs">Delete</a>
+              </td>
             </tr>
           {% endfor %}
         </tbody>

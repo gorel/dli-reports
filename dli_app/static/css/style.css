@@ -16,13 +16,17 @@ body {
   position: relative;
 }
 
-.alert {
+.alert-list {
   position: absolute;
   right: 0;
   z-index: 1000;
+}
+
+.alert {
   width: 400px;
   margin-top: 15px;
   margin-right: 15px;
+  position: relative;
 }
 
  h1,  h2,  h3,  h4,  h5,  h6,
@@ -64,7 +68,7 @@ table tbody + thead>tr>th.super-th {
   background: transparent;
 }
 
-input[type=text]:not(.normal) {
+input:not(.normal) {
   border: none;
   border-radius: 0;
   border-bottom: 1px solid #ccc;
@@ -72,12 +76,12 @@ input[type=text]:not(.normal) {
   box-shadow: none;
 }
 
-input[type=text]:focus, input[type=text]:active {
+input:focus, input:active {
   outline: none;
   box-shadow: none;
 }
 
-input[type=text].input-lg {
+input.input-lg {
   font-size: 24px;
   font-weight: 300;
 }
@@ -186,6 +190,7 @@ select.form-control {
   display: table;
   line-height: 1.2em;
   width: 100%;
+  color: #aaa;
 }
 
 .field-cell {
@@ -202,6 +207,7 @@ select.form-control {
   display: table-cell;
   padding-right: 10px;
   padding-left: 5px;
+  color: #222;
 }
 
 .field .field-label label {
@@ -210,6 +216,7 @@ select.form-control {
 
 .field .field-input {
   padding: 8px 5px 6px 0;
+  color: #222;
 }
 
 .field .field-input > input {

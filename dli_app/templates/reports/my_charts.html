@@ -27,12 +27,9 @@
           <tr>
             <td>{{ chart.id }}</td>
             <td>
-              <form method="POST" action="{{ url_for('reports.unfavorite_chart', chart_id=chart.id) }}" class="form-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-blank">
-                  <span class="fa fa-heart" aria-hidden="true"></span>
-                </button>
-              </form>
+              <a href="{{ url_for('reports.unfavorite_chart', chart_id=chart.id) }}" data-method="post" class="btn btn-blank">
+                <span class="fa fa-heart" aria-hidden="true"></span>
+              </a>
               <a href="{{ url_for('reports.view_chart', chart_id=chart.id) }}">{{ chart.name }}</a>
             </td>
             <td>
@@ -40,12 +37,9 @@
                 <span class="fa fa-pencil" aria-hidden="true"></span>
               </a>
 
-              <form method="POST" action="{{ url_for('reports.delete_chart', chart_id=chart.id) }}" class="form-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-blank">
-                  <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
-                </button>
-              </form>
+              <a href="{{ url_for('reports.delete_chart', chart_id=chart.id) }}" data-method="post" class="btn btn-blank">
+                <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
+              </a>
             </td>
             <td>{{ ', '.join(chart.tagnames) }}</td>
           </tr>
@@ -69,19 +63,13 @@
           <td>{{ chart.id }}</td>
           <td>
             {% if chart not in current_user.favorite_charts %}
-              <form method="POST" action="{{ url_for('reports.favorite_chart', chart_id=chart.id) }}" class="form-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-blank">
-                  <span class="fa fa-heart-o" aria-hidden="true"></span>
-                </button>
-              </form>
+              <a href="{{ url_for('reports.favorite_chart', chart_id=chart.id) }}" data-method="post" class="btn btn-blank">
+                <span class="fa fa-heart-o" aria-hidden="true"></span>
+              </a>
             {% else %}
-              <form method="POST" action="{{ url_for('reports.unfavorite_chart', chart_id=chart.id) }}" class="form-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-blank">
-                  <span class="fa fa-heart" aria-hidden="true"></span>
-                </button>
-              </form>
+              <a href="{{ url_for('reports.unfavorite_chart', chart_id=chart.id) }}" data-method="post" class="btn btn-blank">
+                <span class="fa fa-heart" aria-hidden="true"></span>
+              </a>
             {% endif %}
             <a href="{{ url_for('reports.view_chart', chart_id=chart.id) }}">{{ chart.name }}</a>
           </td>
@@ -90,12 +78,9 @@
               <span class="fa fa-pencil" aria-hidden="true"></span>
             </a>
 
-            <form method="POST" action="{{ url_for('reports.delete_chart', chart_id=chart.id) }}" class="form-inline">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-blank">
-                <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
-              </button>
-            </form>
+            <a href="{{ url_for('reports.delete_chart', chart_id=chart.id) }}" data-method="post" class="btn btn-blank">
+              <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
+            </a>
           </td>
           <td>{{ ', '.join(chart.tagnames) }}</td>
         </tr>

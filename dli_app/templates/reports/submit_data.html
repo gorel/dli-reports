@@ -25,7 +25,15 @@
         {% for field in field_set %}
           <div class="field">
             <span class="field-cell field-label">{{ form[field.name].label() }}</span>
-            <span class="field-cell field-input">{{ form[field.name] }}</span>
+            {% if field.ftype.name == "currency" %}
+              $<span class="field-cell field-input">{{ form[field.name](placeholder="000.00") }}</span>
+            {% elif field.ftype.name == "integer" %}
+              <span class="field-cell field-input">{{ form[field.name](placeholder="000", type="number") }}</span>
+            {% elif field.ftype.name == "time" %}
+              <span class="field-cell field-input">{{ form[field.name](placeholder="00:00") }}</span>
+            {% elif field.ftype.name == "double" %}
+              <span class="field-cell field-input">{{ form[field.name](placeholder="000.00", type="number", step="4") }}</span>
+            {% endif %}
           </div>
         {% endfor %}
       </div>

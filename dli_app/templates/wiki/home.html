@@ -1,23 +1,27 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <div class="btn-group btn-group-sm pull-right header-buttons">
-      <a href="{{ url_for('wiki.edit_page', page_name='home') }}" class="btn btn-primary">Edit this page</a>
-      <a href="{{ url_for('wiki.edit_page') }}" class="btn btn-success">Create new page</a>
-      <a href="{{ url_for('wiki.question') }}" class="btn btn-info">Question</a>
-      <form method="POST" action="{{ url_for('wiki.search') }}" class="form-horizontal">
-        {{ form.csrf_token }}
-        <div class="form-group">
-          {{ form.search_box.label(class='control-label col-sm-2') }}
-        </div>
-        <div class="col-sm-10">
-          {{ form.search_box(class='form-control') }}
-          <button type="submit" class="btn btn-primary">Search</button>
-        </div>
-      </form>
-    </div>
-    <h1>Wiki Home</h1>
+    <h1>
+      Wiki Home
+      <small>
+        <a href="{{ url_for('wiki.edit_page', page_name='home') }}" class="btn btn-default">Edit this page</a>
+        <a href="{{ url_for('wiki.edit_page') }}" class="btn btn-primary">Create new page</a>
+        <a href="{{ url_for('wiki.question') }}" class="btn btn-info">Question</a>
+
+        <form method="POST" action="{{ url_for('wiki.search') }}" class="form-inline">
+          {{ form.csrf_token }}
+          <span class="input-group">
+            {{ form.search_box(class='form-control') }}
+            <span class="input-group-btn">
+              <button type="submit" class="btn btn-default"><span class="fa fa-search"></span></button>
+            </span>
+          </span>
+        </form>
+      </small>
+    </h1>
   </div>
+
+
   <h2>Most Visited Pages</h2>
   <table>
     {% for page in pages %}
