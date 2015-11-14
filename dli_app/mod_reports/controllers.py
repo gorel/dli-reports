@@ -46,6 +46,7 @@ from dli_app.mod_reports.forms import (
     CreateChartForm,
     EditChartForm,
     CreateReportForm,
+    DownloadReportForm,
     SubmitReportDataForm,
     EditReportForm,
     SearchForm,
@@ -207,8 +208,7 @@ def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_i
         # Also "invalidate" any existing Excel sheets that used this data
         for data_point in form.data_points:
             for report in data_point.field.reports:
-                if report.excel_file_exists(ds):
-                    report.remove_excel_file(ds)
+                report.remove_excel_files()
 
         # Add all of the new data points
         db.session.add_all(form.data_points)
@@ -283,23 +283,30 @@ def view_report(report_id, ds=None):
         ds=ds,
     )
 
-@mod_reports.route('/download/<int:report_id>/<ds>', methods=['GET'])
-@mod_reports.route('/download/<int:report_id>/<ds>/', methods=['GET'])
+@mod_reports.route('/download/<int:report_id>', methods=['GET', 'POST'])
+@mod_reports.route('/download/<int:report_id>/', methods=['GET', 'POST'])
 @login_required
-def download_report(report_id, ds):
+def download_report(report_id):
     """Download a report as an Excel file"""
     report = Report.query.get(report_id)
     if report is None:
-        flash(
-            "Report not found!",
-            "alert-warning",
+        flash("Report not found!", "alert-warning")
+        return redirect(url_for('reports.my_reports'))
+
+    form = DownloadReportForm()
+    if form.validate_on_submit():
+        if not report.excel_file_exists(form.start, form.end):
+            report.create_excel_file(form.start, form.end)
+        return send_file(
+            report.excel_filepath_for_ds(form.start, form.end),
+            as_attachment=True,
         )
     else:
-        if not report.excel_file_exists(ds):
-            report.create_excel_file(ds)
-        return send_file(
-            report.excel_filepath_for_ds(ds),
-            as_attachment=True,
+        flash_form_errors(form)
+        return render_template(
+            'reports/download.html',
+            form=form,
+            report=report,
         )
 
 
@@ -584,4 +591,3 @@ def edit_chart(chart_id):
                 set_fields = [field for field in chart.fields if field.department.id == department.id]
                 getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit_chart.html', form=form, chart=chart)
-

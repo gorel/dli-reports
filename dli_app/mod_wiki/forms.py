@@ -81,7 +81,6 @@ class SearchForm(Form):
 
         return True
 
-
     search_box = TextField(
         "Wiki Search",
         validators=[
@@ -90,6 +89,7 @@ class SearchForm(Form):
             ),
         ],
     )
+
 
 class AskQuestionForm(Form):
 
@@ -122,7 +122,7 @@ class AskQuestionForm(Form):
             ),
        ],
     )
-    
+
     content = TextAreaField(
        'Content',
        validators=[
@@ -131,4 +131,3 @@ class AskQuestionForm(Form):
            ),
        ],
     )
-
