@@ -17,16 +17,19 @@ body {
 }
 
 .alert-list {
-  position: absolute;
-  right: 0;
-  z-index: 1000;
 }
 
-.alert {
-  width: 400px;
-  margin-top: 15px;
-  margin-right: 15px;
+.alert-list .alert {
+  width: 100%;
+  margin: 0;
+  padding: 10px 10px;
   position: relative;
+  border-radius: 0;
+}
+
+.alert-list .alert:last-child {
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
  h1,  h2,  h3,  h4,  h5,  h6,
