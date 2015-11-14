@@ -4,18 +4,12 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /admin.
 """
 
-import os
-
 from flask import (
     Blueprint,
     flash,
     redirect,
     render_template,
     url_for,
-)
-
-from flask_mail import (
-    Message,
 )
 
 from flask_login import (
@@ -26,7 +20,6 @@ from flask_login import (
 # Import main db and form error handler for app
 from dli_app import (
     db,
-    mail,
     flash_form_errors,
 )
 
@@ -36,6 +29,7 @@ from dli_app.mod_admin.forms import (
     AddFieldForm,
     AddLocationForm,
     AddUserForm,
+    ErrorReportForm,
 )
 
 # Import models
@@ -332,17 +326,7 @@ def edit_users(page_num=1):
         db.session.commit()
         candidate = RegisterCandidate.query.filter_by(email=form.user.email).first()
         if candidate is not None:
-            key = candidate.registration_key
-            title = 'Activate your account'
-            content = 'Please go to the link: '
-            url = '{site}/auth/register/{key}'.format(
-                site=os.environ['DLI_REPORTS_SITE_URL'],
-                key=key,
-            )
-            recipient = candidate.email
-            msg = Message(title, recipients=[recipient])
-            msg.body = content + url
-            mail.send(msg)
+            candidate.send_link()
             flash(
                 "Sent an invite link to {email}".format(email=form.user.email),
                 "alert-success",
@@ -482,6 +466,35 @@ def demote_user(user_id):
 
     return redirect(url_for('admin.edit_users'))
 
+
+@mod_admin.route('/edit_users/resend_candidate_email/<int:candidate_id>', methods=['POST'])
+@mod_admin.route('/edit_users/resend_candidate_email/<int:candidate_id>/', methods=['POST'])
+@login_required
+def resend_candidate_email(candidate_id):
+    """Resend the registration email to the given RegisterCandidate
+
+    First, perform a check that the user is an admin.
+    Arguments:
+    candidate_id - The id of the candidate to be deleted, as defined in the db
+    """
+    if not current_user.is_admin:
+        flash(
+            "Sorry! You don't have permission to access that page.",
+            "alert-warning",
+        )
+        return redirect(url_for('default.home'))
+
+    candidate = RegisterCandidate.query.get(candidate_id)
+    if candidate is not None:
+        candidate.send_link()
+        flash(
+            "Resent registration email to {}.".format(candidate.email),
+            "alert-success",
+        )
+
+    return redirect(url_for('admin.edit_users'))
+
+
 @mod_admin.route('/edit_users/delete_candidate/<int:candidate_id>', methods=['POST'])
 @mod_admin.route('/edit_users/delete_candidate/<int:candidate_id>/', methods=['POST'])
 @login_required
@@ -511,3 +524,30 @@ def delete_candidate(candidate_id):
         )
 
     return redirect(url_for('admin.edit_users'))
+
+
+@mod_admin.route('/bugsplat', methods=['GET', 'POST'])
+@mod_admin.route('/bugsplat/', methods=['GET', 'POST'])
+@mod_admin.route('/bugsplat/<error>', methods=['GET', 'POST'])
+@mod_admin.route('/bugsplat/<error>/', methods=['GET', 'POST'])
+@login_required
+def bugsplat(error=None):
+    """Default handler page for reporting bugs or feature requests"""
+
+    form = ErrorReportForm()
+    form.user_id.data = current_user.id
+    if form.validate_on_submit():
+        db.session.add(form.error_report)
+        db.session.commit()
+        flash(
+            "Thank you for your report! We will look at this as soon as possible.",
+            "alert-success",
+        )
+        return redirect(url_for('default.home'))
+    else:
+        flash_form_errors(form)
+        form.error.data = error
+        form.report_type.data = 0
+        if error:
+            form.report_type.data = 1
+        return render_template('admin/bugsplat.html', form=form)

@@ -4,10 +4,44 @@
     <div class="container">
       <div class="col-md-7">
         <h1>DLI Reports</h1>
-        <p>They're a thing! Let's do something with that.</p>
+        <p>Welcome to dlireports.com</p>
       </div>
       <div class="col-md-5">
       </div>
     </div>
+  </div>
+
+  <div class="container">
+    <h2>Intro</h2>
+    <p>We are a group of Purdue students that built this to replace the hard-copy 8:40 reports.
+    This site is meant to allow you to submit data that would normally be tracked on the 8:40 report, view only the data <b>you</b> want to see, and maybe even view a chart to see trends over time.</p>
+
+    <h2>Getting Started</h2>
+    <p>Once you have your account set up, click on "Reports" at the top of this page. You should see the 8:40 Report as the only report in the table. Click the heart if you want to favorite the report and have it show up in the list of your favorite reports. Click Submit Data if you would like to enter your daily data for this report.</p>
+
+    <h2>Data submission</h2>
+    <p>The data submission should default to your department and the current date. If you wish to submit data for a different date or a different department, you can change it and click update. <b>If you have any issues entering data, please click the large "Report Bug/Feature" button at the top of the screen and we will handle it as soon as possible.</b> Enter your data and click the submit button.</p>
+
+    <h2>Viewing the data</h2>
+    <p>Now that your data is entered, click "8:40 Report" in the list of reports to view it. As others enter their data, this page will be updated with the numbers they have entered. At the very core, this should match all of the functionality of the current paper reports.</p>
+
+    <h2>What else is there?</h2>
+    <p>Feel free to explore the site. If you ever have any questions about how something works, or if you encounter a bug, or if you wish the site could do something else, please let us know by clicking the big red "Report Bug/Feature" button. When we finish the site, we'll remove that button, but until then, complain as much as you want!</p>
+    <p>Here are some features you may want to check out:</p>
+    <ul>
+        <li>Creating new reports (Reports &#8594; New) to only track fields <b>you</b> care about</li>
+        <li>Creating charts (Charts &#8594; New) to view data over time <b>(Work in progress - may be slow)</b></li>
+        <li>Creating/viewing wiki pages (Wiki) to explain how certain things on the site work</li>
+        <li>Editing your account details (My Account &#8594; Edit Account) to change your password or other details</li>
+    </ul>
+
+    <h2>Help, I found a bug!</h2>
+    <p>If you encounter a bug along the way, please let us know. Even if you think someone else has already reported it, it won't hurt to report it again. Being descriptive about what you did before you encountered the bug will help us track it down and fix it.</p>
+
+    <h2>Final Disclaimer</h2>
+    <p>We're just a group of college students working on our senior project. While this is no excuse for a bad job, we have other classes and obligations, so we may not be able to mend issues immediately. We'll do our best to get things done quickly and to make sure that this site is everything you wish the 8:40 Report could be.</p>
+    {% if current_user.is_authenticated %}
+    <p><b>If you have any questions or comments, you can email us at dlireports@cs.purdue.edu</b></p>
+    {% endif %}
   </div>
 {% endblock %}

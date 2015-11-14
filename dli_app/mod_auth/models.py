@@ -4,6 +4,8 @@ Author: Logan Gore
 This file is responsible for defining models that belong in the auth module.
 """
 
+import datetime
+import os
 import random
 import string
 
@@ -11,12 +13,20 @@ from flask_sqlalchemy import (
     orm,
 )
 
+from flask_mail import (
+    Message,
+)
+
 from werkzeug.security import (
     check_password_hash,
     generate_password_hash,
 )
 
-from dli_app import db, login_manager
+from dli_app import db, login_manager, mail
+
+from dli_app.mod_admin.models import (
+    ErrorReport,
+)
 
 from dli_app.mod_reports.models import (
     Chart,
@@ -50,6 +60,7 @@ class RegisterCandidate(db.Model):
     __tablename__ = 'register_candidate'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64), index=True, unique=True)
+    send_time = db.Column(db.String(32))
     registration_key = db.Column(db.String(64))
 
     def __init__(self, email, registration_key=None):
@@ -62,10 +73,25 @@ class RegisterCandidate(db.Model):
 
         self.email = email
         self.registration_key = registration_key
+        self.send_time = datetime.datetime.now().strftime('%m/%d/%Y %I:%M %p')
 
     def __repr__(self):
         """Return a descriptive representation of a RegisterCandidate"""
         return '<Register Candidate %r>' % self.email
+
+    def send_link(self):
+        """Send a registration link to this user"""
+        key = self.registration_key
+        title = 'Activate your account'
+        content = 'Please go to the link: '
+        url = '{site}/auth/register/{key}'.format(
+            site=os.environ['DLI_REPORTS_SITE_URL'],
+            key=key,
+        )
+        recipient = self.email
+        msg = Message(title, recipients=[recipient])
+        msg.body = content + url
+        mail.send(msg)
 
 
 class PasswordReset(db.Model):
@@ -117,6 +143,10 @@ class User(db.Model):
     )
     charts = db.relationship(
         Chart,
+        backref="user",
+    )
+    error_reports = db.relationship(
+        ErrorReport,
         backref="user",
     )
     favorite_reports = db.relationship(

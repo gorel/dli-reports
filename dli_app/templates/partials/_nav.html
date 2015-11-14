@@ -12,8 +12,8 @@
     <div class="collapse navbar-collapse" id="main_nav_collapse">
       <ul class="nav navbar-nav">
         {% if current_user.is_active %}
-          <li><a href="{{ url_for('reports.my_reports') }}">Reports</a></li>
-          <li><a href="{{ url_for('reports.my_charts') }}">Charts</a></li>
+          <li><a href="{{ url_for('reports.all_reports') }}">Reports</a></li>
+          <li><a href="{{ url_for('reports.all_charts') }}">Charts</a></li>
           <li><a href="{{ url_for('account.home') }}">My Account</a></li>
         {% endif %}
         {% if current_user.is_admin %}
@@ -32,19 +32,20 @@
         <li><a href="{{ url_for('wiki.home') }}">Wiki</a></li>
       </ul>
 
+      <ul class="nav navbar-nav navbar-right">
       {% if current_user.is_active %}
         <form method="POST" action="{{ url_for('auth.logout') }}" class="navbar-form navbar-right">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="btn btn-link" type="submit">Log Out</button>
         </form>
-        <ul class="nav navbar-right">
-          <p class="navbar-text">Hi, {{ current_user.name }}</p>
-        </ul>
+        <li><p class="navbar-text">Hi, {{ current_user.name }}</p></li>
+        <form method="GET" action="{{ url_for('admin.bugsplat') }}" class="navbar-form navbar-right">
+          <button class="btn btn-danger" type="submit"><span class="glyphicon glyphicon-edit"></span> Report Bug/Feature</button>
+        </form>
       {% else %}
-        <ul class="nav navbar-nav navbar-right">
-          <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-        </ul>
+        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
       {% endif %}
+      </ul>
     </div>
   </div>
 </nav>

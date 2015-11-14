@@ -21,6 +21,10 @@ from dli_app.mod_auth.models import (
     User,
 )
 
+from dli_app.mod_admin.models import (
+    ErrorReport,
+)
+
 from dli_app.mod_reports.models import (
     Chart,
     ChartType,
@@ -75,6 +79,7 @@ def populate_db_departments():
         Department('Press'),
         Department('Process Color'),
         Department('Shipping'),
+        Department('General Administrative / Other'),
     ]
     db.session.add_all(departments)
     db.session.commit()
@@ -1335,6 +1340,7 @@ if __name__ == '__main__':
 
     if ARGS.drop:
         vprint('Dropping all existing data first!')
+        db.session.close()
         db.drop_all()
         vprint('DB dropped.')
 
