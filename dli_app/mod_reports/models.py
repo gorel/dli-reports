@@ -400,9 +400,8 @@ class Chart(db.Model):
         """Return a descriptive representation of a Chart"""
         return '<Chart %r>' % self.name
 
-    @property
-    def data_points(self):
-        """Retrieve the data points needed for this chart"""
+    def get_min_date(self):
+        """Retrieve the min_ds for this Chart's date range"""
         today = datetime.date.today()
         if self.cdtype == ChartDateTypeConstants.TODAY:
             date = today
@@ -422,161 +421,51 @@ class Chart(db.Model):
         else:
             raise NotImplementedError('Unexpected cdtype: %r' % self.cdtype)
 
-        ds_list = [d.strftime('%Y-%m-%d') for d in self.generate_date_list(date, today)]
+        return date
+
+    def data_points(self, min_date):
+        """Retrieve the data points needed for this chart"""
+        min_ds = min_date.strftime('%Y-%m-%d')
+
         return {
-            field.identifier: [
-                field.data_points.filter_by(ds=ds).first() or FieldDataDummy(ds)
-                for ds in ds_list
-            ]
+            field.identifier: {
+                str(fdata.ds): fdata.value
+                for fdata in field.data_points.filter(FieldData.ds >= min_ds)
+            }
             for field in self.fields
         }
-
-    def generate_date_list(self, start, end):
-        """Generate a ds list along an interval"""
-        step = 1
-        if (end - start).days > 100:
-            step = 7
-        elif (end - start).days > 20:
-            step = 3
-
-        delta = datetime.timedelta(days=step)
-        dates = []
-        while start < end:
-            dates.append(start)
-            start += delta
-        dates.append(end)
-        return dates
 
     @property
     def tagnames(self):
         """Helper function to get the names of the Report's tags"""
         return [tag.name for tag in self.tags]
 
-    @property
     def generated_js(self):
         """Property that represents this chart generated as C3 JavaScript"""
-        return """
-            var chart = c3.generate({{
-                bindto: '#chart',
-                data: {{
-                    x: 'x',
-                    columns: [
-                      {time_series_sequence},
-                      {data_sequences}
-                    ],
-                    type: {chart_type}
-                }},
-                axis: {{
-                    x: {{
-                        type: 'timeseries',
-                        tick: {{
-                            format: '%Y-%m-%d'
-                        }}
-                    }}
-                }},
-                line: {{
-                    connect_null: false
-                }},
-                bar: {{
-                }},
-                pie: {{
-                    label: {{
-                        format: function(value, ratio, id) {{
-                            return value;
-                        }}
-                    }}
-                }},
-            }});
-
-        {table}
-        """.format(
-            time_series_sequence=self.get_time_series_sequence(),
-            data_sequences=self.get_data_sequences(),
-            chart_type='"{}"'.format(str(self.ctype.name)),
-            table=self.generated_table(),
-        )
-
-    def generated_table(self):
-        """HTML/JS that represents this chart is table format"""
-        if not self.with_table:
-            return ''
-
-        table_header = '<td>Date</td>' + ''.join(
-            '<th>{name}</th>'.format(name=field.name)
-            for field in self.fields
-        )
-
-        data_points = self.data_points
-        field = data_points.itervalues().next()
-        ds_list = sorted(p.ds for p in field)
-        keys = sorted(field.identifier for field in self.fields)
-        values = [
-            self.get_values_at_ds(keys, data_points, ds)
-            for ds in ds_list
-        ]
-
-        table_data = ''.join(
-            '<tr><td>{date}</td>{data}</tr>'.format(
-                date=ds,
-                data=''.join(
-                    '<td>{value}</td>'.format(value=value)
-                    for value in values_at_ds
-                )
-            )
-            for ds, values_at_ds in zip(ds_list, values)
-        )
+        min_date = self.get_min_date()
+        generate = 'true'
+        if self.ctype == ChartTypeConstants.TABLE_ONLY:
+            generate = 'false'
 
         return """
-            var table = '\
-                <table class="table table-striped"> \
-                    <thead> \
-                        {table_header} \
-                    </thead> \
-                    <tbody> \
-                        {table_data} \
-                    </tbody> \
-                </table>';
-            document.write(table);
+            var data_points = {data_points};
+            var time_series = {time_series};
+            var chart_type = "{chart_type}";
+            var generate = {should_generate};
         """.format(
-            table_header=table_header,
-            table_data=table_data,
+            time_series=self.get_time_series_sequence(min_date),
+            data_points=self.data_points(min_date),
+            chart_type=self.ctype.name,
+            should_generate=generate,
         )
 
-    def get_values_at_ds(self, keys, data_points, ds):
-        """Get the value array for this table row at the given ds"""
-        return [
-            point.pretty_value
-            for key in keys
-            for point in data_points[key]
-            if point.ds == ds
-        ]
-
-    def get_time_series_sequence(self):
+    def get_time_series_sequence(self, min_date):
         """Get the time series data that represents this chart in C3"""
         # Any point will do, so just take the first
-        field = self.data_points.itervalues().next()
-        return "['x', {ds_list}]".format(
-            ds_list=', '.join(
-                sorted(['"{}"'.format(str(p.ds)) for p in field])
-            ),
-        )
-
-    def get_data_sequences(self):
-        """Get the data sequences that represent this chart in C3"""
-        data_points = self.data_points
-
-        return ', '.join([
-            "['{name}', {data}]".format(
-                name=field.identifier,
-                # If data points == [], the next line will fail because we will
-                # have ['fieldname', ] and extra commas aren't allowed in json
-                # Explicitly saying that the data is empty will fix this
-                data=', '.join(
-                    [str(p.value) for p in data_points[field.identifier]] or ['0']
-                )
-            )
-            for field in self.fields
-        ])
+        today = datetime.date.today()
+        days = (today - min_date).days + 1
+        ds_list = [min_date + datetime.timedelta(days=x) for x in range(0, days)]
+        return [x.strftime('%Y-%m-%d') for x in ds_list]
 
 
 class ExcelSheetHelper():
@@ -753,16 +642,19 @@ class ChartTypeConstants():
         LINE = ChartType.query.filter_by(name="line").first()
         BAR = ChartType.query.filter_by(name="bar").first()
         PIE = ChartType.query.filter_by(name="pie").first()
+        TABLE_ONLY = ChartType.query.filter_by(name="table only").first()
     except:
         LINE = None
         BAR = None
         PIE = None
+        TABLE_ONLY = None
 
     def __init__(self):
         """Initialize a ChartTypeConstants instance"""
         self.LINE = ChartType.query.filter_by(name="line").first()
         self.BAR = ChartType.query.filter_by(name="bar").first()
         self.PIE = ChartType.query.filter_by(name="pie").first()
+        self.TABLE_ONLY = ChartType.query.filter_by(name="table only").first()
 
     @classmethod
     def reload(cls):
@@ -770,6 +662,7 @@ class ChartTypeConstants():
         cls.LINE = ChartType.query.filter_by(name="line").first()
         cls.BAR = ChartType.query.filter_by(name="bar").first()
         cls.PIE = ChartType.query.filter_by(name="pie").first()
+        cls.TABLE_ONLY = ChartType.query.filter_by(name="table only").first()
 
 
 class ChartDateTypeConstants():

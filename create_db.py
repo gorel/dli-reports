@@ -1225,6 +1225,7 @@ def populate_db_charttypes():
         ChartType('line'),
         ChartType('bar'),
         ChartType('pie'),
+        ChartType('table only'),
     ]
     db.session.add_all(ctypes)
     db.session.commit()
