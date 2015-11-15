@@ -138,7 +138,8 @@ def create_report():
 
     LocalCreateReportForm = CreateReportForm.get_instance()
     for department in Department.query.all():
-        LocalCreateReportForm.add_department(department)
+        if len(department.fields) > 0:
+            LocalCreateReportForm.add_department(department)
 
     form = LocalCreateReportForm()
     form.user_id.data = current_user.id
@@ -370,7 +371,8 @@ def edit_report(report_id):
     else:
         LocalEditReportForm = EditReportForm.get_instance()
         for department in Department.query.all():
-            LocalEditReportForm.add_department(department)
+            if len(department.fields) > 0:
+                LocalEditReportForm.add_department(department)
 
         form = LocalEditReportForm()
         if form.validate_on_submit():
@@ -382,9 +384,11 @@ def edit_report(report_id):
             flash_form_errors(form)
             form.name.data = report.name
             form.report_id.data = report_id
+            form.tags.data = ', '.join(tag.name for tag in report.tags)
             for department in Department.query.all():
-                set_fields = [field for field in report.fields if field.department.id == department.id]
-                getattr(form, department.name).data = [f.id for f in set_fields]
+                if len(department.fields) > 0:
+                    set_fields = [field for field in report.fields if field.department.id == department.id]
+                    getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit.html', form=form, report=report)
 
 
@@ -495,7 +499,8 @@ def create_chart():
 
     LocalCreateChartForm = CreateChartForm.get_instance()
     for department in Department.query.all():
-        LocalCreateChartForm.add_department(department)
+        if len(department.fields) > 0:
+            LocalCreateChartForm.add_department(department)
 
     form = LocalCreateChartForm()
     form.user_id.data = current_user.id
@@ -568,7 +573,8 @@ def edit_chart(chart_id):
     else:
         LocalEditChartForm = EditChartForm.get_instance()
         for department in Department.query.all():
-            LocalEditChartForm.add_department(department)
+            if len(department.fields) > 0:
+                LocalEditChartForm.add_department(department)
 
         form = LocalEditChartForm()
         form.chart_type.choices = [
@@ -589,7 +595,9 @@ def edit_chart(chart_id):
             form.chart_type.data = chart.ctype.id
             form.chart_date_type.data = chart.cdtype.id
             form.with_table.data = chart.with_table
+            form.tags.data = ', '.join(tag.name for tag in chart.tags)
             for department in Department.query.all():
-                set_fields = [field for field in chart.fields if field.department.id == department.id]
-                getattr(form, department.name).data = [f.id for f in set_fields]
+                if len(department.fields) > 0:
+                    set_fields = [field for field in chart.fields if field.department.id == department.id]
+                    getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit_chart.html', form=form, chart=chart)

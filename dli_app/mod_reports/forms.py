@@ -14,7 +14,6 @@ from flask_wtf import (
 from wtforms import (
     BooleanField,
     DecimalField,
-    FieldList,
     HiddenField,
     IntegerField,
     SelectField,
@@ -113,13 +112,7 @@ class CreateReportForm(Form):
         ],
     )
 
-    tags = FieldList(
-        TextField(
-            'Tag',
-            filters=[lambda x: x or None],
-        ),
-        min_entries=5,
-    )
+    tags = TextField("Report tags")
 
     @classmethod
     def get_instance(cls):
@@ -159,8 +152,9 @@ class CreateReportForm(Form):
                         report_fields.append(Field.query.get(field_id))
 
                 tags = [
-                    Tag.get_or_create(tag) for tag in self.tags.data
-                    if tag and tag.strip() != ''
+                    Tag.get_or_create(tag.strip())
+                    for tag in self.tags.data.split(',')
+                    if tag.strip()
                 ]
 
                 user = User.query.get(self.user_id.data)
@@ -227,13 +221,7 @@ class CreateChartForm(Form):
 
     with_table = BooleanField('Include table?')
 
-    tags = FieldList(
-        TextField(
-            'Tag',
-            filters=[lambda x: x or None],
-        ),
-        min_entries=5,
-    )
+    tags = TextField("Chart tags")
 
     @classmethod
     def get_instance(cls):
@@ -273,8 +261,9 @@ class CreateChartForm(Form):
                         chart_fields.append(Field.query.get(field_id))
 
                 tags = [
-                    Tag.get_or_create(tag) for tag in self.tags.data
-                    if tag and tag.strip() != ''
+                    Tag.get_or_create(tag.strip())
+                    for tag in self.tags.data.split(',')
+                    if tag.strip()
                 ]
 
                 user = User.query.get(self.user_id.data)
@@ -354,13 +343,7 @@ class EditChartForm(Form):
 
     with_table = BooleanField('Include table?')
 
-    tags = FieldList(
-        TextField(
-            'Tag',
-            filters=[lambda x: x or None],
-        ),
-        min_entries=5,
-    )
+    tags = TextField("Chart tags")
 
     @classmethod
     def get_instance(cls):
@@ -402,8 +385,9 @@ class EditChartForm(Form):
                         chart_fields.append(Field.query.get(field_id))
 
                 tags = [
-                    Tag.get_or_create(tag) for tag in self.tags.data
-                    if tag and tag.strip() != ''
+                    Tag.get_or_create(tag.strip())
+                    for tag in self.tags.data.split(',')
+                    if tag.strip()
                 ]
 
                 res = True
@@ -651,13 +635,7 @@ class EditReportForm(Form):
         ],
     )
 
-    tags = FieldList(
-        TextField(
-            'Tag',
-            filters=[lambda x: x or None],
-        ),
-        min_entries=5,
-    )
+    tags = TextField("Report tags")
 
     @classmethod
     def get_instance(cls):
@@ -698,8 +676,9 @@ class EditReportForm(Form):
                         report_fields.append(Field.query.get(field_id))
 
                 tags = [
-                    Tag.get_or_create(tag) for tag in self.tags.data
-                    if tag and tag.strip() != ''
+                    Tag.get_or_create(tag.strip())
+                    for tag in self.tags.data.split(',')
+                    if tag.strip()
                 ]
 
                 self.report.name = self.name.data
