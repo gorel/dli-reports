@@ -7,7 +7,7 @@ Tasks:
 Send an email to the developers of the new bug reports and feature requests daily.
 
 2. Invalid expired PasswordResets
-PasswordResets that have reached their expiration date should be deleted.
+Delete PasswordResets that have reached their expiration date
 """
 
 import datetime
@@ -50,7 +50,7 @@ def email_error_reports():
 
 
 def delete_expired_pw_resets():
-    """PasswordResets that have reached their expiration date should be deleted."""
+    """Delete PasswordResets that have reached their expiration date"""
     now = datetime.datetime.now()
     for pw_reset in PasswordReset.query.filter(PasswordReset.expiration < now):
         db.session.delete(pw_reset)
