@@ -99,6 +99,7 @@ class PasswordReset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     key = db.Column(db.String(64))
+    expiration = db.Column(db.DateTime)
 
     def __init__(self, user, key=None):
         """Initialize a  model"""
@@ -108,6 +109,8 @@ class PasswordReset(db.Model):
                 + string.digits) for _ in range(60))
         self.user = user
         self.key = key
+        # Add one additional day so the user can potentially reset their password at midnight
+        self.expiration = datetime.datetime.now() + datetime.timedelta(days=8)
 
     def __repr__(self):
         """Return a descriptive representation of password reset"""
