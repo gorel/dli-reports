@@ -399,6 +399,24 @@ class ChartDateType(db.Model):
         """Determine if two ChartDateTypes are equal"""
         return other is not None and self.id == other.id
 
+    @property
+    def pretty_value(self):
+        """Return a more human-readable representation of this ChartDateType"""
+        if self == ChartDateTypeConstants.TODAY:
+            return 'Data from today only'
+        elif self == ChartDateTypeConstants.FROM_WEEK:
+            return 'Data submitted since Sunday'
+        elif self == ChartDateTypeConstants.ROLLING_WEEK:
+            return 'Data submitted in the last 7 days'
+        elif self == ChartDateTypeConstants.FROM_MONTH:
+            return 'Data submitted since the first of the month'
+        elif self == ChartDateTypeConstants.ROLLING_MONTH:
+            return 'Data submitted in the last 30 days'
+        elif self == ChartDateTypeConstants.FROM_YEAR:
+            return 'Data submitted since January 1st'
+        elif self == ChartDateTypeConstants.ROLLING_YEAR:
+            return 'Data submitted in the last 365 days'
+
 
 class Chart(db.Model):
     """Model for a DLI Chart"""
