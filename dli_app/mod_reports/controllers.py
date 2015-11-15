@@ -157,7 +157,7 @@ def create_report():
 @mod_reports.route('/<int:report_id>/data/', methods=['GET', 'POST'])
 @mod_reports.route('/<int:report_id>/data/<ds>/<int:dept_id>', methods=['GET', 'POST'])
 @login_required
-def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_id=None):
+def submit_report_data(report_id, ds=None, dept_id=None):
     """Submit new report data
 
     If the user successfully submitted the form, submit all of the report
@@ -165,6 +165,8 @@ def submit_report_data(report_id, ds=datetime.now().strftime('%Y-%m-%d'), dept_i
     Otherwise, render the template to show the user the report data submission
     form.
     """
+    if not ds:
+        ds = datetime.now().strftime('%Y-%m-%d')
 
     # Check to see if the user picked a different day or department
     change_form = ChangeDateAndDepartmentForm()
