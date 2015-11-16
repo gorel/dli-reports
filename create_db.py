@@ -28,7 +28,6 @@ from dli_app.mod_admin.models import (
 from dli_app.mod_reports.models import (
     Chart,
     ChartType,
-    ChartDateType,
     Field,
     FieldData,
     FieldType,
@@ -1230,27 +1229,10 @@ def populate_db_charttypes():
     db.session.add_all(ctypes)
     db.session.commit()
 
-def populate_db_chartdatetypes():
-    """Populate the database ChartDateType model"""
-    cdtypes = [
-        ChartDateType('today'),
-        ChartDateType('from_week'),
-        ChartDateType('rolling_week'),
-        ChartDateType('from_month'),
-        ChartDateType('rolling_month'),
-        ChartDateType('from_year'),
-        ChartDateType('rolling_year'),
-        ChartDateType('all_time'),
-    ]
-    db.session.add_all(cdtypes)
-    db.session.commit()
-
 def populate_db_charts():
     """Populate the database Chart model"""
     from dli_app.mod_reports.models import ChartTypeConstants
-    from dli_app.mod_reports.models import ChartDateTypeConstants
     ChartTypeConstants.reload()
-    ChartDateTypeConstants.reload()
 
     charts = [
         Chart(
@@ -1258,7 +1240,6 @@ def populate_db_charts():
             user=User.query.first(),
             with_table=True,
             ctype=ChartTypeConstants.LINE,
-            cdtype=ChartDateTypeConstants.FROM_WEEK,
             fields=[Field.query.filter_by(name='Adjusted Sales').first()],
             tags=Tag.query.all(),
         ),
@@ -1267,7 +1248,6 @@ def populate_db_charts():
             user=User.query.first(),
             with_table=True,
             ctype=ChartTypeConstants.BAR,
-            cdtype=ChartDateTypeConstants.ROLLING_WEEK,
             fields=[
                 Field.query.filter_by(name='DLI On Time Percentage').first(),
                 Field.query.filter_by(name='Omaha On Time Percentage').first(),
@@ -1279,7 +1259,6 @@ def populate_db_charts():
             user=User.query.first(),
             with_table=False,
             ctype=ChartTypeConstants.PIE,
-            cdtype=ChartDateTypeConstants.TODAY,
             fields=Field.query.filter(
                 Field.name.like('Orders on Press%')).filter(
                 ~Field.name.like('%Status')).all(),
@@ -1324,8 +1303,6 @@ def populate_db_all():
     vprint('Report model populated.')
     populate_db_charttypes()
     vprint('ChartType model populated.')
-    populate_db_chartdatetypes()
-    vprint('ChartDateType model populated.')
     populate_db_charts()
     vprint('Chart model populated.')
     populate_db_wikipages()
