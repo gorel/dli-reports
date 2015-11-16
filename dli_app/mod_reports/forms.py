@@ -33,7 +33,6 @@ from dli_app.mod_auth.models import (
 from dli_app.mod_reports.models import (
     Chart,
     ChartType,
-    ChartDateType,
     Field,
     FieldData,
     FieldTypeConstants,
@@ -287,17 +286,11 @@ class CreateChartForm(Form):
                     self.chart_type.errors.append("Chart Type not found!")
                     res = False
 
-                cdtype = ChartDateType.query.get(self.chart_date_type.data)
-                if not cdtype:
-                    self.chart_date_type.errors.append("Date Range not found!")
-                    res = False
-
                 self.chart = Chart(
                     name=self.name.data,
                     with_table=self.with_table.data,
                     user=user,
                     ctype=ctype,
-                    cdtype=cdtype,
                     fields=chart_fields,
                     tags=tags,
                 )
@@ -412,15 +405,9 @@ class EditChartForm(Form):
                     self.chart_type.errors.append("Chart Type not found!")
                     res = False
 
-                cdtype = ChartDateType.query.get(self.chart_date_type.data)
-                if not cdtype:
-                    self.chart_date_type.errors.append("Date Range not found!")
-                    res = False
-
                 self.chart.name = self.name.data
                 self.chart.with_table = self.with_table.data
                 self.chart.ctype = ctype
-                self.chart.cdtype = cdtype
                 self.chart.fields = chart_fields
                 self.chart.tags = tags
 
