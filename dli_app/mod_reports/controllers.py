@@ -9,6 +9,7 @@ from datetime import datetime
 from flask import (
     Blueprint,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -35,7 +36,6 @@ from dli_app.mod_auth.models import (
 from dli_app.mod_reports.models import (
     Chart,
     ChartType,
-    ChartDateType,
     Report,
 )
 
@@ -443,6 +443,24 @@ def view_chart(chart_id):
     else:
         return render_template('reports/view_chart.html', chart=chart)
 
+@mod_reports.route('/charts/get_data/<int:chart_id>', methods=['GET'])
+@mod_reports.route('/charts/get_data/<int:chart_id>/', methods=['GET'])
+@login_required
+def get_chart_data(chart_id):
+    """Retrieve more data in JSON format for a specific chart"""
+    start = request.args.get('start')
+    end = request.args.get('end')
+    data = {}
+
+    chart = Chart.query.get(chart_id)
+    if chart and start and end:
+        data = chart.data_points(
+            min_date=start,
+            max_date=end,
+            ds_format=True,
+        )
+    return jsonify(**data)
+
 
 @mod_reports.route('/charts/favorite/<int:chart_id>', methods=['POST'])
 @mod_reports.route('/charts/favorite/<int:chart_id>/', methods=['POST'])
@@ -506,9 +524,6 @@ def create_chart():
     form.user_id.data = current_user.id
     form.chart_type.choices = [
         (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
-    ]
-    form.chart_date_type.choices = [
-        (cdtype.id, cdtype.pretty_value) for cdtype in ChartDateType.query.all()
     ]
     if form.validate_on_submit():
         # Add the new chart to the database
@@ -580,9 +595,6 @@ def edit_chart(chart_id):
         form.chart_type.choices = [
             (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
         ]
-        form.chart_date_type.choices = [
-            (cdtype.id, cdtype.name.upper().replace('_', ' ')) for cdtype in ChartDateType.query.all()
-        ]
         if form.validate_on_submit():
             flash('Chart: {name} has been updated'.format(name=form.chart.name), 'alert-success')
             db.session.commit()
@@ -593,7 +605,6 @@ def edit_chart(chart_id):
             form.chart_id.data = chart_id
             form.name.data = chart.name
             form.chart_type.data = chart.ctype.id
-            form.chart_date_type.data = chart.cdtype.id
             form.with_table.data = chart.with_table
             form.tags.data = ', '.join(tag.name for tag in chart.tags)
             for department in Department.query.all():

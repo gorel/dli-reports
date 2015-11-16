@@ -6,92 +6,186 @@
 
   <p>Tags: {{ chart.tagnames|join(', ') }}</p>
 
-  <div id="chart"></div>
-
-  {% if chart.with_table %}
-  <table class="table table-striped" id="table"></table>
+  {% if chart.is_pie_chart %}
+    <form class="form-inline" action="#" onsubmit="javascript:return update_days()">
+      <p class="">
+          Data from <input id="end_date" type="text" class="form-control normal datepicker" placeholder="Date">
+          <button type="submit" class="btn btn-sm btn-default">Update</button>
+        </div>
+      </p>
+    </form>
+  {% else %}
+    <form class="form-inline" action="#" onsubmit="javascript:return update_days()">
+      <p class="">
+          Data from <input id="start_date" type="text" class="form-control normal datepicker" placeholder="Start date">
+          to <input id="end_date" type="text" class="form-control normal datepicker" placeholder="End date">
+          <button type="submit" class="btn btn-sm btn-default">Update</button>
+        </div>
+      </p>
+    </form>
   {% endif %}
+
+  <div class="container">
+    <h4 id="no_data_warning"></h4>
+    <div id="chart"></div>
+
+    {% if chart.with_table %}
+      <table class="table table-striped" id="table"></table>
+    {% endif %}
+  </div>
 
   <script>
   {{ chart.generated_js()|safe }}
 
-  var filtered_points = []
-  for (field in data_points) {
-    filtered_points.push(gen_field_list(field));
+  //Set the defaults for the start and end dates
+  {% if not chart.is_pie_chart %}
+    document.getElementById('start_date').value = time_series[0];
+  {% endif %}
+  document.getElementById('end_date').value = time_series[time_series.length - 1];
+
+  function update_days() {
+      var end = document.getElementById('end_date').value;
+      {% if chart.is_pie_chart %}
+        var start = end;
+      {% else %}
+        var start = document.getElementById('start_date').value;
+      {% endif %}
+
+      if (start > end) {
+        alert("Whoops! Your start date is after the end date!");
+        return false;
+      }
+
+      $.ajax({
+        url: "{{ url_for('reports.get_chart_data', chart_id=chart.id) }}",
+        type: 'GET',
+        data: {
+          start: start,
+          end: end
+        },
+        success: function(result) {
+          time_series = regen_time_series(start, end);
+          data_points = result;
+          generate_all();
+      },
+        error: function(xhr) {
+          alert('An unexpected error occurred. Please try again later.');
+        }
+      });
+
+      // Return false to ensure that the page won't reload
+      return false;
   }
 
-  function gen_field_list(field) {
-    var res = [field]
-    time_series.forEach(function(ds) {
-      if (ds in data_points[field]) {
-        res.push(data_points[field][ds]);
-      }
-      else {
-        res.push(null);
-      }
-    });
-
+  function regen_time_series(start, end) {
+    res = new Array();
+    start = start.split('-');
+    end = end.split('-');
+    sdate = new Date(parseInt(start[0]), parseInt(start[1]) - 1, parseInt(start[2]));
+    edate = new Date(parseInt(end[0]), parseInt(end[1]) - 1, parseInt(end[2]));
+    while (sdate <= edate) {
+      res.push(sdate.toISOString().slice(0, 10));
+      sdate.setDate(sdate.getDate() + 1);
+    }
     return res;
   }
 
-  if (generate) {
-      var chart = c3.generate({
-          bindto: '#chart',
-          data: {
-              x: 'x',
-              columns: filtered_points.concat([['x'].concat(time_series)]),
-              type: chart_type
-          },
-          axis: {
-              x: {
-                  type: 'timeseries',
-                  tick: {
-                      format: '%Y-%m-%d'
-                  }
-              }
-          },
-          line: {
-              connect_null: false
-          },
-          bar: {},
-          pie: {
-              label: {
-                  format: function(value, ratio, id) {
-                      return value;
-                  }
-              }
-          },
-      });
-  }
+  function generate_all() {
+    document.getElementById('chart').innerHTML = '';
+    {% if chart.with_table %}
+      document.getElementById('table').innerHTML = '';
+    {% endif %}
 
-  {% if chart.with_table %}
-      //Generate table header
-      var table = document.getElementById('table');
-      var header = table.createTHead();
-      var headerRow = header.insertRow(0);
+    var filtered_points = []
+    var valid = false;
+    for (field in data_points) {
+      filtered_points.push(gen_field_list(field));
+    }
 
-      var cell = headerRow.insertCell(-1);
-      cell.innerHTML = '<b>Date</b>';
-      for (field in data_points) {
-          var cell = headerRow.insertCell(-1);
-          cell.innerHTML = '<b>' + field + '</b>';
-      }
-
-      //Generate table body
+    function gen_field_list(field) {
+      var res = [field]
       time_series.forEach(function(ds) {
-          var row = table.insertRow(-1);
-          var cell = row.insertCell(-1);
-          cell.innerHTML = ds;
-          for (field in data_points) {
-              var cell = row.insertCell(-1);
-              if (ds in data_points[field]) {
-                  cell.innerHTML = data_points[field][ds];
-              }
-              else {
-                  cell.innerHTML = '<small>(No data)</small>';
-              }
-          }
+        if (ds in data_points[field]) {
+          res.push(data_points[field][ds]);
+          valid = true;
+        }
+        else {
+          res.push(null);
+        }
       });
-  {% endif %}
+
+      return res;
+    }
+
+    if (generate) {
+        var chart = c3.generate({
+            bindto: '#chart',
+            data: {
+                x: 'x',
+                columns: filtered_points.concat([['x'].concat(time_series)]),
+                type: chart_type
+            },
+            axis: {
+                x: {
+                    type: 'timeseries',
+                    tick: {
+                        format: '%Y-%m-%d'
+                    }
+                }
+            },
+            line: {
+                connect_null: false
+            },
+            bar: {},
+            pie: {
+                label: {
+                    format: function(value, ratio, id) {
+                        return value;
+                    }
+                }
+            },
+        });
+
+        document.getElementById('no_data_warning').innerHTML = '';
+        if (!valid) {
+          {% if chart.is_pie_chart %}
+            document.getElementById('no_data_warning').innerHTML = 'Warning: No data for this date!';
+          {% else %}
+            document.getElementById('no_data_warning').innerHTML = 'Warning: No data for these dates!';
+          {% endif %}
+        }
+    }
+
+    {% if chart.with_table %}
+        //Generate table header
+        var table = document.getElementById('table');
+        var header = table.createTHead();
+        var headerRow = header.insertRow(0);
+
+        var cell = headerRow.insertCell(-1);
+        cell.innerHTML = '<b>Date</b>';
+        for (field in data_points) {
+            var cell = headerRow.insertCell(-1);
+            cell.innerHTML = '<b>' + field + '</b>';
+        }
+
+        //Generate table body
+        time_series.forEach(function(ds) {
+            var row = table.insertRow(-1);
+            var cell = row.insertCell(-1);
+            cell.innerHTML = ds;
+            for (field in data_points) {
+                var cell = row.insertCell(-1);
+                if (ds in data_points[field]) {
+                    cell.innerHTML = data_points[field][ds];
+                }
+                else {
+                    cell.innerHTML = '<small>(No data)</small>';
+                }
+            }
+        });
+    {% endif %}
+  }
+  generate_all();
   </script>
 {% endblock %}
