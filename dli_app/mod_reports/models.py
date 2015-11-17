@@ -370,16 +370,6 @@ class ChartType(db.Model):
         """Determine if two ChartTypes are equal"""
         return other is not None and self.id == other.id
 
-    def get_data_for_date(self, ds, pretty=False):
-        """Retrieve the FieldData instance for the given date stamp"""
-        data_point = self.data_points.filter_by(ds=ds).first()
-        if not data_point:
-            return ''
-        elif pretty:
-            return data_point.pretty_value
-        else:
-            return data_point.value
-
 
 class ChartDateType(db.Model):
     """Model for a ChartDateType (eg. From week, rolling week, etc.)"""
@@ -465,7 +455,7 @@ class Chart(db.Model):
 
         return {
             field.identifier: {
-                str(fdata.ds): fdata.value
+                str(fdata.ds): str(fdata.value)
                 for fdata in field.data_points.filter(FieldData.ds >= min_ds)
             }
             for field in self.fields
