@@ -134,8 +134,8 @@ class User(db.Model):
     location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
     dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
     pw_reset = db.relationship(
-	PasswordReset,
-	backref="user",
+	    PasswordReset,
+	    backref="user",
     )
     reports = db.relationship(
         Report,
