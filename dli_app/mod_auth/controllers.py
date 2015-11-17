@@ -180,12 +180,11 @@ def setnewpass(reset_key):
     if not user:
         flash("That is not a valid reset_key. That key may have expired.", "alert-warning",)
         return redirect(url_for('default.home'))
+
     form = NewPassForm()
     if form.validate_on_submit():
-        password = form.password.data        
-        print "Deleting keys"
+        password = form.password.data
         for pw_reset in user.pw_reset:
-            print "Key"
             db.session.delete(pw_reset)
         user.set_password(password)
         db.session.commit()
