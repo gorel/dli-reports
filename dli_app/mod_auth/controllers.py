@@ -156,7 +156,8 @@ def resetpass():
             site=os.environ['DLI_REPORTS_SITE_URL'],
             key=pw_reset.key,
         )
-        content = 'Click this link to reset your password: ' + url
+        content = 'Click this link to reset your password: {url}'.format(url=url)
+        content += '\nThis link will expire in 7 days!'
         msg = Message(title, recipients=[email])
         msg.body = content
         mail.send(msg)
