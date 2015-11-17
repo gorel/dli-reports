@@ -1239,7 +1239,6 @@ def populate_db_chartdatetypes():
         ChartDateType('rolling_month'),
         ChartDateType('from_year'),
         ChartDateType('rolling_year'),
-        ChartDateType('all_time'),
     ]
     db.session.add_all(cdtypes)
     db.session.commit()
