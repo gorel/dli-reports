@@ -206,7 +206,7 @@ def delete_department(dept_id):
         return redirect(url_for('default.home'))
 
     department = Department.query.get(dept_id)
-    if department is not None:
+    if department:
         db.session.delete(department)
         db.session.commit()
 
