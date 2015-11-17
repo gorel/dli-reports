@@ -26,6 +26,12 @@
   {% endif %}
 
   <div class="container">
+    <center>
+      <div id="loading" style="visibility:hidden">
+        <img src="{{ url_for('static', filename='ajax-loader.gif') }}" alt="Loading" />
+        <b>Loading...</b>
+      </div>
+    </center>
     <h4 id="no_data_warning"></h4>
     <div id="chart"></div>
 
@@ -56,6 +62,7 @@
         return false;
       }
 
+      $('#loading').css('visibility', 'visible');
       $.ajax({
         url: "{{ url_for('reports.get_chart_data', chart_id=chart.id) }}",
         type: 'GET',
@@ -67,8 +74,10 @@
           time_series = regen_time_series(start, end);
           data_points = result;
           generate_all();
+          $('#loading').css('visibility', 'hidden');
       },
         error: function(xhr) {
+          $('#loading').css('visibility', 'hidden');
           alert('An unexpected error occurred. Please try again later.');
         }
       });
