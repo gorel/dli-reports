@@ -1,40 +1,54 @@
 {% extends 'layout.html' %}
 {% block body %}
   <div class="page-header">
-    <h1>Report: {{report.name }}</h1>
+    <h1>Report: {{report.name }} <small>Data for {{ ds }}</small></h1>
   </div>
 
-  <h2>Data for {{ ds }}</h2>
-  <div class="col-md-10">
-    <form method="POST" action="" url_for('reports.view_report') }} class="form-horizontal">
+  <div class="col-md-4">
+    <form method="POST">
       {{ form.csrf_token }}
-      <div class="col-sm-4">
-        {{ form.date(class='form-control normal datepicker', type='text', placeholder='Click here to choose a date') }}
-        <button type="submit" class="btn btn-primary">Change Date</button>
-      </div>
+        <span class="input-group">
+          <span class="input-group-addon">
+            View data for
+          </span>
+          {{ form.date(class='form-control normal datepicker', type='text', value=ds, placeholder='Select a date') }}
+          <span class="input-group-btn">
+            <button type="submit" class="btn btn-primary">Update</button>
+          </span>
+        </span>
+      </p>
     </form>
+
+    <div class="form-actions">
+      <a href="{{ url_for('reports.download_report', report_id=report.id) }}" class="btn btn-info">Download as Excel</a>
+    </div>
+
+    <div class="tags">
+      <span class="tag-head">Tagged with:</span>
+      {% for tag in report.tagnames %}
+        <span class="tag">{{ tag }}</span>
+      {% endfor %}
+    </div>
   </div>
 
-  <p>Tags: {{ report.tagnames|join(', ') }}</p>
-
-  <a href="{{ url_for('reports.download_report', report_id=report.id) }}" class="btn btn-info">Download as Excel</a>
-
-  {% for department in dept_data %}
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>{{ department }}</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {% for field in dept_data[department] %}
+  <div class="col-md-8">
+    {% for department in dept_data %}
+      <table class="table table-striped">
+        <thead>
           <tr>
-            <td>{{ field['name'] }}</td>
-            <td>{{ field['value'] }}</td>
+            <th>{{ department }}</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% endfor %}
+        </thead>
+
+        <tbody>
+          {% for field in dept_data[department] %}
+            <tr>
+              <td>{{ field['name'] }}</td>
+              <td>{{ field['value'] }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endfor %}
+  </div>
 {% endblock %}
