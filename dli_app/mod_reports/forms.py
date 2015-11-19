@@ -213,11 +213,6 @@ class CreateChartForm(Form):
         coerce=int,
     )
 
-    chart_date_type = SelectField(
-        "Date Range",
-        coerce=int,
-    )
-
     with_table = BooleanField('Include table?')
 
     tags = TextField("Chart tags")
@@ -326,11 +321,6 @@ class EditChartForm(Form):
 
     chart_type = SelectField(
         "Chart Type",
-        coerce=int,
-    )
-
-    chart_date_type = SelectField(
-        "Date Range",
         coerce=int,
     )
 
