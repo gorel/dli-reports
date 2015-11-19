@@ -487,6 +487,7 @@ class SubmitReportDataForm(Form):
                 """Add the given field to this form dynamically"""
                 cls.fields.append(field)
                 formfield = None
+                FieldTypeConstants.reload()
                 if field.ftype == FieldTypeConstants.CURRENCY:
                     formfield = TextField(
                         field.name,
