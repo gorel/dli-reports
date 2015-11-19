@@ -6,7 +6,7 @@
       <small>
         <a href="{{ url_for('wiki.edit_page', page_name=page.name) }}" class="btn btn-default">Edit this page</a>
         <a href="{{ url_for('wiki.edit_page') }}" class="btn btn-primary">Create new page</a>
-        <a href="{{ url_for('wiki.delete_page', page_id=page.id) }}" data-method="post" class="btn btn-danger">Delete</a>
+        <a href="{{ url_for('wiki.delete_page', page_id=page.id) }}" data-method="post" data-confirm="Are you sure you want to delete this page?" class="btn btn-danger">Delete</a>
       </small>
     </h1>
   </div>

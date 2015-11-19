@@ -21,7 +21,7 @@
               <td>{{ location.id }}</td>
               <td>{{ location.name }}</td>
               <td>
-                <a href="{{ url_for('admin.delete_location', loc_id=location.id) }}" data-method="post" class="btn btn-danger btn-xs">Delete</a>
+                <a href="{{ url_for('admin.delete_location', loc_id=location.id) }}" data-method="post" data-confirm="Are you sure you want to delete this location?" class="btn btn-danger btn-xs">Delete</a>
               </td>
             </tr>
           {% endfor %}
