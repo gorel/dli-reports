@@ -352,8 +352,8 @@ def delete_report(report_id):
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
 
-@mod_reports.route('/edit/<int:report_id>', methods=['GET','POST'])
-@mod_reports.route('/edit/<int:report_id>/', methods=['GET','POST'])
+@mod_reports.route('/edit/<int:report_id>', methods=['GET', 'POST'])
+@mod_reports.route('/edit/<int:report_id>/', methods=['GET', 'POST'])
 @login_required
 def edit_report(report_id):
     """Edit the specified report"""
@@ -569,8 +569,8 @@ def delete_chart(chart_id):
     return redirect(request.args.get('next') or url_for('reports.my_charts'))
 
 
-@mod_reports.route('/charts/edit/<int:chart_id>', methods=['GET','POST'])
-@mod_reports.route('/charts/edit/<int:chart_id>/', methods=['GET','POST'])
+@mod_reports.route('/charts/edit/<int:chart_id>', methods=['GET', 'POST'])
+@mod_reports.route('/charts/edit/<int:chart_id>/', methods=['GET', 'POST'])
 @login_required
 def edit_chart(chart_id):
     """Edit the specified chart"""
