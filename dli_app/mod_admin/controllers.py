@@ -4,46 +4,39 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /admin.
 """
 
-from flask import (
-    Blueprint,
-    flash,
-    redirect,
-    render_template,
-    url_for,
-)
+from flask import Blueprint
+from flask import flash
+from flask import jsonify
+from flask import redirect
+from flask import render_template
+from flask import url_for
 
-from flask_login import (
-    current_user,
-    login_required,
-)
+from flask_login import current_user
+from flask_login import login_required
 
 # Import main db and form error handler for app
-from dli_app import (
-    db,
-    flash_form_errors,
-)
+from dli_app import db
+from dli_app import flash_form_errors
 
 # Import forms
-from dli_app.mod_admin.forms import (
-    AddDepartmentForm,
-    AddFieldForm,
-    AddLocationForm,
-    AddUserForm,
-    ErrorReportForm,
-)
+from dli_app.mod_admin.forms import AddDepartmentForm
+from dli_app.mod_admin.forms import AddFieldForm
+from dli_app.mod_admin.forms import AddLocationForm
+from dli_app.mod_admin.forms import ChangeDepartmentForm
+from dli_app.mod_admin.forms import ChangeFieldForm
+from dli_app.mod_admin.forms import ChangeLocationForm
+from dli_app.mod_admin.forms import AddUserForm
+from dli_app.mod_admin.forms import ErrorReportForm
 
 # Import models
-from dli_app.mod_auth.models import (
-    Department,
-    Location,
-    User,
-    RegisterCandidate,
-)
+from dli_app.mod_auth.models import Department
+from dli_app.mod_auth.models import Location
+from dli_app.mod_auth.models import User
+from dli_app.mod_auth.models import RegisterCandidate
 
-from dli_app.mod_reports.models import (
-    Field,
-    FieldType,
-)
+from dli_app.mod_reports.models import Field
+from dli_app.mod_reports.models import FieldType
+
 
 # Create a blueprint for this module
 mod_admin = Blueprint('admin', __name__, url_prefix='/admin')
@@ -111,6 +104,17 @@ def edit_locations():
             form=form,
             locations=locations,
         )
+
+
+@mod_admin.route('/change_location_name', methods=['POST'])
+@mod_admin.route('/change_location_name/', methods=['POST'])
+@login_required
+def change_location_name():
+    """Change the name of a location"""
+    form = ChangeLocationForm()
+    if form.validate_on_submit():
+        db.session.commit()
+    return jsonify(**{})
 
 
 @mod_admin.route('/edit_locations/delete/<int:loc_id>', methods=['POST'])
@@ -185,6 +189,17 @@ def edit_departments():
             form=form,
             departments=departments,
         )
+
+
+@mod_admin.route('/change_department_name', methods=['POST'])
+@mod_admin.route('/change_department_name/', methods=['POST'])
+@login_required
+def change_department_name():
+    """Change the name of a department"""
+    form = ChangeDepartmentForm()
+    if form.validate_on_submit():
+        db.session.commit()
+    return jsonify(**{})
 
 
 @mod_admin.route('/edit_departments/delete/<int:dept_id>', methods=['POST'])
@@ -266,6 +281,17 @@ def edit_fields():
             form=form,
             departments=Department.query.all(),
         )
+
+
+@mod_admin.route('/change_field_name', methods=['POST'])
+@mod_admin.route('/change_field_name/', methods=['POST'])
+@login_required
+def change_field_name():
+    """Change the name of a field"""
+    form = ChangeFieldForm()
+    if form.validate_on_submit():
+        db.session.commit()
+    return jsonify(**{})
 
 
 @mod_admin.route('/edit_fields/delete/<int:field_id>', methods=['POST'])
