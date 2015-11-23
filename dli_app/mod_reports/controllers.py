@@ -5,6 +5,7 @@ This file is responsible for loading all site pages under /reports.
 """
 
 from datetime import datetime
+from datetime import timedelta
 
 from flask import (
     Blueprint,
@@ -156,7 +157,10 @@ def create_report():
 
 @mod_reports.route('/<int:report_id>/data', methods=['GET', 'POST'])
 @mod_reports.route('/<int:report_id>/data/', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/<ds>', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/<ds>/', methods=['GET', 'POST'])
 @mod_reports.route('/<int:report_id>/data/<ds>/<int:dept_id>', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/<ds>/<int:dept_id>/', methods=['GET', 'POST'])
 @login_required
 def submit_report_data(report_id, ds=None, dept_id=None):
     """Submit new report data
@@ -166,8 +170,10 @@ def submit_report_data(report_id, ds=None, dept_id=None):
     Otherwise, render the template to show the user the report data submission
     form.
     """
-    if not ds:
+    if not ds or ds == 'today':
         ds = datetime.now().strftime('%Y-%m-%d')
+    elif ds == 'yesterday':
+        ds = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
     # Check to see if the user picked a different day or department
     change_form = ChangeDateAndDepartmentForm()
@@ -184,11 +190,11 @@ def submit_report_data(report_id, ds=None, dept_id=None):
     report = Report.query.get(report_id)
 
     # We must generate the dynamic form before loading it
-    if dept_id is None:
+    if not dept_id:
         dept_id = current_user.department.id
 
     department = Department.query.get(dept_id)
-    if department is None:
+    if not department:
         flash(
             "No department with that ID found.",
             "alert-warning",
