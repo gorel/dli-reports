@@ -270,6 +270,10 @@ class CreateChartForm(Form):
                     self.chart_type.errors.append("Chart Type not found!")
                     res = False
 
+                if not self.with_table.data and not len(chart_fields):
+                    self.with_table.errors.append("You've created an empty chart!")
+                    res = False
+
                 self.chart = Chart(
                     name=self.name.data,
                     with_table=self.with_table.data,
