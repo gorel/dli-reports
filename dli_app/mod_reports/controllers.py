@@ -234,10 +234,10 @@ def submit_report_data(report_id, ds=None, dept_id=None):
         for field in form.instance_fields:
             # This line allows us to dynamically load the field data
             formfield = getattr(form, field.name)
-            if formfield.data is None:
+            if not formfield.data:
                 existing_value = field.data_points.filter_by(ds=ds).first()
-                if existing_value is not None:
-                    formfield.data = existing_value.value
+                if existing_value:
+                    formfield.data = existing_value.pretty_value
 
         chunk_size = 10
         field_list = form.instance_fields

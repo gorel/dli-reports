@@ -70,7 +70,7 @@ class SplitNumValidator():
                 )
             )
         self.parts_message = parts_message
-        if num_message is None:
+        if not num_message:
             num_message = "{part} is not a number"
         self.num_message = num_message
 
@@ -84,7 +84,7 @@ class SplitNumValidator():
                 if len(parts) > self.max_parts:
                     raise ValidationError(self.parts_message)
                 for part in parts:
-                    if not part.isdigit():
+                    if part and not part.isdigit():
                         raise ValidationError(
                             self.num_message.format(
                                 part=part,

@@ -136,7 +136,17 @@ class FieldData(db.Model):
             self.svalue = value
         elif self.field.ftype == FieldTypeConstants.TIME:
             # Convert the value into seconds for convenience
-            parts = value.split(':')
+            if ':' in value:
+                parts = value.split(':')
+            elif '.' in value:
+                # Some people use '.' to denote minutes/seconds
+                parts = value.split('.')
+            else:
+                # If no : or ., assume the value listed is seconds
+                parts = ['0', value]
+
+            # If the user listed something like ':00', make sure we can still parse
+            parts = [x or '0' for x in parts]
             self.ivalue = int(parts[0]) * 60
             if len(parts) == 2:
                 self.ivalue += int(parts[1])
@@ -176,9 +186,9 @@ class FieldData(db.Model):
                 cents=cents,
             )
         elif ftype == FieldTypeConstants.DOUBLE:
-            return str(self.dvalue)
+            return self.dvalue
         elif ftype == FieldTypeConstants.INTEGER:
-            return str(self.ivalue)
+            return self.ivalue
         elif ftype == FieldTypeConstants.STRING:
             return self.svalue
         elif ftype == FieldTypeConstants.TIME:
