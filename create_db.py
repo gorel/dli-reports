@@ -473,7 +473,7 @@ def populate_db_fields():
         ),
         Field(
             name='Online Quotes Percentage',
-            ftype=FieldTypeConstants.INTEGER,
+            ftype=FieldTypeConstants.DOUBLE,
             department=op,
         ),
         Field(
@@ -1075,7 +1075,7 @@ def populate_db_fields():
             department=shipping,
         ),
         Field(
-            name='Day Copies',
+            name='Day Boxes',
             ftype=FieldTypeConstants.INTEGER,
             department=shipping,
         ),
@@ -1085,7 +1085,7 @@ def populate_db_fields():
             department=shipping,
         ),
         Field(
-            name='Night Copies',
+            name='Night Boxes',
             ftype=FieldTypeConstants.INTEGER,
             department=shipping,
         ),
