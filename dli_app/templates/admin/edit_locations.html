@@ -19,11 +19,18 @@
           {% for location in locations %}
             <tr>
               <td>{{ location.id }}</td>
-              <td>{{ location.name }}</td>
+              <td>
+                <a href="#" id="loc_{{ location.id }}" class="editable editable-click inline-input">
+                  {{ location.name }}
+                </a>
+              </td>
               <td>
                 <form action="{{ url_for('admin.delete_location', loc_id=location.id) }}" method="POST">
+                  <span id="edit_{{ location.id }}" class="fa fa-pencil" aria-hidden="true"></span>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-xs btn-danger">Delete</button>
+                  <button class="btn btn-blank">
+                    <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
+                  </button>
                 </form>
             </tr>
           {% endfor %}
@@ -47,4 +54,25 @@
       </form>
     </div>
   </div>
+
+  <script>
+  {% for location in locations %}
+    $('#loc_{{ location.id }}').editable({
+      type: 'text',
+      url: '{{ url_for('admin.change_location_name') }}',
+      pk: {{ location.id }},
+      placement: 'top',
+      title: 'Edit location name',
+      toggle: 'manual',
+      params: {
+        csrf_token: "{{ csrf_token() }}"
+      }
+    });
+
+    $('#edit_{{ location.id }}').click(function(e) {
+      e.stopPropagation();
+      $('#loc_{{ location.id }}').editable('toggle');
+    });
+  {% endfor %}
+  </script>
 {% endblock %}

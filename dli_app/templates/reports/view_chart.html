@@ -34,14 +34,18 @@
     </center>
     <h4 id="no_data_warning"></h4>
     <div id="chart"></div>
-
-    {% if chart.with_table %}
-      <table class="table table-striped" id="table"></table>
-    {% endif %}
+    <table class="table table-striped" id="table">
+      <thead id="thead">
+      </thead>
+      <tbody id="tbody">
+      </tbody>
+    </table>
   </div>
 
   <script>
   {{ chart.generated_js()|safe }}
+  // by default, time_series is the active time series
+  var active_time_series = time_series;
 
   //Set the defaults for the start and end dates
   {% if not chart.is_pie_chart %}
@@ -63,27 +67,82 @@
       }
 
       $('#loading').css('visibility', 'visible');
-      $.ajax({
-        url: "{{ url_for('reports.get_chart_data', chart_id=chart.id) }}",
-        type: 'GET',
-        data: {
-          start: start,
-          end: end
+      active_time_series = regen_time_series(start, end);
+      chunks = get_missing_chunks(start, end);
+
+      var promises = []
+      chunks.forEach(function(chunk) {
+        promises.push($.ajax({
+          url: "{{ url_for('reports.get_chart_data', chart_id=chart.id) }}",
+          type: 'GET',
+          data: {
+            start: chunk['start'],
+            end: chunk['end']
+          },
+          success: function(result) {
+            add_data_points(result);
         },
-        success: function(result) {
-          time_series = regen_time_series(start, end);
-          data_points = result;
-          generate_all();
-          $('#loading').css('visibility', 'hidden');
-      },
-        error: function(xhr) {
-          $('#loading').css('visibility', 'hidden');
-          alert('An unexpected error occurred. Please try again later.');
-        }
+          error: function(xhr) {
+            alert('An unexpected error occurred. Please try again later.');
+          }
+        }));
+      });
+
+      $.when.apply(null, promises).done(function() {
+        generate_all();
+        $('#loading').css('visibility', 'hidden');
       });
 
       // Return false to ensure that the page won't reload
       return false;
+  }
+
+  function get_missing_chunks() {
+    active_time_series.sort();
+    start = new Date(active_time_series[0]);
+    end = new Date(active_time_series[active_time_series.length - 1]);
+    dates = [];
+    chunks = [];
+
+    while (start <= end) {
+      // If the date is not in the time series array, add the date
+      ds = start.toISOString().slice(0, 10);
+      if ($.inArray(ds, time_series) == -1) {
+        dates.push(ds);
+        time_series.push(ds);
+      }
+      start.setDate(start.getDate() + 1);
+    }
+
+    // If no dates, base case
+    if (dates.length == 0) {
+      return [];
+    }
+
+    cur_start = new Date(dates[0]);
+    last_value = new Date(dates[0]);
+    dates.slice(1).forEach(function(ds) {
+      if (!one_more_day(last_value, ds)) {
+        start_ds = cur_start.toISOString().slice(0, 10);
+        end_ds = last_value.toISOString().slice(0, 10);
+        chunks.push({start: start_ds, end: end_ds});
+        cur_start = new Date(ds);
+      }
+      last_value = new Date(ds);
+    });
+
+    // Remember to get the final chunk!
+    start_ds = cur_start.toISOString().slice(0, 10);
+    end_ds = last_value.toISOString().slice(0, 10);
+    chunks.push({start: start_ds, end: end_ds});
+
+    return chunks;
+  }
+
+  function one_more_day(last_value, ds) {
+    var copy = new Date(last_value.getTime());
+    copy.setDate(copy.getDate() + 1);
+    return copy.toISOString().slice(0, 10) == ds;
   }
 
   function regen_time_series(start, end) {
@@ -99,10 +158,21 @@
     return res;
   }
 
+  function add_data_points(new_points) {
+    for (field in data_points) {
+      if (field in new_points) {
+        for (ds in new_points[field]) {
+          data_points[field][ds] = new_points[field][ds];
+        }
+      }
+    }
+  }
+
   function generate_all() {
     document.getElementById('chart').innerHTML = '';
     {% if chart.with_table %}
-      document.getElementById('table').innerHTML = '';
+      document.getElementById('thead').innerHTML = '';
+      document.getElementById('tbody').innerHTML = '';
     {% endif %}
 
     var filtered_points = []
@@ -113,7 +183,7 @@
 
     function gen_field_list(field) {
       var res = [field]
-      time_series.forEach(function(ds) {
+      active_time_series.forEach(function(ds) {
         if (ds in data_points[field]) {
           res.push(data_points[field][ds]);
           valid = true;
@@ -131,7 +201,7 @@
             bindto: '#chart',
             data: {
                 x: 'x',
-                columns: filtered_points.concat([['x'].concat(time_series)]),
+                columns: filtered_points.concat([['x'].concat(active_time_series)]),
                 type: chart_type
             },
             axis: {
@@ -167,8 +237,8 @@
 
     {% if chart.with_table %}
         //Generate table header
-        var table = document.getElementById('table');
-        var header = table.createTHead();
+        var header = document.getElementById('thead');
+        var body = document.getElementById('tbody');
         var headerRow = header.insertRow(0);
 
         var cell = headerRow.insertCell(-1);
@@ -179,8 +249,8 @@
         }
 
         //Generate table body
-        time_series.forEach(function(ds) {
-            var row = table.insertRow(-1);
+        active_time_series.forEach(function(ds) {
+            var row = body.insertRow(-1);
             var cell = row.insertCell(-1);
             cell.innerHTML = ds;
             for (field in data_points) {

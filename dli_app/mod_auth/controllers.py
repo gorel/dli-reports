@@ -82,7 +82,7 @@ def register(registration_key):
     if form.validate_on_submit():
         db.session.add(form.user)
         db.session.commit()
-        candidate =  RegisterCandidate.query.filter_by(email=form.user.email).first()
+        candidate = RegisterCandidate.query.filter_by(email=form.user.email).first()
         if candidate:
             db.session.delete(candidate)
             db.session.commit()

@@ -4,33 +4,23 @@ Author: Logan Gore
 This file lists all forms to be filled out from within the admin module.
 """
 
-from flask_wtf import (
-    Form,
-)
+from flask_wtf import Form
 
-from wtforms import (
-    HiddenField,
-    SelectField,
-    TextField,
-    TextAreaField,
-    validators,
-)
+from wtforms import HiddenField
+from wtforms import SelectField
+from wtforms import TextField
+from wtforms import TextAreaField
+from wtforms import validators
 
-from dli_app.mod_admin.models import (
-    ErrorReport,
-)
+from dli_app.mod_admin.models import ErrorReport
 
-from dli_app.mod_auth.models import (
-    Department,
-    Location,
-    RegisterCandidate,
-    User,
-)
+from dli_app.mod_auth.models import Department
+from dli_app.mod_auth.models import Location
+from dli_app.mod_auth.models import RegisterCandidate
+from dli_app.mod_auth.models import User
 
-from dli_app.mod_reports.models import (
-    Field,
-    FieldType,
-)
+from dli_app.mod_reports.models import Field
+from dli_app.mod_reports.models import FieldType
 
 
 class AddLocationForm(Form):
@@ -234,3 +224,75 @@ class ErrorReportForm(Form):
         'Description',
         validators=[validators.Required()],
     )
+
+
+class ChangeDepartmentForm(Form):
+    """A form to change the name of a Department"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize an AddLocationForm"""
+        Form.__init__(self, *args, **kwargs)
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+
+        department = Department.query.get(self.pk.data)
+        if not department:
+            self.pk.errors.append('Department not found')
+            return False
+
+        department.name = self.value.data
+        return True
+
+    pk = HiddenField()
+    value = HiddenField()
+
+
+class ChangeLocationForm(Form):
+    """A form to change the name of a Location"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize an AddLocationForm"""
+        Form.__init__(self, *args, **kwargs)
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+
+        location = Location.query.get(self.pk.data)
+        if not location:
+            self.pk.errors.append('Location not found')
+            return False
+
+        location.name = self.value.data
+        return True
+
+    pk = HiddenField()
+    value = HiddenField()
+
+
+class ChangeFieldForm(Form):
+    """A form to change the name of a Field"""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize an AddLocationForm"""
+        Form.__init__(self, *args, **kwargs)
+
+    def validate(self):
+        """Validate the form"""
+        if not Form.validate(self):
+            return False
+
+        field = Field.query.get(self.pk.data)
+        if not field:
+            self.pk.errors.append('Field not found')
+            return False
+
+        field.name = self.value.data
+        return True
+
+    pk = HiddenField()
+    value = HiddenField()

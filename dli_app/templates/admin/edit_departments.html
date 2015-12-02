@@ -9,7 +9,6 @@
       <table class="table table-striped">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Name</th>
             <th></th>
           </tr>
@@ -18,12 +17,18 @@
         <tbody>
           {% for department in departments %}
             <tr>
-              <td>{{ department.id }}</td>
-              <td>{{ department.name }}</td>
+              <td>
+                <a href="#" id="dept_{{ department.id }}" class="editable editable-click inline-input">
+                  {{ department.name }}
+                </a>
+              </td>
               <td>
                 <form action="{{ url_for('admin.delete_department', dept_id=department.id) }}" method="POST">
+                  <span id="edit_{{ department.id }}" class="fa fa-pencil" aria-hidden="true"></span>
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-xs btn-danger">Delete</button>
+                  <button type="submit" class="btn btn-blank">
+                    <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
+                  </button>
                 </form>
             </tr>
           {% endfor %}
@@ -52,4 +57,25 @@
       </div>
     </div>
   </div>
+
+  <script>
+  {% for department in departments %}
+    $('#dept_{{ department.id }}').editable({
+      type: 'text',
+      url: '{{ url_for('admin.change_department_name') }}',
+      pk: {{ department.id }},
+      placement: 'top',
+      title: 'Edit department name',
+      toggle: 'manual',
+      params: {
+        csrf_token: "{{ csrf_token() }}"
+      }
+    });
+
+    $('#edit_{{ department.id }}').click(function(e) {
+      e.stopPropagation();
+      $('#dept_{{ department.id }}').editable('toggle');
+    });
+  {% endfor %}
+  </script>
 {% endblock %}
