@@ -5,5 +5,5 @@ app.run(
     host=app.config['SERVER_HOST'],
     port=app.config['SERVER_PORT'],
     debug=app.config['DEBUG'],
-    processes=4,
+    threaded=True,
 )
