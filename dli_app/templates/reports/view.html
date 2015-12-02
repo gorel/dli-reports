@@ -5,19 +5,22 @@
   </div>
 
   <h2>Data for {{ ds }}</h2>
-  <div class="col-md-10">
-    <form method="POST" action="" url_for('reports.view_report') }} class="form-horizontal">
+
+  <p>
+  Switch to data for <u><b><a href="{{ url_for('reports.submit_report_data', report_id=report.id, ds='yesterday') }}">Yesterday</a></b></u> or <u><b><a href="{{ url_for('reports.submit_report_data', report_id=report.id) }}">Today</a></b></u>
+  </p>
+
+  <div class="col-md-3">
+    <form id="form" method="POST" action="" url_for('reports.view_report') }} class="form-horizontal">
       {{ form.csrf_token }}
-      <div class="col-sm-4">
-        {{ form.date(class='form-control normal datepicker', type='text', placeholder='Click here to choose a date') }}
-        <button type="submit" class="btn btn-primary">Change Date</button>
-      </div>
+      {{ form.date(class='form-control normal datepicker', type='text', placeholder='Or click here to choose a date') }}
     </form>
   </div>
 
-  <p>Tags: {{ report.tagnames|join(', ') }}</p>
-
-  <a href="{{ url_for('reports.download_report', report_id=report.id) }}" class="btn btn-info">Download as Excel</a>
+  <div class="pull-right">
+    <p>Tags: {{ report.tagnames|join(', ') }}</p>
+    <a href="{{ url_for('reports.download_report', report_id=report.id) }}" class="btn btn-info">Download as Excel</a>
+  </div>
 
   {% for department in dept_data %}
     <table class="table table-striped">
@@ -37,4 +40,16 @@
       </tbody>
     </table>
   {% endfor %}
+
+  <script>
+    $('#date').datepicker({
+      format: "yyyy-mm-dd",
+      maxDate: "+0d",
+      endDate: "+0d"
+    }).change(function(ev) {
+      $('#form').submit();
+    }).on('changeDate', function(ev) {
+      $('#form').submit();
+    });
+  </script>
 {% endblock %}
