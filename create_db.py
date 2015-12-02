@@ -99,7 +99,7 @@ def populate_db_users():
     users = [
         User(
             name='Nobody',
-            email='nobody@dli.report',
+            email='nobody@dlireports.com',
             password=os.environ['DLI_REPORTS_ADMIN_PASSWORD'],
             location=Location.query.first(),
             department=Department.query.first(),

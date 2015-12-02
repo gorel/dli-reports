@@ -45,7 +45,9 @@
           {% if user.email != current_user.email %}
                 <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-xs btn-danger">Delete</button>
+                  <button class="btn btn-blank">
+                    <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
+                  </button>
                 </form>
           {% endif %}
             </tr>

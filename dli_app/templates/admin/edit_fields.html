@@ -21,12 +21,19 @@
             {% for field in department.fields %}
               <tr>
                 <td>{{ field.department.name }}</td>
-                <td>{{ field.name }}</td>
+                <td>
+                  <a href="#" id="field_{{ field.id }}" class="editable editable-click inline-input">
+                    {{ field.name }}
+                  </a>
+                </td>
                 <td>{{ field.ftype.name|upper }}</td>
                 <td>
                   <form action="{{ url_for('admin.delete_field', field_id=field.id) }}" method="POST">
+                    <span id="edit_{{ field.id }}" class="fa fa-pencil" aria-hidden="true"></span>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button class="btn btn-xs btn-danger">Delete</button>
+                    <button class="btn btn-blank">
+                      <span class="fa fa-trash-o text-danger" aria-hidden="true"></span>
+                    </button>
                   </form>
               </tr>
             {% endfor %}
@@ -68,4 +75,27 @@
       </form>
     </div>
   </div>
+  <script>
+
+  {% for department in departments %}
+    {% for field in department.fields %}
+      $('#field_{{ field.id }}').editable({
+        type: 'text',
+        url: '{{ url_for('admin.change_field_name') }}',
+        pk: {{ field.id }},
+        placement: 'top',
+        title: 'Edit field name',
+        toggle: 'manual',
+        params: {
+          csrf_token: "{{ csrf_token() }}"
+        }
+      });
+
+      $('#edit_{{ field.id }}').click(function(e) {
+        e.stopPropagation();
+        $('#field_{{ field.id }}').editable('toggle');
+      });
+    {% endfor %}
+  {% endfor %}
+  </script>
 {% endblock %}

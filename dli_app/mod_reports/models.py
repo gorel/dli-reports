@@ -609,7 +609,7 @@ class ExcelSheetHelper():
                     self.row,
                     self.col,
                     field_data,
-                    self.get_format(field),
+                    self.get_format(field_data.field),
                 )
             self.col += 1
 
