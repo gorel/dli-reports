@@ -50,7 +50,8 @@
   <script>
     $('#date').datepicker({
       format: "yyyy-mm-dd",
-      maxDate: "+0d"
+      maxDate: "+0d",
+      endDate: "+0d"
     }).change(function(ev) {
       $('#form').submit();
     }).on('changeDate', function(ev) {
