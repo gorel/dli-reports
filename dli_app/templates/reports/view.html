@@ -4,20 +4,20 @@
     <h1>Report: {{report.name }}</h1>
   </div>
 
-  <h2>Data for {{ ds }}</h2>
+  <h2 class="hidden-print">Data for {{ ds }}</h2>
 
-  <p>
+  <p class="hidden-print">
   Switch to data for <u><b><a href="{{ url_for('reports.submit_report_data', report_id=report.id, ds='yesterday') }}">Yesterday</a></b></u> or <u><b><a href="{{ url_for('reports.submit_report_data', report_id=report.id) }}">Today</a></b></u>
   </p>
 
-  <div class="col-md-3">
+  <div class="col-md-3 hidden-print">
     <form id="form" method="POST" action="" url_for('reports.view_report') }} class="form-horizontal">
       {{ form.csrf_token }}
       {{ form.date(class='form-control normal datepicker', type='text', placeholder='Or click here to choose a date') }}
     </form>
   </div>
 
-  <div class="pull-right">
+  <div class="pull-right hidden-print">
     <p>Tags: {{ report.tagnames|join(', ') }}</p>
     <a href="{{ url_for('reports.download_report', report_id=report.id) }}" class="btn btn-info">Download as Excel</a>
   </div>
