@@ -31,6 +31,7 @@
           <th>ID</th>
           <th>Name</th>
           <th></th>
+          <th></th>
           <th>Tags</th>
         </tr>
       </thead>
@@ -62,6 +63,7 @@
                 </button>
               </form>
             </td>
+            <td></td>
             <td>{{ ', '.join(report.tagnames) }}</td>
           </tr>
         {% endfor %}
@@ -74,11 +76,12 @@
         <th>ID</th>
         <th>Name</th>
         <th></th>
+        <th></th>
         <th>Tags</th>
       </tr>
     </thead>
 
-    <tbody>
+    <tbody id="search_target">
       {% for report in reports.items %}
         <tr>
           <td>{{ report.id }}</td>
@@ -114,6 +117,7 @@
               </button>
             </form>
           </td>
+          <td></td>
           <td>{{ ', '.join(report.tagnames) }}</td>
         </tr>
       {% endfor %}
