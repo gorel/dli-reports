@@ -82,7 +82,7 @@ def register(registration_key):
     if form.validate_on_submit():
         db.session.add(form.user)
         db.session.commit()
-        candidate =  RegisterCandidate.query.filter_by(email=form.user.email).first()
+        candidate = RegisterCandidate.query.filter_by(email=form.user.email).first()
         if candidate:
             db.session.delete(candidate)
             db.session.commit()
@@ -146,7 +146,7 @@ def resetpass():
     if form.validate_on_submit():
         email = form.email.data
         pw_reset = PasswordReset(
-            user= User.get_by_email(email),
+            user=User.get_by_email(email),
         )
         db.session.add(pw_reset)
         db.session.commit()
@@ -156,7 +156,8 @@ def resetpass():
             site=os.environ['DLI_REPORTS_SITE_URL'],
             key=pw_reset.key,
         )
-        content = 'Click this link to reset your password: ' + url
+        content = 'Click this link to reset your password: {url}'.format(url=url)
+        content += '\nThis link will expire in 7 days!'
         msg = Message(title, recipients=[email])
         msg.body = content
         mail.send(msg)
@@ -176,13 +177,16 @@ def setnewpass(reset_key):
     Arguments:
     reset_key - the unique key for resetting the password
     """
+    user = PasswordReset.get_by_key(reset_key)
+    if not user:
+        flash("That is not a valid reset_key. That key may have expired.", "alert-warning",)
+        return redirect(url_for('default.home'))
+
     form = NewPassForm()
     if form.validate_on_submit():
         password = form.password.data
-        user = PasswordReset.get_by_key(reset_key)
-        if user is None:
-            flash("That is not a valid reset_key. Click the link in your email.", "alert-warning",)
-            return redirect(url_for('default.home'))
+        for pw_reset in user.pw_reset:
+            db.session.delete(pw_reset)
         user.set_password(password)
         db.session.commit()
         flash("Password reset!", "alert-success")

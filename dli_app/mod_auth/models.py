@@ -83,14 +83,14 @@ class RegisterCandidate(db.Model):
         """Send a registration link to this user"""
         key = self.registration_key
         title = 'Activate your account'
-        content = 'Please go to the link: '
+        content = 'Please go to the link: {url}'
         url = '{site}/auth/register/{key}'.format(
             site=os.environ['DLI_REPORTS_SITE_URL'],
             key=key,
         )
         recipient = self.email
         msg = Message(title, recipients=[recipient])
-        msg.body = content + url
+        msg.body = content.format(url=url)
         mail.send(msg)
 
 
@@ -99,6 +99,7 @@ class PasswordReset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     key = db.Column(db.String(64))
+    expiration = db.Column(db.DateTime)
 
     def __init__(self, user, key=None):
         """Initialize a  model"""
@@ -108,6 +109,8 @@ class PasswordReset(db.Model):
                 + string.digits) for _ in range(60))
         self.user = user
         self.key = key
+        # Add one additional day so the user can potentially reset their password at midnight
+        self.expiration = datetime.datetime.now() + datetime.timedelta(days=8)
 
     def __repr__(self):
         """Return a descriptive representation of password reset"""
@@ -134,8 +137,8 @@ class User(db.Model):
     location_id = db.Column(db.Integer, db.ForeignKey("location.id"))
     dept_id = db.Column(db.Integer, db.ForeignKey("department.id"))
     pw_reset = db.relationship(
-	PasswordReset,
-	backref="user",
+        PasswordReset,
+        backref="user",
     )
     reports = db.relationship(
         Report,

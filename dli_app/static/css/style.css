@@ -96,7 +96,7 @@ table tbody + thead>tr>th.super-th {
 }
 
 input.normal {
-  border-radius: 2px;
+  border-radius: 4px;
   border: 1px solid #e7e7e7;
   padding: 2px 5px;
 }

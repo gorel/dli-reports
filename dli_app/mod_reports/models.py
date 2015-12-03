@@ -117,6 +117,7 @@ class FieldData(db.Model):
 
     def __init__(self, ds, field, value):
         """Initialize a FieldData model"""
+        FieldTypeConstants.reload()
         self.ds = ds
         self.field = field
 
@@ -135,7 +136,17 @@ class FieldData(db.Model):
             self.svalue = value
         elif self.field.ftype == FieldTypeConstants.TIME:
             # Convert the value into seconds for convenience
-            parts = value.split(':')
+            if ':' in value:
+                parts = value.split(':')
+            elif '.' in value:
+                # Some people use '.' to denote minutes/seconds
+                parts = value.split('.')
+            else:
+                # If no : or ., assume the value listed is seconds
+                parts = ['0', value]
+
+            # If the user listed something like ':00', make sure we can still parse
+            parts = [x or '0' for x in parts]
             self.ivalue = int(parts[0]) * 60
             if len(parts) == 2:
                 self.ivalue += int(parts[1])
@@ -147,6 +158,7 @@ class FieldData(db.Model):
     @property
     def value(self):
         """Property to easily retrieve the FieldData's value"""
+        FieldTypeConstants.reload()
         ftype = self.field.ftype
         if ftype == FieldTypeConstants.CURRENCY:
             return float(self.ivalue) / 100
@@ -164,6 +176,7 @@ class FieldData(db.Model):
     @property
     def pretty_value(self):
         """Property to easily retrieve a human-readable FieldData model"""
+        FieldTypeConstants.reload()
         ftype = self.field.ftype
         if ftype == FieldTypeConstants.CURRENCY:
             dollars = self.ivalue / 100
@@ -173,9 +186,9 @@ class FieldData(db.Model):
                 cents=cents,
             )
         elif ftype == FieldTypeConstants.DOUBLE:
-            return str(self.dvalue)
+            return self.dvalue
         elif ftype == FieldTypeConstants.INTEGER:
-            return str(self.ivalue)
+            return self.ivalue
         elif ftype == FieldTypeConstants.STRING:
             return self.svalue
         elif ftype == FieldTypeConstants.TIME:
@@ -370,53 +383,6 @@ class ChartType(db.Model):
         """Determine if two ChartTypes are equal"""
         return other is not None and self.id == other.id
 
-    def get_data_for_date(self, ds, pretty=False):
-        """Retrieve the FieldData instance for the given date stamp"""
-        data_point = self.data_points.filter_by(ds=ds).first()
-        if not data_point:
-            return ''
-        elif pretty:
-            return data_point.pretty_value
-        else:
-            return data_point.value
-
-
-class ChartDateType(db.Model):
-    """Model for a ChartDateType (eg. From week, rolling week, etc.)"""
-    __tablename__ = 'chart_date_type'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), index=True)
-
-    def __init__(self, name):
-        """Initialize a ChartDateType model"""
-        self.name = name
-
-    def __repr__(self):
-        """Return a descriptive representation of a ChartDateType"""
-        return '<Chart Date Type %r>' % self.name
-
-    def __eq__(self, other):
-        """Determine if two ChartDateTypes are equal"""
-        return other is not None and self.id == other.id
-
-    @property
-    def pretty_value(self):
-        """Return a more human-readable representation of this ChartDateType"""
-        if self == ChartDateTypeConstants.TODAY:
-            return 'Data from today only'
-        elif self == ChartDateTypeConstants.FROM_WEEK:
-            return 'Data submitted since Sunday'
-        elif self == ChartDateTypeConstants.ROLLING_WEEK:
-            return 'Data submitted in the last 7 days'
-        elif self == ChartDateTypeConstants.FROM_MONTH:
-            return 'Data submitted since the first of the month'
-        elif self == ChartDateTypeConstants.ROLLING_MONTH:
-            return 'Data submitted in the last 30 days'
-        elif self == ChartDateTypeConstants.FROM_YEAR:
-            return 'Data submitted since January 1st'
-        elif self == ChartDateTypeConstants.ROLLING_YEAR:
-            return 'Data submitted in the last 365 days'
-
 
 class Chart(db.Model):
     """Model for a DLI Chart"""
@@ -427,8 +393,6 @@ class Chart(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     ctype_id = db.Column(db.Integer, db.ForeignKey("chart_type.id"))
     ctype = db.relationship(ChartType, backref="charts")
-    cdtype_id = db.Column(db.Integer, db.ForeignKey("chart_date_type.id"))
-    cdtype = db.relationship(ChartDateType, backref="charts")
     fields = db.relationship(
         Field,
         secondary=chart_fields,
@@ -440,13 +404,12 @@ class Chart(db.Model):
         backref='charts',
     )
 
-    def __init__(self, name, with_table, user, ctype, cdtype, fields, tags):
+    def __init__(self, name, with_table, user, ctype, fields, tags):
         """Initialize a Chart model"""
         self.name = name
         self.with_table = with_table
         self.user = user
         self.ctype = ctype
-        self.cdtype = cdtype
         self.fields = fields
         self.tags = tags
 
@@ -455,33 +418,26 @@ class Chart(db.Model):
         return '<Chart %r>' % self.name
 
     @property
-    def data_points(self):
-        """Retrieve the data points needed for this chart"""
-        today = datetime.date.today()
-        if self.cdtype == ChartDateTypeConstants.TODAY:
-            date = today
-        elif self.cdtype == ChartDateTypeConstants.FROM_WEEK:
-            days = today.weekday() + 1
-            date = today - datetime.timedelta(days=days)
-        elif self.cdtype == ChartDateTypeConstants.ROLLING_WEEK:
-            date = today - datetime.timedelta(days=7)
-        elif self.cdtype == ChartDateTypeConstants.FROM_MONTH:
-            date = datetime.date(today.year, today.month, 1)
-        elif self.cdtype == ChartDateTypeConstants.ROLLING_MONTH:
-            date = today - datetime.timedelta(days=30)
-        elif self.cdtype == ChartDateTypeConstants.FROM_YEAR:
-            date = datetime.date(today.year, 1, 1)
-        elif self.cdtype == ChartDateTypeConstants.ROLLING_YEAR:
-            date = today - datetime.timedelta(days=365)
-        else:
-            raise NotImplementedError('Unexpected cdtype: %r' % self.cdtype)
+    def is_pie_chart(self):
+        ChartTypeConstants.reload()
+        return self.ctype == ChartTypeConstants.PIE
 
-        ds_list = [d.strftime('%Y-%m-%d') for d in generate_date_list(date, today)]
+    def data_points(self, min_date, max_date=None, ds_format=False):
+        """Retrieve the data points needed for this chart"""
+        if ds_format:
+            min_ds = min_date
+            max_ds = max_date
+        else:
+            min_ds = min_date.strftime('%Y-%m-%d')
+            max_ds = datetime.datetime.now().strftime('%Y-%m-%d')
+            if max_date:
+                max_ds = max_date.strftime('%Y-%m-%d')
+
         return {
-            field.identifier: [
-                field.data_points.filter_by(ds=ds).first() or FieldDataDummy(ds)
-                for ds in ds_list
-            ]
+            field.identifier: {
+                str(fdata.ds): str(fdata.value)
+                for fdata in field.data_points.filter(FieldData.ds >= min_ds).filter(FieldData.ds <= max_ds)
+            }
             for field in self.fields
         }
 
@@ -490,131 +446,35 @@ class Chart(db.Model):
         """Helper function to get the names of the Report's tags"""
         return [tag.name for tag in self.tags]
 
-    @property
     def generated_js(self):
         """Property that represents this chart generated as C3 JavaScript"""
-        return """
-            var chart = c3.generate({{
-                bindto: '#chart',
-                data: {{
-                    x: 'x',
-                    columns: [
-                      {time_series_sequence},
-                      {data_sequences}
-                    ],
-                    type: {chart_type}
-                }},
-                axis: {{
-                    x: {{
-                        type: 'timeseries',
-                        tick: {{
-                            format: '%Y-%m-%d'
-                        }}
-                    }}
-                }},
-                line: {{
-                    connect_null: false
-                }},
-                bar: {{
-                }},
-                pie: {{
-                    label: {{
-                        format: function(value, ratio, id) {{
-                            return value;
-                        }}
-                    }}
-                }},
-            }});
+        min_date = datetime.datetime.now()
+        ChartTypeConstants.reload()
+        if self.ctype != ChartTypeConstants.PIE:
+            min_date = min_date - datetime.timedelta(days=14)
 
-        {table}
-        """.format(
-            time_series_sequence=self.get_time_series_sequence(),
-            data_sequences=self.get_data_sequences(),
-            chart_type='"{}"'.format(str(self.ctype.name)),
-            table=self.generated_table(),
-        )
-
-    def generated_table(self):
-        """HTML/JS that represents this chart is table format"""
-        if not self.with_table:
-            return ''
-
-        table_header = '<td>Date</td>' + ''.join(
-            '<th>{name}</th>'.format(name=field.name)
-            for field in self.fields
-        )
-
-        data_points = self.data_points
-        field = data_points.itervalues().next()
-        ds_list = sorted(p.ds for p in field)
-        keys = sorted(field.identifier for field in self.fields)
-        values = [
-            self.get_values_at_ds(keys, data_points, ds)
-            for ds in ds_list
-        ]
-
-        table_data = ''.join(
-            '<tr><td>{date}</td>{data}</tr>'.format(
-                date=ds,
-                data=''.join(
-                    '<td>{value}</td>'.format(value=value)
-                    for value in values_at_ds
-                )
-            )
-            for ds, values_at_ds in zip(ds_list, values)
-        )
+        generate = 'true'
+        if self.ctype == ChartTypeConstants.TABLE_ONLY:
+            generate = 'false'
 
         return """
-            var table = '\
-                <table class="table table-striped"> \
-                    <thead> \
-                        {table_header} \
-                    </thead> \
-                    <tbody> \
-                        {table_data} \
-                    </tbody> \
-                </table>';
-            document.write(table);
+            var data_points = {data_points};
+            var time_series = {time_series};
+            var chart_type = "{chart_type}";
+            var generate = {should_generate};
         """.format(
-            table_header=table_header,
-            table_data=table_data,
+            time_series=self.get_time_series_sequence(min_date),
+            data_points=self.data_points(min_date),
+            chart_type=self.ctype.name,
+            should_generate=generate,
         )
 
-    def get_values_at_ds(self, keys, data_points, ds):
-        """Get the value array for this table row at the given ds"""
-        return [
-            point.pretty_value
-            for key in keys
-            for point in data_points[key]
-            if point.ds == ds
-        ]
-
-    def get_time_series_sequence(self):
+    def get_time_series_sequence(self, min_date):
         """Get the time series data that represents this chart in C3"""
-        # Any point will do, so just take the first
-        field = self.data_points.itervalues().next()
-        return "['x', {ds_list}]".format(
-            ds_list=', '.join(
-                sorted(['"{}"'.format(str(p.ds)) for p in field])
-            ),
-        )
-
-    def get_data_sequences(self):
-        """Get the data sequences that represent this chart in C3"""
-        data_points = self.data_points
-
-        return ', '.join([
-            "['{name}', {data}]".format(
-                name=field.identifier,
-                # If data points == [], the next line will fail because we will
-                # have ['fieldname', ] and extra commas aren't allowed in json
-                # Explicitly saying that the data is empty will fix this
-                data=', '.join(
-                    [str(p.value) for p in data_points[field.identifier]] or ['0']
-                )
-            )
-            for field in self.fields
-        ])
+        now = datetime.datetime.now()
+        days = (now - min_date).days + 1
+        ds_list = [min_date + datetime.timedelta(days=x) for x in range(0, days)]
+        return sorted([x.strftime('%Y-%m-%d') for x in ds_list])
 
 
 class ExcelSheetHelper():
@@ -749,7 +609,7 @@ class ExcelSheetHelper():
                     self.row,
                     self.col,
                     field_data,
-                    self.get_format(field),
+                    self.get_format(field_data.field),
                 )
             self.col += 1
 
@@ -758,6 +618,7 @@ class ExcelSheetHelper():
 
     def get_format(self, field):
         """Get the format required for the specific field"""
+        FieldTypeConstants.reload()
         if field.ftype == FieldTypeConstants.CURRENCY:
             return self.currency_format
         elif field.ftype == FieldTypeConstants.DOUBLE:
@@ -815,16 +676,19 @@ class ChartTypeConstants():
         LINE = ChartType.query.filter_by(name="line").first()
         BAR = ChartType.query.filter_by(name="bar").first()
         PIE = ChartType.query.filter_by(name="pie").first()
+        TABLE_ONLY = ChartType.query.filter_by(name="table only").first()
     except:
         LINE = None
         BAR = None
         PIE = None
+        TABLE_ONLY = None
 
     def __init__(self):
         """Initialize a ChartTypeConstants instance"""
         self.LINE = ChartType.query.filter_by(name="line").first()
         self.BAR = ChartType.query.filter_by(name="bar").first()
         self.PIE = ChartType.query.filter_by(name="pie").first()
+        self.TABLE_ONLY = ChartType.query.filter_by(name="table only").first()
 
     @classmethod
     def reload(cls):
@@ -832,61 +696,4 @@ class ChartTypeConstants():
         cls.LINE = ChartType.query.filter_by(name="line").first()
         cls.BAR = ChartType.query.filter_by(name="bar").first()
         cls.PIE = ChartType.query.filter_by(name="pie").first()
-
-
-class ChartDateTypeConstants():
-    """Constant ChartTypes used for easy type-checking in other modules"""
-    try:
-        TODAY = ChartDateType.query.filter_by(name="today").first()
-        FROM_WEEK = ChartDateType.query.filter_by(name="from_week").first()
-        ROLLING_WEEK = ChartDateType.query.filter_by(name="rolling_week").first()
-        FROM_MONTH = ChartDateType.query.filter_by(name="from_month").first()
-        ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
-        FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
-        ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-    except:
-        TODAY = None
-        FROM_WEEK = None
-        ROLLING_WEEK = None
-        FROM_MONTH = None
-        ROLLING_MONTH = None
-        FROM_YEAR = None
-        ROLLING_YEAR = None
-
-    def __init__(self):
-        """Initialize a ChartDateTypeConstants instance"""
-        self.TODAY = ChartDateType.query.filter_by(name="today").first()
-        self.FROM_WEEK = ChartDateType.query.filter_by(name="from_week").first()
-        self.ROLLING_WEEK = ChartDateType.query.filter_by(name="rolling_week").first()
-        self.FROM_MONTH = ChartDateType.query.filter_by(name="from_month").first()
-        self.ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
-        self.FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
-        self.ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-
-    @classmethod
-    def reload(cls):
-        """Reload the class constants"""
-        cls.TODAY = ChartDateType.query.filter_by(name="today").first()
-        cls.FROM_WEEK = ChartDateType.query.filter_by(name="from_week").first()
-        cls.ROLLING_WEEK = ChartDateType.query.filter_by(name="rolling_week").first()
-        cls.FROM_MONTH = ChartDateType.query.filter_by(name="from_month").first()
-        cls.ROLLING_MONTH = ChartDateType.query.filter_by(name="rolling_month").first()
-        cls.FROM_YEAR = ChartDateType.query.filter_by(name="from_year").first()
-        cls.ROLLING_YEAR = ChartDateType.query.filter_by(name="rolling_year").first()
-
-
-class FieldDataDummy():
-    """Class to hold dummy data for a Field when a value is missing"""
-    def __init__(self, ds):
-        """Initialize the FieldDataDummy"""
-        self.ds = ds
-        self.value = 'null'
-
-    def __repr__(self):
-        """Return a representation of this FieldDataDummy"""
-        return '<FieldDataDummy for {ds}>'.format(ds=self.ds)
-
-    @property
-    def pretty_value(self):
-        """Return an empty string, this is needed since we call .pretty_value elsewhere"""
-        return ''
+        cls.TABLE_ONLY = ChartType.query.filter_by(name="table only").first()

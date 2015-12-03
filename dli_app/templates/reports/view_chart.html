@@ -6,9 +6,265 @@
 
   <p>Tags: {{ chart.tagnames|join(', ') }}</p>
 
-  <div id="chart"></div>
+  {% if chart.is_pie_chart %}
+    <form class="form-inline" action="#" onsubmit="javascript:return update_days()">
+      <p class="">
+          Data from <input id="end_date" type="text" class="form-control normal datepicker" placeholder="Date">
+          <button type="submit" class="btn btn-sm btn-default">Update</button>
+        </div>
+      </p>
+    </form>
+  {% else %}
+    <form class="form-inline" action="#" onsubmit="javascript:return update_days()">
+      <p class="">
+          Data from <input id="start_date" type="text" class="form-control normal datepicker" placeholder="Start date">
+          to <input id="end_date" type="text" class="form-control normal datepicker" placeholder="End date">
+          <button type="submit" class="btn btn-sm btn-default">Update</button>
+        </div>
+      </p>
+    </form>
+  {% endif %}
+
+  <div class="container">
+    <center>
+      <div id="loading" style="visibility:hidden">
+        <img src="{{ url_for('static', filename='ajax-loader.gif') }}" alt="Loading" />
+        <b>Loading...</b>
+      </div>
+    </center>
+    <h4 id="no_data_warning"></h4>
+    <div id="chart"></div>
+    <table class="table table-striped" id="table">
+      <thead id="thead">
+      </thead>
+      <tbody id="tbody">
+      </tbody>
+    </table>
+  </div>
 
   <script>
-  {{ chart.generated_js|safe }}
+  {{ chart.generated_js()|safe }}
+  // by default, time_series is the active time series
+  var active_time_series = time_series;
+
+  //Set the defaults for the start and end dates
+  {% if not chart.is_pie_chart %}
+    document.getElementById('start_date').value = time_series[0];
+  {% endif %}
+  document.getElementById('end_date').value = time_series[time_series.length - 1];
+
+  function update_days() {
+      var end = document.getElementById('end_date').value;
+      {% if chart.is_pie_chart %}
+        var start = end;
+      {% else %}
+        var start = document.getElementById('start_date').value;
+      {% endif %}
+
+      if (start > end) {
+        alert("Whoops! Your start date is after the end date!");
+        return false;
+      }
+
+      $('#loading').css('visibility', 'visible');
+      active_time_series = regen_time_series(start, end);
+      chunks = get_missing_chunks(start, end);
+
+      var promises = []
+      chunks.forEach(function(chunk) {
+        promises.push($.ajax({
+          url: "{{ url_for('reports.get_chart_data', chart_id=chart.id) }}",
+          type: 'GET',
+          data: {
+            start: chunk['start'],
+            end: chunk['end']
+          },
+          success: function(result) {
+            add_data_points(result);
+        },
+          error: function(xhr) {
+            alert('An unexpected error occurred. Please try again later.');
+          }
+        }));
+      });
+
+      $.when.apply(null, promises).done(function() {
+        generate_all();
+        $('#loading').css('visibility', 'hidden');
+      });
+
+      // Return false to ensure that the page won't reload
+      return false;
+  }
+
+  function get_missing_chunks() {
+    active_time_series.sort();
+    start = new Date(active_time_series[0]);
+    end = new Date(active_time_series[active_time_series.length - 1]);
+    dates = [];
+    chunks = [];
+
+    while (start <= end) {
+      // If the date is not in the time series array, add the date
+      ds = start.toISOString().slice(0, 10);
+      if ($.inArray(ds, time_series) == -1) {
+        dates.push(ds);
+        time_series.push(ds);
+      }
+      start.setDate(start.getDate() + 1);
+    }
+
+    // If no dates, base case
+    if (dates.length == 0) {
+      return [];
+    }
+
+    cur_start = new Date(dates[0]);
+    last_value = new Date(dates[0]);
+    dates.slice(1).forEach(function(ds) {
+      if (!one_more_day(last_value, ds)) {
+        start_ds = cur_start.toISOString().slice(0, 10);
+        end_ds = last_value.toISOString().slice(0, 10);
+        chunks.push({start: start_ds, end: end_ds});
+        cur_start = new Date(ds);
+      }
+      last_value = new Date(ds);
+    });
+
+    // Remember to get the final chunk!
+    start_ds = cur_start.toISOString().slice(0, 10);
+    end_ds = last_value.toISOString().slice(0, 10);
+    chunks.push({start: start_ds, end: end_ds});
+
+    return chunks;
+  }
+
+  function one_more_day(last_value, ds) {
+    var copy = new Date(last_value.getTime());
+    copy.setDate(copy.getDate() + 1);
+    return copy.toISOString().slice(0, 10) == ds;
+  }
+
+  function regen_time_series(start, end) {
+    res = new Array();
+    start = start.split('-');
+    end = end.split('-');
+    sdate = new Date(parseInt(start[0]), parseInt(start[1]) - 1, parseInt(start[2]));
+    edate = new Date(parseInt(end[0]), parseInt(end[1]) - 1, parseInt(end[2]));
+    while (sdate <= edate) {
+      res.push(sdate.toISOString().slice(0, 10));
+      sdate.setDate(sdate.getDate() + 1);
+    }
+    return res;
+  }
+
+  function add_data_points(new_points) {
+    for (field in data_points) {
+      if (field in new_points) {
+        for (ds in new_points[field]) {
+          data_points[field][ds] = new_points[field][ds];
+        }
+      }
+    }
+  }
+
+  function generate_all() {
+    document.getElementById('chart').innerHTML = '';
+    {% if chart.with_table %}
+      document.getElementById('thead').innerHTML = '';
+      document.getElementById('tbody').innerHTML = '';
+    {% endif %}
+
+    var filtered_points = []
+    var valid = false;
+    for (field in data_points) {
+      filtered_points.push(gen_field_list(field));
+    }
+
+    function gen_field_list(field) {
+      var res = [field]
+      active_time_series.forEach(function(ds) {
+        if (ds in data_points[field]) {
+          res.push(data_points[field][ds]);
+          valid = true;
+        }
+        else {
+          res.push(null);
+        }
+      });
+
+      return res;
+    }
+
+    if (generate) {
+        var chart = c3.generate({
+            bindto: '#chart',
+            data: {
+                x: 'x',
+                columns: filtered_points.concat([['x'].concat(active_time_series)]),
+                type: chart_type
+            },
+            axis: {
+                x: {
+                    type: 'timeseries',
+                    tick: {
+                        format: '%Y-%m-%d'
+                    }
+                }
+            },
+            line: {
+                connect_null: false
+            },
+            bar: {},
+            pie: {
+                label: {
+                    format: function(value, ratio, id) {
+                        return value;
+                    }
+                }
+            },
+        });
+
+        document.getElementById('no_data_warning').innerHTML = '';
+        if (!valid) {
+          {% if chart.is_pie_chart %}
+            document.getElementById('no_data_warning').innerHTML = 'Warning: No data for this date!';
+          {% else %}
+            document.getElementById('no_data_warning').innerHTML = 'Warning: No data for these dates!';
+          {% endif %}
+        }
+    }
+
+    {% if chart.with_table %}
+        //Generate table header
+        var header = document.getElementById('thead');
+        var body = document.getElementById('tbody');
+        var headerRow = header.insertRow(0);
+
+        var cell = headerRow.insertCell(-1);
+        cell.innerHTML = '<b>Date</b>';
+        for (field in data_points) {
+            var cell = headerRow.insertCell(-1);
+            cell.innerHTML = '<b>' + field + '</b>';
+        }
+
+        //Generate table body
+        active_time_series.forEach(function(ds) {
+            var row = body.insertRow(-1);
+            var cell = row.insertCell(-1);
+            cell.innerHTML = ds;
+            for (field in data_points) {
+                var cell = row.insertCell(-1);
+                if (ds in data_points[field]) {
+                    cell.innerHTML = data_points[field][ds];
+                }
+                else {
+                    cell.innerHTML = '<small>(No data)</small>';
+                }
+            }
+        });
+    {% endif %}
+  }
+  generate_all();
   </script>
 {% endblock %}

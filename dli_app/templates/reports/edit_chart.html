@@ -12,41 +12,37 @@
 
 
       <div class="field-selector-header">
-        <span class="lead">
-          Chart Name:
-          {{ form.name(placeholder='My Chart', class='normal') }}
-        </span>
-        <div class="pull-right">
-          <span class="lead tag-list">
-            Tags:
-            {{ form.tags(class='normal', placeholder='tag1, tag2, etc.') }}
-          </span>
-          <button type="submit" class="btn btn-primary">Save</button>
-        </div>
+        <div class="row">
+          <div class="col-md-4">
+            <span class="input-group">
+              <span class="input-group-addon">Name</span>
+              {{ form.name(placeholder='My Chart', class='form-control normal') }}
+            </span>
+          </div>
 
-        <div class="row padded-row">
+          <div class="col-md-2">
+            <span class="input-group">
+              <span class="input-group-addon">Type</span>
+              {{ form.chart_type(class='form-control') }}
+            </span>
+          </div>
+
           <div class="col-md-2">
             {{ form.with_table }}
-            <span class="lead control-label">
+            <span class="control-label">
               Include Table?
             </span>
           </div>
 
-          <div class="col-md-5">
-            <div class="input-group">
-              <span class="input-group-addon">
-                Chart Type
+          <div class="col-md-4">
+            <div class="pull-right">
+              <span class="input-group">
+                <span class="input-group-addon">Tags</span>
+                {{ form.tags(placeholder='tag1, tag2, etc.', class='form-control normal') }}
+                <span class="input-group-btn">
+                  <button type="submit" class="btn btn-primary">Create</button>
+                </span>
               </span>
-              {{ form.chart_type(class='form-control') }}
-            </div>
-          </div>
-
-          <div class="col-md-5">
-            <div class="input-group">
-              <span class="input-group-addon">
-                Date Range
-              </span>
-              {{ form.chart_date_type(class='form-control') }}
             </div>
           </div>
         </div>

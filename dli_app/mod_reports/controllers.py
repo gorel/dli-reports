@@ -5,10 +5,12 @@ This file is responsible for loading all site pages under /reports.
 """
 
 from datetime import datetime
+from datetime import timedelta
 
 from flask import (
     Blueprint,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -35,7 +37,6 @@ from dli_app.mod_auth.models import (
 from dli_app.mod_reports.models import (
     Chart,
     ChartType,
-    ChartDateType,
     Report,
 )
 
@@ -138,7 +139,8 @@ def create_report():
 
     LocalCreateReportForm = CreateReportForm.get_instance()
     for department in Department.query.all():
-        LocalCreateReportForm.add_department(department)
+        if len(department.fields) > 0:
+            LocalCreateReportForm.add_department(department)
 
     form = LocalCreateReportForm()
     form.user_id.data = current_user.id
@@ -155,7 +157,10 @@ def create_report():
 
 @mod_reports.route('/<int:report_id>/data', methods=['GET', 'POST'])
 @mod_reports.route('/<int:report_id>/data/', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/<ds>', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/<ds>/', methods=['GET', 'POST'])
 @mod_reports.route('/<int:report_id>/data/<ds>/<int:dept_id>', methods=['GET', 'POST'])
+@mod_reports.route('/<int:report_id>/data/<ds>/<int:dept_id>/', methods=['GET', 'POST'])
 @login_required
 def submit_report_data(report_id, ds=None, dept_id=None):
     """Submit new report data
@@ -165,8 +170,10 @@ def submit_report_data(report_id, ds=None, dept_id=None):
     Otherwise, render the template to show the user the report data submission
     form.
     """
-    if not ds:
+    if not ds or ds == 'today':
         ds = datetime.now().strftime('%Y-%m-%d')
+    elif ds == 'yesterday':
+        ds = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
     # Check to see if the user picked a different day or department
     change_form = ChangeDateAndDepartmentForm()
@@ -183,11 +190,11 @@ def submit_report_data(report_id, ds=None, dept_id=None):
     report = Report.query.get(report_id)
 
     # We must generate the dynamic form before loading it
-    if dept_id is None:
+    if not dept_id:
         dept_id = current_user.department.id
 
     department = Department.query.get(dept_id)
-    if department is None:
+    if not department:
         flash(
             "No department with that ID found.",
             "alert-warning",
@@ -233,10 +240,10 @@ def submit_report_data(report_id, ds=None, dept_id=None):
         for field in form.instance_fields:
             # This line allows us to dynamically load the field data
             formfield = getattr(form, field.name)
-            if formfield.data is None:
+            if not formfield.data:
                 existing_value = field.data_points.filter_by(ds=ds).first()
-                if existing_value is not None:
-                    formfield.data = existing_value.value
+                if existing_value:
+                    formfield.data = existing_value.pretty_value
 
         chunk_size = 10
         field_list = form.instance_fields
@@ -351,8 +358,8 @@ def delete_report(report_id):
     return redirect(request.args.get('next') or url_for('reports.my_reports'))
 
 
-@mod_reports.route('/edit/<int:report_id>', methods=['GET','POST'])
-@mod_reports.route('/edit/<int:report_id>/', methods=['GET','POST'])
+@mod_reports.route('/edit/<int:report_id>', methods=['GET', 'POST'])
+@mod_reports.route('/edit/<int:report_id>/', methods=['GET', 'POST'])
 @login_required
 def edit_report(report_id):
     """Edit the specified report"""
@@ -370,7 +377,8 @@ def edit_report(report_id):
     else:
         LocalEditReportForm = EditReportForm.get_instance()
         for department in Department.query.all():
-            LocalEditReportForm.add_department(department)
+            if len(department.fields) > 0:
+                LocalEditReportForm.add_department(department)
 
         form = LocalEditReportForm()
         if form.validate_on_submit():
@@ -382,9 +390,11 @@ def edit_report(report_id):
             flash_form_errors(form)
             form.name.data = report.name
             form.report_id.data = report_id
+            form.tags.data = ', '.join(tag.name for tag in report.tags)
             for department in Department.query.all():
-                set_fields = [field for field in report.fields if field.department.id == department.id]
-                getattr(form, department.name).data = [f.id for f in set_fields]
+                if len(department.fields) > 0:
+                    set_fields = [field for field in report.fields if field.department.id == department.id]
+                    getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit.html', form=form, report=report)
 
 
@@ -438,6 +448,24 @@ def view_chart(chart_id):
         return redirect(url_for('reports.my_charts'))
     else:
         return render_template('reports/view_chart.html', chart=chart)
+
+@mod_reports.route('/charts/get_data/<int:chart_id>', methods=['GET'])
+@mod_reports.route('/charts/get_data/<int:chart_id>/', methods=['GET'])
+@login_required
+def get_chart_data(chart_id):
+    """Retrieve more data in JSON format for a specific chart"""
+    start = request.args.get('start')
+    end = request.args.get('end')
+    data = {}
+
+    chart = Chart.query.get(chart_id)
+    if chart and start and end:
+        data = chart.data_points(
+            min_date=start,
+            max_date=end,
+            ds_format=True,
+        )
+    return jsonify(**data)
 
 
 @mod_reports.route('/charts/favorite/<int:chart_id>', methods=['POST'])
@@ -495,15 +523,13 @@ def create_chart():
 
     LocalCreateChartForm = CreateChartForm.get_instance()
     for department in Department.query.all():
-        LocalCreateChartForm.add_department(department)
+        if len(department.fields) > 0:
+            LocalCreateChartForm.add_department(department)
 
     form = LocalCreateChartForm()
     form.user_id.data = current_user.id
     form.chart_type.choices = [
         (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
-    ]
-    form.chart_date_type.choices = [
-        (cdtype.id, cdtype.pretty_value) for cdtype in ChartDateType.query.all()
     ]
     if form.validate_on_submit():
         # Add the new chart to the database
@@ -549,8 +575,8 @@ def delete_chart(chart_id):
     return redirect(request.args.get('next') or url_for('reports.my_charts'))
 
 
-@mod_reports.route('/charts/edit/<int:chart_id>', methods=['GET','POST'])
-@mod_reports.route('/charts/edit/<int:chart_id>/', methods=['GET','POST'])
+@mod_reports.route('/charts/edit/<int:chart_id>', methods=['GET', 'POST'])
+@mod_reports.route('/charts/edit/<int:chart_id>/', methods=['GET', 'POST'])
 @login_required
 def edit_chart(chart_id):
     """Edit the specified chart"""
@@ -568,14 +594,12 @@ def edit_chart(chart_id):
     else:
         LocalEditChartForm = EditChartForm.get_instance()
         for department in Department.query.all():
-            LocalEditChartForm.add_department(department)
+            if len(department.fields) > 0:
+                LocalEditChartForm.add_department(department)
 
         form = LocalEditChartForm()
         form.chart_type.choices = [
             (ctype.id, ctype.name.upper()) for ctype in ChartType.query.all()
-        ]
-        form.chart_date_type.choices = [
-            (cdtype.id, cdtype.name.upper().replace('_', ' ')) for cdtype in ChartDateType.query.all()
         ]
         if form.validate_on_submit():
             flash('Chart: {name} has been updated'.format(name=form.chart.name), 'alert-success')
@@ -587,9 +611,10 @@ def edit_chart(chart_id):
             form.chart_id.data = chart_id
             form.name.data = chart.name
             form.chart_type.data = chart.ctype.id
-            form.chart_date_type.data = chart.cdtype.id
             form.with_table.data = chart.with_table
+            form.tags.data = ', '.join(tag.name for tag in chart.tags)
             for department in Department.query.all():
-                set_fields = [field for field in chart.fields if field.department.id == department.id]
-                getattr(form, department.name).data = [f.id for f in set_fields]
+                if len(department.fields) > 0:
+                    set_fields = [field for field in chart.fields if field.department.id == department.id]
+                    getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit_chart.html', form=form, chart=chart)

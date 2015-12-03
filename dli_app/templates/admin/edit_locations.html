@@ -19,7 +19,11 @@
           {% for location in locations %}
             <tr>
               <td>{{ location.id }}</td>
-              <td>{{ location.name }}</td>
+              <td>
+                <a href="#" id="loc_{{ location.id }}" class="editable editable-click inline-input">
+                  {{ location.name }}
+                </a>
+              </td>
               <td>
                 <a href="{{ url_for('admin.delete_location', loc_id=location.id) }}" data-method="post" data-confirm="Are you sure you want to delete this location?" class="btn btn-danger btn-xs">Delete</a>
               </td>
@@ -42,4 +46,25 @@
       </form>
     </div>
   </div>
+
+  <script>
+  {% for location in locations %}
+    $('#loc_{{ location.id }}').editable({
+      type: 'text',
+      url: '{{ url_for('admin.change_location_name') }}',
+      pk: {{ location.id }},
+      placement: 'top',
+      title: 'Edit location name',
+      toggle: 'manual',
+      params: {
+        csrf_token: "{{ csrf_token() }}"
+      }
+    });
+
+    $('#edit_{{ location.id }}').click(function(e) {
+      e.stopPropagation();
+      $('#loc_{{ location.id }}').editable('toggle');
+    });
+  {% endfor %}
+  </script>
 {% endblock %}

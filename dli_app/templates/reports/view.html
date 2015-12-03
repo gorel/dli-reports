@@ -51,4 +51,16 @@
       </table>
     {% endfor %}
   </div>
+
+  <script>
+    $('#date').datepicker({
+      format: "yyyy-mm-dd",
+      maxDate: "+0d",
+      endDate: "+0d"
+    }).change(function(ev) {
+      $('#form').submit();
+    }).on('changeDate', function(ev) {
+      $('#form').submit();
+    });
+  </script>
 {% endblock %}

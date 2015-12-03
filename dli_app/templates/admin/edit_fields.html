@@ -21,7 +21,11 @@
             {% for field in department.fields %}
               <tr>
                 <td>{{ field.department.name }}</td>
-                <td>{{ field.name }}</td>
+                <td>
+                  <a href="#" id="field_{{ field.id }}" class="editable editable-click inline-input">
+                    {{ field.name }}
+                  </a>
+                </td>
                 <td>{{ field.ftype.name|upper }}</td>
                 <td>
                   <a href="{{ url_for('admin.delete_field', field_id=field.id) }}" data-method="post" data-confirm="Are you sure you want to delete this field?" class="btn btn-danger btn-xs">Delete</a>
@@ -57,4 +61,27 @@
       </form>
     </div>
   </div>
+  <script>
+
+  {% for department in departments %}
+    {% for field in department.fields %}
+      $('#field_{{ field.id }}').editable({
+        type: 'text',
+        url: '{{ url_for('admin.change_field_name') }}',
+        pk: {{ field.id }},
+        placement: 'top',
+        title: 'Edit field name',
+        toggle: 'manual',
+        params: {
+          csrf_token: "{{ csrf_token() }}"
+        }
+      });
+
+      $('#edit_{{ field.id }}').click(function(e) {
+        e.stopPropagation();
+        $('#field_{{ field.id }}').editable('toggle');
+      });
+    {% endfor %}
+  {% endfor %}
+  </script>
 {% endblock %}

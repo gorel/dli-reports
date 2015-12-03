@@ -14,7 +14,6 @@ from flask_wtf import (
 from wtforms import (
     BooleanField,
     DecimalField,
-    FieldList,
     HiddenField,
     IntegerField,
     SelectField,
@@ -36,7 +35,6 @@ from dli_app.mod_auth.models import (
 from dli_app.mod_reports.models import (
     Chart,
     ChartType,
-    ChartDateType,
     Field,
     FieldData,
     FieldTypeConstants,
@@ -75,7 +73,7 @@ class SplitNumValidator():
                 )
             )
         self.parts_message = parts_message
-        if num_message is None:
+        if not num_message:
             num_message = "{part} is not a number"
         self.num_message = num_message
 
@@ -89,7 +87,7 @@ class SplitNumValidator():
                 if len(parts) > self.max_parts:
                     raise ValidationError(self.parts_message)
                 for part in parts:
-                    if not part.isdigit():
+                    if part and not part.isdigit():
                         raise ValidationError(
                             self.num_message.format(
                                 part=part,
@@ -106,7 +104,7 @@ class ListField(FormField):
 
     def _value(self):
         if self.data:
-            return u', '.join(self.data)
+            return unicode(self.data)
         else:
             return u''
 
@@ -174,7 +172,7 @@ class CreateReportForm(Form):
 
                 tags = [
                     Tag.get_or_create(tag.strip()) for tag in self.tags.data
-                    if tag and tag.strip() != ''
+                    if tag.strip()
                 ]
 
                 user = User.query.get(self.user_id.data)
@@ -237,13 +235,7 @@ class CreateChartForm(Form):
         coerce=int,
     )
 
-    chart_date_type = SelectField(
-        "Date Range",
-        coerce=int,
-    )
-
     with_table = BooleanField('Include table?')
-
 
     @classmethod
     def get_instance(cls):
@@ -279,7 +271,7 @@ class CreateChartForm(Form):
                 chart_fields = Field.query.filter(Field.id.in_([int(f) for f in self.fields.data if f])).all()
                 tags = [
                     Tag.get_or_create(tag.strip()) for tag in self.tags.data
-                    if tag and tag.strip() != ''
+                    if tag.strip()
                 ]
 
                 user = User.query.get(self.user_id.data)
@@ -292,17 +284,11 @@ class CreateChartForm(Form):
                     self.chart_type.errors.append("Chart Type not found!")
                     res = False
 
-                cdtype = ChartDateType.query.get(self.chart_date_type.data)
-                if not cdtype:
-                    self.chart_date_type.errors.append("Date Range not found!")
-                    res = False
-
                 self.chart = Chart(
                     name=self.name.data,
                     with_table=self.with_table.data,
                     user=user,
                     ctype=ctype,
-                    cdtype=cdtype,
                     fields=chart_fields,
                     tags=tags,
                 )
@@ -355,11 +341,6 @@ class EditChartForm(Form):
         coerce=int,
     )
 
-    chart_date_type = SelectField(
-        "Date Range",
-        coerce=int,
-    )
-
     with_table = BooleanField('Include table?')
 
     @classmethod
@@ -398,7 +379,7 @@ class EditChartForm(Form):
                 chart_fields = Field.query.filter(Field.id.in_([int(f) for f in self.fields.data if f])).all()
                 tags = [
                     Tag.get_or_create(tag.strip()) for tag in self.tags.data
-                    if tag and tag.strip() != ''
+                    if tag.strip()
                 ]
 
                 res = True
@@ -407,15 +388,9 @@ class EditChartForm(Form):
                     self.chart_type.errors.append("Chart Type not found!")
                     res = False
 
-                cdtype = ChartDateType.query.get(self.chart_date_type.data)
-                if not cdtype:
-                    self.chart_date_type.errors.append("Date Range not found!")
-                    res = False
-
                 self.chart.name = self.name.data
                 self.chart.with_table = self.with_table.data
                 self.chart.ctype = ctype
-                self.chart.cdtype = cdtype
                 self.chart.fields = chart_fields
                 self.chart.tags = tags
 
@@ -511,6 +486,7 @@ class SubmitReportDataForm(Form):
                 """Add the given field to this form dynamically"""
                 cls.fields.append(field)
                 formfield = None
+                FieldTypeConstants.reload()
                 if field.ftype == FieldTypeConstants.CURRENCY:
                     formfield = TextField(
                         field.name,
@@ -684,7 +660,7 @@ class EditReportForm(Form):
                 report_fields = Field.query.filter(Field.id.in_([int(f) for f in self.fields.data if f])).all()
                 tags = [
                     Tag.get_or_create(tag.strip()) for tag in self.tags.data
-                    if tag and tag.strip() != ''
+                    if tag.strip()
                 ]
 
                 self.report.name = self.name.data
