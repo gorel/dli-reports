@@ -23,7 +23,10 @@ from wtforms import (
     ValidationError,
     validators,
     widgets,
+    Field as FormField
 )
+
+from wtforms.widgets import TextInput
 
 from dli_app.mod_auth.models import (
     Department,
@@ -94,6 +97,26 @@ class SplitNumValidator():
                         )
 
 
+# Different from FieldList in that it doesn't care about order. FieldList
+# doesn't work with the well-known `fields[]` syntax that is essentially
+# standard in HTML/JS. This doesn't either, but still works with the
+# much-easier-to-serialize-to `fields=id1,id2,id3` syntax.
+class ListField(FormField):
+    widget = TextInput()
+
+    def _value(self):
+        if self.data:
+            return u', '.join(self.data)
+        else:
+            return u''
+
+    def process_formdata(self, valuelist):
+        if valuelist:
+            self.data = [x.strip() for x in valuelist[0].split(',')]
+        else:
+            self.data = []
+
+
 class CreateReportForm(Form):
     """A form for creating a new report"""
 
@@ -104,6 +127,9 @@ class CreateReportForm(Form):
 
     user_id = HiddenField()
 
+    fields = ListField()
+    tags = ListField()
+
     name = TextField(
         "Report name",
         validators=[
@@ -111,14 +137,6 @@ class CreateReportForm(Form):
                 message="Please give this report a name.",
             ),
         ],
-    )
-
-    tags = FieldList(
-        TextField(
-            'Tag',
-            filters=[lambda x: x or None],
-        ),
-        min_entries=5,
     )
 
     @classmethod
@@ -152,14 +170,10 @@ class CreateReportForm(Form):
                 if not Form.validate(self):
                     res = False
 
-                report_fields = []
-                for department in self.departments:
-                    multiselect = getattr(self, department.name)
-                    for field_id in multiselect.data:
-                        report_fields.append(Field.query.get(field_id))
+                report_fields = Field.query.filter(Field.id.in_([int(f) for f in self.fields.data if f])).all()
 
                 tags = [
-                    Tag.get_or_create(tag) for tag in self.tags.data
+                    Tag.get_or_create(tag.strip()) for tag in self.tags.data
                     if tag and tag.strip() != ''
                 ]
 
@@ -206,6 +220,9 @@ class CreateChartForm(Form):
 
     user_id = HiddenField()
 
+    fields = ListField()
+    tags = ListField()
+
     name = TextField(
         "Chart name",
         validators=[
@@ -227,13 +244,6 @@ class CreateChartForm(Form):
 
     with_table = BooleanField('Include table?')
 
-    tags = FieldList(
-        TextField(
-            'Tag',
-            filters=[lambda x: x or None],
-        ),
-        min_entries=5,
-    )
 
     @classmethod
     def get_instance(cls):
@@ -266,14 +276,9 @@ class CreateChartForm(Form):
                 if not Form.validate(self):
                     res = False
 
-                chart_fields = []
-                for department in self.departments:
-                    multiselect = getattr(self, department.name)
-                    for field_id in multiselect.data:
-                        chart_fields.append(Field.query.get(field_id))
-
+                chart_fields = Field.query.filter(Field.id.in_([int(f) for f in self.fields.data if f])).all()
                 tags = [
-                    Tag.get_or_create(tag) for tag in self.tags.data
+                    Tag.get_or_create(tag.strip()) for tag in self.tags.data
                     if tag and tag.strip() != ''
                 ]
 
@@ -333,6 +338,9 @@ class EditChartForm(Form):
 
     chart_id = HiddenField()
 
+    fields = ListField()
+    tags = ListField()
+
     name = TextField(
         "Chart name",
         validators=[
@@ -353,14 +361,6 @@ class EditChartForm(Form):
     )
 
     with_table = BooleanField('Include table?')
-
-    tags = FieldList(
-        TextField(
-            'Tag',
-            filters=[lambda x: x or None],
-        ),
-        min_entries=5,
-    )
 
     @classmethod
     def get_instance(cls):
@@ -395,14 +395,9 @@ class EditChartForm(Form):
 
                 self.chart = Chart.query.get(self.chart_id.data)
 
-                chart_fields = []
-                for department in self.departments:
-                    multiselect = getattr(self, department.name)
-                    for field_id in multiselect.data:
-                        chart_fields.append(Field.query.get(field_id))
-
+                chart_fields = Field.query.filter(Field.id.in_([int(f) for f in self.fields.data if f])).all()
                 tags = [
-                    Tag.get_or_create(tag) for tag in self.tags.data
+                    Tag.get_or_create(tag.strip()) for tag in self.tags.data
                     if tag and tag.strip() != ''
                 ]
 
@@ -651,13 +646,8 @@ class EditReportForm(Form):
         ],
     )
 
-    tags = FieldList(
-        TextField(
-            'Tag',
-            filters=[lambda x: x or None],
-        ),
-        min_entries=5,
-    )
+    fields = ListField()
+    tags = ListField()
 
     @classmethod
     def get_instance(cls):
@@ -691,14 +681,9 @@ class EditReportForm(Form):
 
                 self.report = Report.query.get(self.report_id.data)
 
-                report_fields = []
-                for department in self.departments:
-                    multiselect = getattr(self, department.name)
-                    for field_id in multiselect.data:
-                        report_fields.append(Field.query.get(field_id))
-
+                report_fields = Field.query.filter(Field.id.in_([int(f) for f in self.fields.data if f])).all()
                 tags = [
-                    Tag.get_or_create(tag) for tag in self.tags.data
+                    Tag.get_or_create(tag.strip()) for tag in self.tags.data
                     if tag and tag.strip() != ''
                 ]
 

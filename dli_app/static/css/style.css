@@ -47,6 +47,30 @@ body {
   height: 400px;
 }
 
+.form-actions {
+  margin-top: 20px;
+}
+
+.tags {
+  margin: 20px 0;
+}
+
+.tags .tag-head {
+  display: block;
+  font-size: 1.2em;
+  margin-bottom: 5px;
+}
+
+.tags .tag {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid #e7e7e7;
+  color: #777;
+  text-transform: uppercase;
+  font-size: .9em;
+}
+
+
 /*
  * General Bootstrap improvements
  */
@@ -69,6 +93,12 @@ table tbody + thead>tr>th.super-th {
 
 .btn.btn-default {
   background: transparent;
+}
+
+input.normal {
+  border-radius: 2px;
+  border: 1px solid #e7e7e7;
+  padding: 2px 5px;
 }
 
 input:not(.normal) {
@@ -149,6 +179,11 @@ select.form-control {
   padding: 0 4px;
 }
 
+.btn.btn-blank:active {
+  border: none;
+  box-shadow: none;
+}
+
 /*
  * Design Language Styles
  */
@@ -182,7 +217,7 @@ select.form-control {
 
 
 /*
- * Report Styles
+ * Report Data Submission Styles
  */
 
 .field-set {
@@ -226,25 +261,181 @@ select.form-control {
   width: 100%;
 }
 
-.form-actions {
-  margin-top: 20px;
-}
+/*
+ * Report/Chart Creation Styles
+ */
 
-.tags {
-  margin: 20px 0;
-}
-
-.tags .tag-head {
-  display: block;
-  font-size: 1.2em;
-  margin-bottom: 5px;
-}
-
-.tags .tag {
-  display: inline-block;
-  padding: 1px 5px;
+.field-selector {
+  width: 100%;
+  background-color: #fff;
   border: 1px solid #e7e7e7;
-  color: #777;
-  text-transform: uppercase;
-  font-size: .9em;
+  display: table;
+}
+
+.field-selector-header {
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #e7e7e7;
+  display: table;
+  padding: 10px;
+  border-bottom: none;
+  vertical-align: middle;
+}
+
+.field-selector-header .padded-row {
+  margin-top: 10px;
+}
+
+.field-selector-content {
+  height: 500px;
+}
+
+.field-selector:first-child {
+  border-top-left-radius: 2px;
+  border-top-right-radius: 2px;
+}
+
+.field-selector:last-child {
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+.field-selector .selector-cell {
+  display: table-cell;
+}
+
+.field-selector .selector-cell.selector-cell-20 { width: 20%; }
+.field-selector .selector-cell.selector-cell-30 { width: 30%; }
+.field-selector .selector-cell.selector-cell-40 { width: 40%; }
+.field-selector .selector-cell.selector-cell-50 { width: 50%; }
+.field-selector .selector-cell.selector-cell-60 { width: 60%; }
+.field-selector .selector-cell.selector-cell-70 { width: 70%; }
+.field-selector .selector-cell.selector-cell-80 { width: 80%; }
+
+.field-selector .field-list {
+  height: 100%;
+  padding: 0;
+  overflow-y: scroll;
+  border-right: 1px solid #e7e7e7;
+}
+
+.field-selector .field-list .department .department-name {
+  border-bottom: 1px solid #e7e7e7;
+  font-size: 1.1em;
+  padding: 6px 10px;
+}
+
+.field-selector .field-list .department .department-name:not(.collapsed) {
+  background-color: #f7f7f7;
+}
+
+.field-selector .field-list .department .department-name:hover {
+  background-color: #f0f0f0;
+}
+
+.field-selector .field-list .department .department-fieldset {
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field {
+  padding: 4px 0;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field:hover {
+  background-color: #f0f0f0;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field .action {
+  display: inline-block;
+  margin: 0 10px;
+  color: #aaa;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field:hover .action {
+  color: #333;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field.added {
+  color: #aaa;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field.unadded .action.add-field-btn {
+  display: inline-block;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field.added .action.add-field-btn {
+  display: none;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field.unadded .action.remove-field-btn {
+  display: none;
+}
+
+.field-selector .field-list .department .department-fieldset .department-field.added .action.remove-field-btn {
+  display: inline-block;
+}
+
+.field-selector .field-list .department .department-fieldset .empty-fieldset {
+  padding: 6px 10px;
+  display: block;
+  color: #aaa;
+  font-style: italic;
+}
+
+.field-selector .selected-fields {
+  height: 100%;
+  overflow-y: scroll;
+}
+
+.field-selector .selected-fields .department-field {
+  display: table;
+  padding: 5px 20px;
+  width: 100%;
+}
+
+.field-selector .selected-fields .department-field:hover {
+  background-color: #f7f7f7;
+}
+
+.field-selector .selected-fields .department-field .handle {
+  display: table-cell;
+  vertical-align: middle;
+  padding-right: 15px;
+  width: 30px;
+  color: #ccc;
+  cursor: move;
+}
+
+.field-selector .selected-fields .department-field .content {
+  display: table-cell;
+}
+
+.field-selector .selected-fields .department-field .content .name {
+  color: #000;
+}
+
+.field-selector .selected-fields .department-field .content .department {
+  font-size: 0.8em;
+  color: #aaa;
+}
+
+.field-selector .selected-fields .department-field .actions-cell {
+  width: 100px;
+  display: table-cell;
+  text-align: right;
+  height: 100%;
+}
+
+.field-selector .selected-fields .department-field .actions-cell .actions {
+  display: hidden;
+  vertical-align: middle;
+}
+
+.field-selector .selected-fields .department-field:hover .actions-cell .actions {
+  display: block;
+}
+
+.lead {
+  vertical-align: middle;
 }

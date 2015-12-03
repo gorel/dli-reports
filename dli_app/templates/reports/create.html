@@ -5,38 +5,55 @@
   </div>
 
   <div class="col-md-12">
-    <form method="POST" action="{{ url_for('reports.create_report') }}" class="form-horizontal">
+    <form method="POST" action="{{ url_for('reports.create_report') }}" id="create_report_form">
       {{ form.csrf_token }}
       {{ form.user_id }}
 
-      <div class="form-group">
-        {{ form.name.label(class='control-label col-sm-2') }}
-        <div class="col-sm-10">
-            {{ form.name(class='form-control') }}
+
+      <div class="field-selector-header">
+        <span class="lead">
+          Report Name:
+          {{ form.name(placeholder='My Report', class='normal') }}
+        </span>
+        <div class="pull-right">
+          <span class="lead tag-list">
+            Tags:
+            {{ form.tags(class='normal', placeholder='tag1, tag2, etc.') }}
+          </span>
+          <button type="submit" class="btn btn-primary">Create</button>
         </div>
       </div>
 
-      {% for tagfield in form.tags.entries %}
-        <div class="form-group">
-          {{ tagfield.label(class='control-label col-sm-2') }}
-          <div class="col-sm-10">
-              {{ tagfield(class='form-control') }}
+
+      <div class="field-selector field-selector-content" data-form-name="fields">
+        <div class="selector-cell selector-cell-40">
+          <div class="field-list">
+            {% for department in form.departments %}
+              <div class="department">
+                <div class="department-name collapsed" data-toggle="collapse" data-target="#department_{{ department.id }}_fieldset">
+                  {{ department.name }}
+                </div>
+                <div class="department-fieldset collapse" id="department_{{ department.id }}_fieldset">
+                  {% if department.fields %}
+                    {% for field in department.fields %}
+                      <div class="department-field unadded" id="department-field-{{ field.id }}" data-department="{{ department.name }}" data-id="{{ field.id }}">
+                        <a class="action add-field-btn"><span class="fa fa-plus"></span></a>
+                        <a class="action remove-field-btn"><span class="fa fa-minus"></span></a>
+                        {{ field.name }}
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <span class="empty-fieldset">No fields for this department</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
           </div>
         </div>
-      {% endfor %}
 
-      {% for department in form.departments %}
-        <div class="form-group">
-          {{ form[department.name].label(class='control-label col-sm-2') }}
-          <div class="col-sm-10">
-            {{ form[department.name](class='col-md-10') }}
+        <div class="selector-cell selector-cell-60">
+          <div class="selected-fields" id="selected_fields">
           </div>
-        </div>
-      {% endfor %}
-
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-primary">Create Report</button>
         </div>
       </div>
     </form>
