@@ -6,38 +6,31 @@ This file lists all forms to be filled out from within the reports module.
 
 from datetime import datetime
 
-from flask_wtf import (
-    Form,
-    html5,
-)
+from flask_wtf import Form
+from flask_wtf import html5
 
-from wtforms import (
-    BooleanField,
-    DecimalField,
-    HiddenField,
-    IntegerField,
-    SelectField,
-    SelectMultipleField,
-    TextField,
-    ValidationError,
-    validators,
-    widgets,
-)
+from wtforms import BooleanField
+from wtforms import DecimalField
+from wtforms import HiddenField
+from wtforms import IntegerField
+from wtforms import SelectField
+from wtforms import SelectMultipleField
+from wtforms import TextField
+from wtforms import ValidationError
+from wtforms import validators
+from wtforms import widgets
 
-from dli_app.mod_auth.models import (
-    Department,
-    User,
-)
+from dli_app.mod_auth.models import Department
+from dli_app.mod_auth.models import User
 
-from dli_app.mod_reports.models import (
-    Chart,
-    ChartType,
-    Field,
-    FieldData,
-    FieldTypeConstants,
-    Report,
-    Tag,
-)
+from dli_app.mod_reports.models import Chart
+from dli_app.mod_reports.models import ChartType
+from dli_app.mod_reports.models import ChartTypeConstants
+from dli_app.mod_reports.models import Field
+from dli_app.mod_reports.models import FieldData
+from dli_app.mod_reports.models import FieldTypeConstants
+from dli_app.mod_reports.models import Report
+from dli_app.mod_reports.models import Tag
 
 
 class SplitNumValidator():
