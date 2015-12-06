@@ -11,6 +11,7 @@
       <p class="">
           Data from <input id="end_date" type="text" class="form-control normal datepicker" placeholder="Date">
           <button type="submit" class="btn btn-sm btn-default">Update</button>
+          <br><input id="hideWeekend" type="checkbox" onclick="update_days()" checked>Hide weekend data</input>
         </div>
       </p>
     </form>
@@ -20,6 +21,7 @@
           Data from <input id="start_date" type="text" class="form-control normal datepicker" placeholder="Start date">
           to <input id="end_date" type="text" class="form-control normal datepicker" placeholder="End date">
           <button type="submit" class="btn btn-sm btn-default">Update</button>
+          <br><input id="hideWeekend" type="checkbox" onclick="update_days()" checked>Hide weekend data</input>
         </div>
       </p>
     </form>
@@ -45,7 +47,7 @@
   <script>
   {{ chart.generated_js()|safe }}
   // by default, time_series is the active time series
-  var active_time_series = time_series;
+  var active_time_series = regen_time_series(time_series[0], time_series[time_series.length - 1]);
 
   //Set the defaults for the start and end dates
   {% if not chart.is_pie_chart %}
@@ -151,8 +153,13 @@
     end = end.split('-');
     sdate = new Date(parseInt(start[0]), parseInt(start[1]) - 1, parseInt(start[2]));
     edate = new Date(parseInt(end[0]), parseInt(end[1]) - 1, parseInt(end[2]));
+
+    var hideWeekend = $('#hideWeekend').is(':checked');
     while (sdate <= edate) {
-      res.push(sdate.toISOString().slice(0, 10));
+      //If it's a weekday or the user unchecked hide weekend, show this date
+      if (!(sdate.getDay() == 0 || sdate.getDay() == 6) || !hideWeekend) {
+        res.push(sdate.toISOString().slice(0, 10));
+      }
       sdate.setDate(sdate.getDate() + 1);
     }
     return res;
@@ -243,6 +250,8 @@
 
         var cell = headerRow.insertCell(-1);
         cell.innerHTML = '<b>Date</b>';
+        cell = headerRow.insertCell(-1);
+        cell.innerHTML = '<b>Weekday</b>';
         for (field in data_points) {
             var cell = headerRow.insertCell(-1);
             cell.innerHTML = '<b>' + field + '</b>';
@@ -253,6 +262,8 @@
             var row = body.insertRow(-1);
             var cell = row.insertCell(-1);
             cell.innerHTML = ds;
+            cell = row.insertCell(-1);
+            cell.innerHTML = weekdayFor(ds);
             for (field in data_points) {
                 var cell = row.insertCell(-1);
                 if (ds in data_points[field]) {
@@ -263,6 +274,28 @@
                 }
             }
         });
+
+        function weekdayFor(ds) {
+          dat = ds.split('-');
+          dat = new Date(parseInt(dat[0]), parseInt(dat[1]) - 1, parseInt(dat[2]));
+          switch (dat.getDay()) {
+              case 0:
+                return 'Sunday';
+              case 1:
+                return 'Monday';
+              case 2:
+                return 'Tuesday';
+              case 3:
+                return 'Wednesday';
+              case 4:
+                return 'Thursday';
+              case 5:
+                return 'Friday';
+              case 6:
+                return 'Saturday';
+          }
+          return '?';
+        }
     {% endif %}
   }
   generate_all();
