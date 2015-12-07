@@ -9,30 +9,21 @@ import os
 import random
 import string
 
-from flask_sqlalchemy import (
-    orm,
-)
+from flask_login import UserMixin
+from flask_mail import Message
 
-from flask_mail import (
-    Message,
-)
+from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash
 
-from werkzeug.security import (
-    check_password_hash,
-    generate_password_hash,
-)
+from dli_app import db
+from dli_app import login_manager
+from dli_app import mail
 
-from dli_app import db, login_manager, mail
+from dli_app.mod_admin.models import ErrorReport
 
-from dli_app.mod_admin.models import (
-    ErrorReport,
-)
-
-from dli_app.mod_reports.models import (
-    Chart,
-    Field,
-    Report,
-)
+from dli_app.mod_reports.models import Chart
+from dli_app.mod_reports.models import Field
+from dli_app.mod_reports.models import Report
 
 
 report_users = db.Table(
@@ -126,7 +117,7 @@ class PasswordReset(db.Model):
             return None
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     """Model for users of the site"""
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -171,37 +162,6 @@ class User(db.Model):
         self.location = location
         self.department = department
         self.is_admin = False
-
-        self._is_authenticated = None
-        self._is_active = None
-
-        # Call the method to load local variables NOT stored in the db
-        self.init_on_load()
-
-    @orm.reconstructor
-    def init_on_load(self):
-        """Load code that isn't stored in the db model"""
-        self._is_authenticated = True
-        self._is_active = True
-
-    @property
-    def is_authenticated(self):
-        """Return whether or not the user is authenticated (logged in)"""
-        return self._is_authenticated
-
-    @property
-    def is_active(self):
-        """Return whether or not the user's account is active on the site"""
-        return self._is_active
-
-    @property
-    def is_anonymous(self):
-        """Return whether or not the user is acting in an anonymous context"""
-        return not self.is_authenticated()
-
-    def get_id(self):
-        """Return a unique identifier for the user"""
-        return self.id
 
     def set_password(self, new_password):
         """Change the user's password to the new password"""
