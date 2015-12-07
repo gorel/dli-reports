@@ -60,8 +60,13 @@ def delete_expired_pw_resets():
 
 
 # Schedule the jobs and run forever
-schedule.every().day.at("21:59").do(email_error_reports)
 schedule.every().day.at("23:59").do(delete_expired_pw_resets)
+# Ignore the weekend for error reports
+schedule.every().monday.at("21:59").do(email_error_reports)
+schedule.every().tuesday.at("21:59").do(email_error_reports)
+schedule.every().wednesday.at("21:59").do(email_error_reports)
+schedule.every().thursday.at("21:59").do(email_error_reports)
+schedule.every().friday.at("21:59").do(email_error_reports)
 
 
 # Run all scheduled jobs forever
