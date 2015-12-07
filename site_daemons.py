@@ -18,6 +18,8 @@ import schedule
 import time
 
 from dli_app import app
+from dli_app import db
+
 from dli_app.mod_admin.models import ErrorReport
 from dli_app.mod_auth.models import PasswordReset
 
