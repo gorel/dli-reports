@@ -7,6 +7,11 @@ $(function() {
 
   $('#loading_spinner').hide();
 
+  // Prevent form submission using the Enter key
+  $(document).on('keypress', 'form', function(e) {
+    return e.keyCode != 13;
+  });
+
   $('#search_text').on('keyup', function() {
     form_data = {
       'filter_choices': $('#filter_choices').val(),

@@ -7,13 +7,13 @@
         <a href="{{ url_for('reports.my_reports') }}" class="btn btn-default">My Reports</a>
         <a href="{{ url_for('reports.create_report') }}" class="btn btn-primary"><span class="fa fa-plus"></span> New</a>
 
-        <form method="POST" action="{{ url_for('reports.search') }}" class="form-inline">
+        <form method="POST" action="#" class="form-inline">
           {{ form.csrf_token }}
           <span class="input-group">
             <span class="input-group-btn">
               {{ form.filter_choices(class='form-control') }}
             </span>
-            {{ form.search_text(class='form-control normal') }}
+            {{ form.search_text(class='form-control normal', placeholder='Search') }}
           </span>
           <span id="loading_spinner" class="fa fa-spinner fa-spin"></span>
         </form>
