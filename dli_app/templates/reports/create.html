@@ -11,16 +11,25 @@
 
 
       <div class="field-selector-header">
-        <span class="lead">
-          Report Name:
-          {{ form.name(placeholder='My Report', class='normal') }}
-        </span>
-        <div class="pull-right">
-          <span class="lead tag-list">
-            Tags:
-            {{ form.tags(class='normal', placeholder='tag1, tag2, etc.') }}
-          </span>
-          <button type="submit" class="btn btn-primary">Create</button>
+        <div class="row">
+          <div class="col-md-4">
+            <span class="input-group">
+              <span class="input-group-addon">Name</span>
+              {{ form.name(placeholder='My Report', class='form-control normal') }}
+            </span>
+          </div>
+
+          <div class="col-md-4 col-md-offset-4">
+            <div class="pull-right">
+              <span class="input-group">
+                <span class="input-group-addon">Tags</span>
+                {{ form.tags(placeholder='tag1, tag2, etc.', class='form-control normal') }}
+                <span class="input-group-btn">
+                  <button type="submit" class="btn btn-primary">Create</button>
+                </span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
