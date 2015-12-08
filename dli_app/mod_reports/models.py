@@ -361,7 +361,7 @@ class Report(db.Model):
             }
             if not dept_data.get(field.department.name):
                 dept_data[field.department.name] = {}
-            dept_data[field.department.name][field.name] = field_data
+            dept_data[field.department.name][field] = field_data
         return dept_data
 
 
@@ -577,7 +577,7 @@ class ExcelSheetHelper():
         """
         for dept in dept_fields.keys():
             self.write_dept_title(dept)
-            for field in sorted(dept_fields[dept].keys()):
+            for field in sorted(dept_fields[dept].keys(), key=lambda x: x.name):
                 self.write_field(field, dept_fields[dept][field])
 
     def write_dept_title(self, dept_name):
@@ -591,25 +591,25 @@ class ExcelSheetHelper():
         )
         self.row += 1
 
-    def write_field(self, field_name, values):
+    def write_field(self, field, values):
         """Write a Field within a Report"""
         self.worksheet.write(
             self.row,
             self.col,
-            field_name,
+            field.name,
             self.field_format,
         )
         self.col += 1
 
         for date in self.date_list:
             # Write the data for each ds
-            field_data = values.get(date)
+            field_data = values.get(date.strftime('%Y-%m-%d'))
             if field_data:
                 self.worksheet.write(
                     self.row,
                     self.col,
                     field_data,
-                    self.get_format(field_data.field),
+                    self.get_format(field),
                 )
             self.col += 1
 
