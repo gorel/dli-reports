@@ -22,15 +22,11 @@ from flask_wtf.csrf import CsrfProtect
 from htmlmin.main import minify
 
 # Check for environment variables.  Exit if they are not set properly
-if !(os.environ.has_key('DLI_REPORTS_GITHUB_PASSWORD') and
-    os.environ.has_key('DLI_REPORTS_ADMIN_PASSWORD') and
-    os.environ.has_key('DLI_REPORTS_SITE_URL') and
-    os.environ.has_key('DLI_REPORTS_DEV_EMAIL') and
-    os.environ.has_key('PATH') and
-    os.environ.has_key('DLI_REPORTS_GITHUB_ISSUES_URL') and
-    os.environ.has_key('DLI_REPORTS_GITHUB_USERNAME')):
-    sys.stdout.write('Error! Environment variables not set up properly.')
-    sys.exit()
+ENVIRON_KEYS = ['DLI_REPORTS_GITHUB_USERNAME', 'DLI_REPORTS_GITHUB_PASSWORD', 'DLI_REPORTS_ADMIN_PASSWORD', 'DLI_REPORTS_SITE_URL', 'DLI_REPORTS_DEV_EMAIL', 'DLI_REPORTS_GITHUB_ISSUES_URL']
+for key in ENVIRON_KEYS:
+    if not key in os.environ:
+        sys.stdout.write('Error! Environment variables not set up properly.')
+        sys.exit()
 
 # Define the web app
 sys.stdout.write('Creating Flask app...')
