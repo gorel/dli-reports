@@ -21,15 +21,17 @@ from flask_wtf.csrf import CsrfProtect
 # Other imports
 from htmlmin.main import minify
 
-# Check for environment variables.  Exit if they are not set properly
+
 ENVIRON_KEYS = [
     'DLI_REPORTS_GITHUB_USERNAME', 
     'DLI_REPORTS_GITHUB_PASSWORD', 
     'DLI_REPORTS_ADMIN_PASSWORD', 
     'DLI_REPORTS_SITE_URL', 
     'DLI_REPORTS_DEV_EMAIL', 
-    'DLI_REPORTS_GITHUB_ISSUES_URL'
+    'DLI_REPORTS_GITHUB_ISSUES_URL',
 ]
+
+# Check for environment variables.  Exit if they are not set properly
 for key in ENVIRON_KEYS:
     if not key in os.environ:
         sys.stdout.write('Error! Environment variables not set up properly.')
