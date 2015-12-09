@@ -5,52 +5,95 @@
   </div>
 
   <div class="col-md-12">
-    <form method="POST" action="{{ url_for('reports.edit_chart', chart_id=chart.id) }}" class="form-horizontal">
+    <form method="POST" action="{{ url_for('reports.edit_chart', chart_id=chart.id) }}" id="edit_chart_form">
       {{ form.csrf_token }}
+      {{ form.user_id }}
       {{ form.chart_id }}
 
 
-      <div class="form-group">
-        {{ form.name.label(class='control-label col-sm-2') }}
-        <div class="col-sm-10">
-            {{ form.name(class='form-control') }}
+      <div class="field-selector-header">
+        <div class="row">
+          <div class="col-md-4">
+            <span class="input-group">
+              <span class="input-group-addon">Name</span>
+              {{ form.name(placeholder='My Chart', class='form-control normal') }}
+            </span>
+          </div>
+
+          <div class="col-md-2">
+            <span class="input-group">
+              <span class="input-group-addon">Type</span>
+              {{ form.chart_type(class='form-control') }}
+            </span>
+          </div>
+
+          <div class="col-md-2">
+            {{ form.with_table }}
+            <span class="control-label">
+              Include Table?
+            </span>
+          </div>
+
+          <div class="col-md-4">
+            <div class="pull-right">
+              <span class="input-group">
+                <span class="input-group-addon">Tags</span>
+                {{ form.tags(placeholder='tag1, tag2, etc.', class='form-control normal') }}
+                <span class="input-group-btn">
+                  <button type="submit" class="btn btn-primary">Create</button>
+                </span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="form-group">
-        {{ form.tags.label(class='control-label col-sm-2') }}
-        <div class="col-sm-10">
-            {{ form.tags(class='form-control', placeholder='Enter the chart tags, separated by commas') }}
+
+      <div class="field-selector field-selector-content" data-form-name="fields">
+        <div class="selector-cell selector-cell-40">
+          <div class="field-list">
+            {% for department in form.departments %}
+              <div class="department">
+                <div class="department-name collapsed" data-toggle="collapse" data-target="#department_{{ department.id }}_fieldset">
+                  {{ department.name }}
+                </div>
+                <div class="department-fieldset collapse" id="department_{{ department.id }}_fieldset">
+                  {% if department.fields %}
+                    {% for field in department.fields %}
+                      <div class="department-field unadded" id="department-field-{{ field.id }}" data-department="{{ department.name }}" data-id="{{ field.id }}">
+                        <a class="action add-field-btn"><span class="fa fa-plus"></span></a>
+                        <a class="action remove-field-btn"><span class="fa fa-minus"></span></a>
+                        {{ field.name }}
+                      </div>
+                    {% endfor %}
+                  {% else %}
+                    <span class="empty-fieldset">No fields for this department</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        {{ form.with_table.label(class='control-label col-sm-2') }}
-        <div class="col-sm-10">
-            {{ form.with_table() }}
-        </div>
-      </div>
-
-      <div class="form-group">
-        {{ form.chart_type.label(class='control-label col-sm-2') }}
-        <div class="col-sm-4">
-          {{ form.chart_type(class='form-control') }}
-        </div>
-      </div>
-
-
-      {% for department in form.departments %}
-      <div class="form-group">
-        {{ form[department.name].label(class='control-label col-sm-2') }}
-        <div class="col-sm-10">
-          {{ form[department.name](class='col-md-10') }}
-        </div>
-      </div>
-      {% endfor %}
-
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-primary">Save Changes</button>
+        <div class="selector-cell selector-cell-60">
+          <div class="selected-fields" id="selected_fields">
+            {% for field in chart.fields %}
+              <div class="department-field" id="{{ field.id }}" data-id="{{ field.id }}">
+                <div class="handle">
+                  <span class="fa fa-th"></span>
+                </div>
+                <div class="content">
+                  <span class="name">{{ field.name }}</span>
+                  <span class="department">{{ field.department.name }}</span>
+                </div>
+                <div class="actions-cell">
+                  <div class="actions">
+                    <a class="btn btn-blank text-danger remove-field-btn"><span class="fa fa-remove"></span></a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         </div>
       </div>
     </form>
