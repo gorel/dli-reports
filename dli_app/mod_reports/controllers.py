@@ -6,7 +6,7 @@ This file is responsible for loading all site pages under /reports.
 
 from datetime import datetime
 from datetime import timedelta
-import numpy as np
+import numpy
 
 from flask import (
     Blueprint,
@@ -628,18 +628,15 @@ def predict():
     one_month_ago = one_month_ago.strftime('%Y-%m-%d')
     fields = Field.query.all()
     data_points = {
-        field:
-            field.data_points.filter(
-                FieldData.ds >= one_month_ago
-            ).order_by(
-                FieldData.ds.desc()
-            ).all()
+        field: field.data_points.filter(
+            FieldData.ds >= one_month_ago
+        ).order_by(FieldData.ds.desc()).all()
         for field in fields
     }
     predictions = {}
     for field in data_points.keys():
         values = data_points[field]
         y = arange(len(values))
-        m, b = np.polyfit(values, y, 1)
+        m, b = numpy.polyfit(values, y, 1)
         predictions[field] = m * 30 + b
     return render_template("reports/predict.html",predictions=predictions)
