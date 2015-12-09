@@ -6,6 +6,7 @@ This file is responsible for loading all site pages under /reports.
 
 from datetime import datetime
 from datetime import timedelta
+import numpy as np
 
 from flask import (
     Blueprint,
@@ -618,3 +619,27 @@ def edit_chart(chart_id):
                     set_fields = [field for field in chart.fields if field.department.id == department.id]
                     getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit_chart.html', form=form, chart=chart)
+
+@mod_reports.route('/predict', methods=['GET'])
+@mod_reports.route('/predict/', methods=['GET'])
+@login_required
+def predict():
+    one_month_ago = datetime.today() - timedelta(days=30)
+    one_month_ago = one_month_ago.strftime('%Y-%m-%d')
+    fields = Field.query.all()
+    data_points = {
+        field:
+            field.data_points.filter(
+                FieldData.ds >= one_month_ago
+            ).order_by(
+                FieldData.ds.desc()
+            ).all()
+        for field in fields
+    }
+    predictions = {}
+    for field in data_points.keys():
+        values = data_points[field]
+        y = arange(len(values))
+        m, b = np.polyfit(values, y, 1)
+        predictions[field] = m * 30 + b
+    return render_template("reports/predict.html",predictions=predictions)
