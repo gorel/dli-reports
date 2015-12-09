@@ -5,6 +5,7 @@ This module creates the app and initializes all startup code.
 """
 
 # System imports
+import os
 import sys
 
 # Flask imports
@@ -23,18 +24,16 @@ from htmlmin.main import minify
 
 
 ENVIRON_KEYS = [
-    'DLI_REPORTS_GITHUB_USERNAME', 
-    'DLI_REPORTS_GITHUB_PASSWORD', 
-    'DLI_REPORTS_ADMIN_PASSWORD', 
-    'DLI_REPORTS_SITE_URL', 
-    'DLI_REPORTS_DEV_EMAIL', 
-    'DLI_REPORTS_GITHUB_ISSUES_URL',
+    'DLI_REPORTS_ADMIN_PASSWORD',
+    'DLI_REPORTS_SITE_URL',
+    'DLI_REPORTS_DEV_EMAIL',
 ]
 
 # Check for environment variables.  Exit if they are not set properly
 for key in ENVIRON_KEYS:
     if not key in os.environ:
-        sys.stdout.write('Error! Environment variables not set up properly.')
+        sys.stderr.write('Error! Environment variables not set up properly.\n')
+        sys.stderr.write('Missing variable: {}\n'.format(key))
         sys.exit()
 
 # Define the web app
