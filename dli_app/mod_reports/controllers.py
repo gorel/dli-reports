@@ -620,11 +620,14 @@ def edit_chart(chart_id):
                     getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit_chart.html', form=form, chart=chart)
 
+
 @mod_reports.route('/predict', methods=['GET'])
 @mod_reports.route('/predict/', methods=['GET'])
+@mod_reports.route('/predict/<int:num_days>', methods=['GET'])
+@mod_reports.route('/predict/<int:num_days>/', methods=['GET'])
 @login_required
-def predict():
-    one_month_ago = datetime.today() - timedelta(days=30)
+def predict(num_days=30):
+    one_month_ago = datetime.today() - timedelta(days=num_days)
     one_month_ago = one_month_ago.strftime('%Y-%m-%d')
     fields = Field.query.all()
     data_points = {
@@ -636,10 +639,10 @@ def predict():
     predictions = {}
     for field in data_points.keys():
         values = data_points[field]
-	if not len(values)==0:
-            y = np.arange(len(values))
-            m, b = np.polyfit(values, y, 1)
-            predictions[field] = m * 30 + b
+	if len(values):
+            y = numpy.arange(len(values))
+            m, b = numpy.polyfit(values, y, 1)
+            predictions[field] = m * num_days + b
 	else:
             predictions[field] = 0
-    return render_template("reports/predict.html",predictions=predictions)
+    return render_template("reports/predict.html", predictions=predictions)
