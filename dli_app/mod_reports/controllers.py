@@ -639,7 +639,10 @@ def predict():
     predictions = {}
     for field in data_points.keys():
         values = data_points[field]
-        y = arange(len(values))
-        m, b = np.polyfit(values, y, 1)
-        predictions[field] = m * 30 + b
+	if not len(values)==0:
+            y = np.arange(len(values))
+            m, b = np.polyfit(values, y, 1)
+            predictions[field] = m * 30 + b
+	else:
+            predictions[field] = 0
     return render_template("reports/predict.html",predictions=predictions)
