@@ -732,11 +732,6 @@ class SearchForm(Form):
 
     search_text = TextField(
         "Search",
-        validators=[
-            validators.Required(
-                "Please enter a search term",
-            ),
-        ],
     )
 
 
