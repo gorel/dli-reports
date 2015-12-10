@@ -4,33 +4,24 @@ Author: Logan Gore
 This file is responsible for loading all site pages under /account.
 """
 
-from flask import (
-    Blueprint,
-    flash,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
+from flask import Blueprint
+from flask import flash
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import url_for
 
-from flask_login import (
-    current_user,
-    login_required,
-)
+from flask_login import current_user
+from flask_login import login_required
 
-from dli_app import (
-    db,
-    flash_form_errors,
-)
+from dli_app import db
+from dli_app import flash_form_errors
 
-from dli_app.mod_auth.models import (
-    Department,
-    Location,
-)
+from dli_app.mod_auth.models import Department
+from dli_app.mod_auth.models import Location
 
-from dli_app.mod_account.forms import (
-    EditAccountForm,
-)
+from dli_app.mod_account.forms import EditAccountForm
+
 
 # Create a blueprint for this module
 mod_account = Blueprint('account', __name__, url_prefix='/account')

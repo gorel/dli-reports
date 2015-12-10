@@ -8,9 +8,7 @@ import datetime
 
 from dli_app import db
 
-from flask_login import (
-    current_user,
-)
+from flask_login import current_user
 
 class WikiPage(db.Model):
     """Model for a page on the wiki"""

@@ -6,53 +6,36 @@ This file is responsible for loading all site pages under /wiki.
 
 import datetime
 
-from markdown import (
-    Markdown,
-)
+from markdown import Markdown
 
-from markdown.extensions import (
-    extra,
-    nl2br,
-    toc,
-    wikilinks,
-)
+from markdown.extensions import extra
+from markdown.extensions import nl2br
+from markdown.extensions import toc
+from markdown.extensions import wikilinks
 
-from flask import (
-    Blueprint,
-    flash,
-    redirect,
-    render_template,
-    url_for,
-)
+from flask import Blueprint
+from flask import flash
+from flask import redirect
+from flask import render_template
+from flask import url_for
 
-from flask_mail import (
-    Message,
-)
+from flask_mail import Message
 
-from dli_app.mod_auth.models import (
-    User,
-)
+from dli_app.mod_auth.models import User
 
-from flask_login import (
-    current_user,
-    login_required,
-)
+from flask_login import current_user
+from flask_login import login_required
 
-from dli_app import (
-    db,
-    mail,
-    flash_form_errors,
-)
+from dli_app import db
+from dli_app import mail
+from dli_app import flash_form_errors
 
-from dli_app.mod_wiki.models import (
-    WikiPage,
-)
+from dli_app.mod_wiki.models import WikiPage
 
-from dli_app.mod_wiki.forms import (
-    EditWikiPageForm,
-    SearchForm,
-    AskQuestionForm,
-)
+from dli_app.mod_wiki.forms import EditWikiPageForm
+from dli_app.mod_wiki.forms import SearchForm
+from dli_app.mod_wiki.forms import AskQuestionForm
+
 
 EXTENSIONS = [
     extra.ExtraExtension(),

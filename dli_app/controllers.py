@@ -4,10 +4,8 @@ Author: Logan Gore
 This file is only responsible for loading the site index page.
 """
 
-from flask import (
-    Blueprint,
-    render_template,
-)
+from flask import Blueprint
+from flask import render_template
 
 
 # Create a blueprint for this module

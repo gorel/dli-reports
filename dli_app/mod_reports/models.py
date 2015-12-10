@@ -61,6 +61,14 @@ def generate_date_list(start, end, step=None):
     return dates
 
 
+def get_time_series_sequence(min_date):
+    """Get the time series data that represents this chart in C3"""
+    now = datetime.datetime.now()
+    days = (now - min_date).days + 1
+    ds_list = [min_date + datetime.timedelta(days=x) for x in range(0, days)]
+    return sorted([x.strftime('%Y-%m-%d') for x in ds_list])
+
+
 class Tag(db.Model):
     """Model for a Tag associated with a Report"""
     __tablename__ = "tag"
@@ -419,6 +427,7 @@ class Chart(db.Model):
 
     @property
     def is_pie_chart(self):
+        """Return whether or not this chart is a Pie Chart"""
         ChartTypeConstants.reload()
         return self.ctype == ChartTypeConstants.PIE
 
@@ -463,18 +472,11 @@ class Chart(db.Model):
             var chart_type = "{chart_type}";
             var generate = {should_generate};
         """.format(
-            time_series=self.get_time_series_sequence(min_date),
+            time_series=get_time_series_sequence(min_date),
             data_points=self.data_points(min_date),
             chart_type=self.ctype.name,
             should_generate=generate,
         )
-
-    def get_time_series_sequence(self, min_date):
-        """Get the time series data that represents this chart in C3"""
-        now = datetime.datetime.now()
-        days = (now - min_date).days + 1
-        ds_list = [min_date + datetime.timedelta(days=x) for x in range(0, days)]
-        return sorted([x.strftime('%Y-%m-%d') for x in ds_list])
 
 
 class ExcelSheetHelper():

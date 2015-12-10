@@ -88,20 +88,31 @@ class SplitNumValidator():
                         )
 
 
-# Different from FieldList in that it doesn't care about order. FieldList
-# doesn't work with the well-known `fields[]` syntax that is essentially
-# standard in HTML/JS. This doesn't either, but still works with the
-# much-easier-to-serialize-to `fields=id1,id2,id3` syntax.
 class ListField(FormField):
+    """A special field that can store a list of values
+    Different from FieldList in that it doesn't care about order. FieldList
+    doesn't work with the well-known `fields[]` syntax that is essentially
+    standard in HTML/JS. This doesn't either, but still works with the
+    much-easier-to-serialize-to `fields=id1,id2,id3` syntax.
+    Author: Jon Egeland
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the ListField"""
+        FormField.__init__(self, *args, **kwargs)
+        self.data = None
+
     widget = TextInput()
 
     def _value(self):
+        """Get the value of the field"""
         if self.data:
             return unicode(self.data)
         else:
             return u''
 
     def process_formdata(self, valuelist):
+        """Process the form data for this field"""
         if valuelist:
             self.data = [x.strip() for x in valuelist[0].split(',')]
         else:

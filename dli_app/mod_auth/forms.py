@@ -4,25 +4,19 @@ Author: Logan Gore
 This file lists all forms to be filled out from within the auth module.
 """
 
-from flask_wtf import (
-    Form,
-)
+from flask_wtf import Form
 
-from wtforms import (
-    BooleanField,
-    HiddenField,
-    PasswordField,
-    SelectField,
-    TextField,
-    validators,
-)
+from wtforms import BooleanField
+from wtforms import HiddenField
+from wtforms import PasswordField
+from wtforms import SelectField
+from wtforms import TextField
+from wtforms import validators
 
-from dli_app.mod_auth.models import (
-    Department,
-    Location,
-    RegisterCandidate,
-    User,
-)
+from dli_app.mod_auth.models import Department
+from dli_app.mod_auth.models import Location
+from dli_app.mod_auth.models import RegisterCandidate
+from dli_app.mod_auth.models import User
 
 
 class RegistrationForm(Form):
