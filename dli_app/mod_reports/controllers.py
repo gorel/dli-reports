@@ -7,51 +7,40 @@ This file is responsible for loading all site pages under /reports.
 from datetime import datetime
 from datetime import timedelta
 
-from flask import (
-    Blueprint,
-    flash,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    send_file,
-    url_for,
-)
+from flask import Blueprint
+from flask import flash
+from flask import jsonify
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import send_file
+from flask import url_for
 
-from flask_login import (
-    current_user,
-    login_required,
-)
+from flask_login import current_user
+from flask_login import login_required
 
 # Import main db and form error handler for app
-from dli_app import (
-    db,
-    flash_form_errors,
-)
+from dli_app import db
+from dli_app import flash_form_errors
 
 # Import models
-from dli_app.mod_auth.models import (
-    Department,
-)
+from dli_app.mod_auth.models import Department
 
-from dli_app.mod_reports.models import (
-    Chart,
-    ChartType,
-    Report,
-)
+from dli_app.mod_reports.models import Chart
+from dli_app.mod_reports.models import ChartType
+from dli_app.mod_reports.models import Report
 
 # Import forms
-from dli_app.mod_reports.forms import (
-    ChangeDateForm,
-    ChangeDateAndDepartmentForm,
-    CreateChartForm,
-    EditChartForm,
-    CreateReportForm,
-    DownloadReportForm,
-    SubmitReportDataForm,
-    EditReportForm,
-    SearchForm,
-)
+from dli_app.mod_reports.forms import ChangeDateForm
+from dli_app.mod_reports.forms import ChangeDateAndDepartmentForm
+from dli_app.mod_reports.forms import CreateChartForm
+from dli_app.mod_reports.forms import EditChartForm
+from dli_app.mod_reports.forms import CreateReportForm
+from dli_app.mod_reports.forms import DownloadReportForm
+from dli_app.mod_reports.forms import SubmitReportDataForm
+from dli_app.mod_reports.forms import EditReportForm
+from dli_app.mod_reports.forms import SearchForm
+
 
 # Create a blueprint for this module
 mod_reports = Blueprint('reports', __name__, url_prefix='/reports')

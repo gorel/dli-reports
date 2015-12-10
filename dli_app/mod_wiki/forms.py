@@ -4,23 +4,13 @@ Author: Logan Gore
 This file lists all forms to be filled out from within the wiki module.
 """
 
-from flask_wtf import (
-    Form,
-)
+from flask_wtf import Form
 
-from sqlalchemy import (
-    or_,
-)
+from wtforms import TextAreaField
+from wtforms import TextField
+from wtforms import validators
 
-from wtforms import (
-    TextAreaField,
-    TextField,
-    validators,
-)
-
-from dli_app.mod_wiki.models import (
-    WikiPage,
-)
+from dli_app.mod_wiki.models import WikiPage
 
 
 class EditWikiPageForm(Form):
@@ -74,10 +64,7 @@ class SearchForm(Form):
             return False
 
         query = '%{}%'.format(self.search_box.data)
-        self.results = WikiPage.query.filter(or_(
-            WikiPage.name.like(query),
-            WikiPage.content.like(query)
-        )).all()
+        self.results = WikiPage.query.filter(WikiPage.name.like(query) | WikiPage.content.like(query)).all()
 
         return True
 

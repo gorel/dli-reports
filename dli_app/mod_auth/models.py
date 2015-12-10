@@ -156,6 +156,7 @@ class User(db.Model, UserMixin):
 
     def __init__(self, name, email, password, location, department):
         """Initialize a User model"""
+        UserMixin.__init__(self)
         self.name = name
         self.email = email
         self.password = generate_password_hash(password)

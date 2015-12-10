@@ -14,30 +14,23 @@ import sys
 
 from dli_app import db
 
-from dli_app.mod_auth.models import (
-    Department,
-    Location,
-    RegisterCandidate,
-    User,
-)
+from dli_app.mod_auth.models import Department
+from dli_app.mod_auth.models import Location
+from dli_app.mod_auth.models import RegisterCandidate
+from dli_app.mod_auth.models import User
 
-from dli_app.mod_admin.models import (
-    ErrorReport,
-)
+from dli_app.mod_admin.models import ErrorReport
 
-from dli_app.mod_reports.models import (
-    Chart,
-    ChartType,
-    Field,
-    FieldData,
-    FieldType,
-    Report,
-    Tag,
-)
+from dli_app.mod_reports.models import Chart
+from dli_app.mod_reports.models import ChartType
+from dli_app.mod_reports.models import Field
+from dli_app.mod_reports.models import FieldData
+from dli_app.mod_reports.models import FieldType
+from dli_app.mod_reports.models import Report
+from dli_app.mod_reports.models import Tag
 
-from dli_app.mod_wiki.models import (
-    WikiPage,
-)
+from dli_app.mod_wiki.models import WikiPage
+
 
 WIKIPAGE_HOME_CONTENT = """
 # DLI Policies Wiki

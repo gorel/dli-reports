@@ -7,14 +7,11 @@ This file is responsible for defining models that belong in the admin module.
 import datetime
 import os
 
-from dli_app import (
-    db,
-    mail,
-)
+from dli_app import db
+from dli_app import mail
 
-from flask_mail import (
-    Message,
-)
+from flask_mail import Message
+
 
 class ErrorReport(db.Model):
     """Class representing bug reports and feature requests"""
