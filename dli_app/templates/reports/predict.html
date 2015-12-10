@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+{% block body %}
+  <div class="page-header">
+    <h1>Predictions based on the last {{ num_days }} days</h1>
+  </div>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Field Name</th>
+          <th>Prediction</th>
+        </tr>
+      </thead>
+
+      <tbody>
+          {% for field in predictions.keys() %}
+          <tr>
+            <td>{{ field.name }}</td>
+            <td>{{ predictions[field] }}</td>
+          </tr>
+          {% endfor %}
+      </tbody>
+    </table>
+{% endblock %}

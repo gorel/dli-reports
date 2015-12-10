@@ -6,52 +6,44 @@ This file is responsible for loading all site pages under /reports.
 
 from datetime import datetime
 from datetime import timedelta
+import numpy
 
-from flask import (
-    Blueprint,
-    flash,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    send_file,
-    url_for,
-)
+from flask import Blueprint
+from flask import flash
+from flask import jsonify
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import send_file
+from flask import url_for
 
-from flask_login import (
-    current_user,
-    login_required,
-)
+from flask_login import current_user
+from flask_login import login_required
 
 # Import main db and form error handler for app
-from dli_app import (
-    db,
-    flash_form_errors,
-)
+from dli_app import db
+from dli_app import flash_form_errors
 
 # Import models
-from dli_app.mod_auth.models import (
-    Department,
-)
+from dli_app.mod_auth.models import Department
 
-from dli_app.mod_reports.models import (
-    Chart,
-    ChartType,
-    Report,
-)
+from dli_app.mod_reports.models import Chart
+from dli_app.mod_reports.models import ChartType
+from dli_app.mod_reports.models import Field
+from dli_app.mod_reports.models import FieldData
+from dli_app.mod_reports.models import Report
 
 # Import forms
-from dli_app.mod_reports.forms import (
-    ChangeDateForm,
-    ChangeDateAndDepartmentForm,
-    CreateChartForm,
-    EditChartForm,
-    CreateReportForm,
-    DownloadReportForm,
-    SubmitReportDataForm,
-    EditReportForm,
-    SearchForm,
-)
+from dli_app.mod_reports.forms import ChangeDateForm
+from dli_app.mod_reports.forms import ChangeDateAndDepartmentForm
+from dli_app.mod_reports.forms import CreateChartForm
+from dli_app.mod_reports.forms import EditChartForm
+from dli_app.mod_reports.forms import CreateReportForm
+from dli_app.mod_reports.forms import DownloadReportForm
+from dli_app.mod_reports.forms import SubmitReportDataForm
+from dli_app.mod_reports.forms import EditReportForm
+from dli_app.mod_reports.forms import SearchForm
+
 
 # Create a blueprint for this module
 mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
@@ -618,3 +610,29 @@ def edit_chart(chart_id):
                     set_fields = [field for field in chart.fields if field.department.id == department.id]
                     getattr(form, department.name).data = [f.id for f in set_fields]
             return render_template('reports/edit_chart.html', form=form, chart=chart)
+
+
+@mod_reports.route('/predict', methods=['GET'])
+@mod_reports.route('/predict/', methods=['GET'])
+@mod_reports.route('/predict/<int:num_days>', methods=['GET'])
+@mod_reports.route('/predict/<int:num_days>/', methods=['GET'])
+@login_required
+def predict(num_days=30):
+    one_month_ago = datetime.today() - timedelta(days=num_days)
+    one_month_ago = one_month_ago.strftime('%Y-%m-%d')
+    data_points = {
+        field: field.data_points.filter(
+            FieldData.ds >= one_month_ago
+        ).order_by(FieldData.ds.desc()).all()
+        for field in Field.query.all()
+    }
+    predictions = {}
+    for field in data_points.keys():
+        values = [pt.value for pt in data_points[field]]
+        if len(values):
+            y = numpy.arange(len(values))
+            m, b = numpy.polyfit(values, y, 1)
+            predictions[field] = m * num_days + b
+        else:
+            predictions[field] = 0
+    return render_template("reports/predict.html", predictions=predictions, num_days=num_days)
