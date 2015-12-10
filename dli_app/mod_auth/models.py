@@ -79,9 +79,10 @@ class RegisterCandidate(db.Model):
             site=os.environ['DLI_REPORTS_SITE_URL'],
             key=key,
         )
+        fullurl = 'http://'+url
         recipient = self.email
         msg = Message(title, recipients=[recipient])
-        msg.body = content.format(url=url)
+        msg.html = '<p>Hello</p><p>You are invited to register at DLI Reports! Please go to this link to activate your account:</p> <a href={fullurl}>{url}</a><p>Thank you!</p>'.format(fullurl=fullurl,url=url)
         mail.send(msg)
 
 
