@@ -16,6 +16,7 @@ from flask import render_template
 from flask import url_for
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import current_user
 from flask_login import LoginManager
 from flask_wtf.csrf import CsrfProtect
 
@@ -93,6 +94,19 @@ def response_minify(response):
     """Minify HTML response to decrease bandwidth"""
     if response.content_type == u'text/html; charset=utf-8':
         response.set_data(minify(response.get_data(as_text=True)))
+    return response
+sys.stdout.write('Done\n')
+
+# Set up the tracker for users to see where requests are coming from
+sys.stdout.write('Loading user request tracking callback...')
+@app.after_request
+def user_tracking_callback(response):
+    """Print out the name of the user that made this request"""
+    sys.stdout.write('\tFollowing request made by: ')
+    if current_user.is_authenticated:
+        sys.stdout.write('{}\n'.format(current_user.email))
+    else:
+        sys.stdout.write('Anonymous Guest\n')
     return response
 sys.stdout.write('Done\n')
 
