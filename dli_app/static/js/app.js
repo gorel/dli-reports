@@ -82,7 +82,7 @@ $(function() {
     .disableSelection();
 
   // Programmatically add selected fields to the "selected" side
-  $('.field-selector .department-field .add-field-btn').click(function() {
+  $('.field-selector').on('click', '.add-field-btn', function() {
     // Add the field
     selected_fields = $('.field-selector .selected-fields');
     sortable_insert = selected_fields.sortable('option','receive');
@@ -95,13 +95,16 @@ $(function() {
   });
 
   // Programmatically remove selected fields from the "selected" side
-  $('.field-selector .department-field .remove-field-btn').click(function() {
+  $('.field-selector').on('click', '.remove-field-btn', function() {
     // Remove the field
     selected_fields = $('.field-selector .selected-fields');
-    selected_fields.children().remove('[data-id='+$(this).closest('.department-field').data('id')+']');
+    df_id = $(this).closest('.department-field').data('id');
+    selected_fields.children().remove('[data-id='+df_id+']');
 
     // Change the action to "add" and re-enable the element
-    $(this).closest('.department-field').removeClass('added').addClass('unadded');
+    $('.field-selector .field-list').find('.department-field[data-id='+df_id+']')
+      .removeClass('added')
+      .addClass('unadded');
   });
 
   $('#create_report_form, #edit_report_form, #create_chart_form, #edit_chart_form').submit(function() {

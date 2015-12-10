@@ -60,11 +60,24 @@
                 <div class="department-fieldset collapse" id="department_{{ department.id }}_fieldset">
                   {% if department.fields %}
                     {% for field in department.fields %}
-                      <div class="department-field unadded" id="department-field-{{ field.id }}" data-department="{{ department.name }}" data-id="{{ field.id }}">
+                      {% if field in chart.fields %}
+                          <div class="department-field added" id="department-field-{{ field.id }}" data-department="{{ department.name }}" data-id="{{ field.id }}">
+                            <a class="action add-field-btn"><span class="fa fa-plus"></span></a>
+                            <a class="action remove-field-btn"><span class="fa fa-minus"></span></a>
+                            {{ field.name }}
+                          </div>
+                        {% else %}
+                          <div class="department-field unadded" id="department-field-{{ field.id }}" data-department="{{ department.name }}" data-id="{{ field.id }}">
+                            <a class="action add-field-btn"><span class="fa fa-plus"></span></a>
+                            <a class="action remove-field-btn"><span class="fa fa-minus"></span></a>
+                            {{ field.name }}
+                          </div>
+                        {% endif %}
+<!--                       <div class="department-field unadded" id="department-field-{{ field.id }}" data-department="{{ department.name }}" data-id="{{ field.id }}">
                         <a class="action add-field-btn"><span class="fa fa-plus"></span></a>
                         <a class="action remove-field-btn"><span class="fa fa-minus"></span></a>
                         {{ field.name }}
-                      </div>
+                      </div> -->
                     {% endfor %}
                   {% else %}
                     <span class="empty-fieldset">No fields for this department</span>
