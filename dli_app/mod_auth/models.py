@@ -74,14 +74,19 @@ class RegisterCandidate(db.Model):
         """Send a registration link to this user"""
         key = self.registration_key
         title = 'Activate your account'
-        content = 'Please go to the link: {url}'
-        url = '{site}/auth/register/{key}'.format(
+        url = 'http://{site}/auth/register/{key}'.format(
             site=os.environ['DLI_REPORTS_SITE_URL'],
             key=key,
         )
         recipient = self.email
         msg = Message(title, recipients=[recipient])
-        msg.body = content.format(url=url)
+        msg.html = """
+            <p>Hello</p>
+            <p>You are invited to register at DLI Reports!
+            Please go to this link to activate your account:</p>
+            <a href="{url}">{url}</a>
+            <p>Thank you!</p>
+        """.format(url=url)
         mail.send(msg)
 
 
