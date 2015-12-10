@@ -152,14 +152,16 @@ def resetpass():
         db.session.commit()
         #Send email here
         title = 'Reset your Password'
-        url = "{site}/auth/setnewpass/{key}".format(
+        url = 'http://{site}/auth/setnewpass/{key}".format(
             site=os.environ['DLI_REPORTS_SITE_URL'],
             key=pw_reset.key,
         )
-        content = 'Click this link to reset your password: {url}'.format(url=url)
-        content += '\nThis link will expire in 7 days!'
         msg = Message(title, recipients=[email])
-        msg.body = content
+        msg.html = """
+            <p>Hello!</p>
+            <a href="{url}">Click this link to reset your password: {url}</a>
+            <p>This link will expire in 7 days!</p>
+        """.format(url=url)
         mail.send(msg)
         flash("Email sent!", "alert-success")
         return redirect(url_for('default.home'))
