@@ -74,7 +74,6 @@ class RegisterCandidate(db.Model):
         """Send a registration link to this user"""
         key = self.registration_key
         title = 'Activate your account'
-        content = 'Please go to the link: {url}'
         url = 'http://{site}/auth/register/{key}'.format(
             site=os.environ['DLI_REPORTS_SITE_URL'],
             key=key,
