@@ -28,6 +28,9 @@
                 </td>
                 <td>{{ field.ftype.name|upper }}</td>
                 <td>
+                  <span id="edit_{{ field.id }}" class="fa fa-pencil" aria-hidden="true"> Edit</span>
+                </td>
+                <td>
                   <a href="{{ url_for('admin.delete_field', field_id=field.id) }}" data-method="post" data-confirm="Are you sure you want to delete this field?" class="btn btn-danger btn-xs">Delete</a>
                 </td>
               </tr>
