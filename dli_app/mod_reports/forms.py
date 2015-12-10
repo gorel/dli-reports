@@ -709,11 +709,10 @@ class SearchForm(Form):
         choice = self.filter_choices.data
         search_text = "%{}%".format(self.search_text.data)
         if choice == self.OWNER_CHOICE:
-            self.reports = Report.query.filter(Report.user.name.ilike(search_text)).all()
+            self.reports = Report.query.join(User, Report.user).filter(User.name.ilike(search_text)).all()
         elif choice == self.EMAIL_CHOICE:
-            self.reports = Report.query.filter(Report.user.email.ilike(search_text)).all()
+            self.reports = Report.query.join(User, Report.user).filter(User.email.ilike(search_text)).all()
         elif choice == self.REPORTNAME_CHOICE:
-            print("Filter Report name like {}".format(search_text))
             self.reports = Report.query.filter(Report.name.ilike(search_text)).all()
         elif choice == self.TAG_CHOICE:
             self.reports = Report.query.join(Tag, Report.tags).filter(Tag.name.ilike(search_text)).all()
