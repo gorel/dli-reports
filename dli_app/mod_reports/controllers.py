@@ -640,4 +640,4 @@ def predict(num_days=30):
             predictions[field] = m * num_days + b
         else:
             predictions[field] = 0
-    return render_template("reports/predict.html", predictions=predictions, num_days=num_days)
+    return render_template("reports/predict.html", predictions = predictions, num_days = num_days)
