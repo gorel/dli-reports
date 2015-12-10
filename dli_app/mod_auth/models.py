@@ -85,7 +85,7 @@ class RegisterCandidate(db.Model):
             <p>Hello</p>
             <p>You are invited to register at DLI Reports!
             Please go to this link to activate your account:</p>
-            <a href={url}>{url}</a>
+            <a href="{url}">{url}</a>
             <p>Thank you!</p>'.format(url=url)
         """
         mail.send(msg)
