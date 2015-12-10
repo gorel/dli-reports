@@ -629,14 +629,9 @@ def predict(num_days=30):
     predictions = {}
     for field in data_points.keys():
         values = [pt.value for pt in data_points[field]]
-        if len(values):
-            tValues = {}
-            i = 0
-            for value in values:
-                tValues[i] = value.value
-                i = i + 1
-            y = numpy.arange(len(values))
-            m, b = numpy.polyfit(tValues, y, 1)
+        if len(values) and not type(values[0])=='str':
+            y = range(0,len(values))
+            m, b = numpy.polyfit(values, y, 1)
             predictions[field] = m * num_days + b
         else:
             predictions[field] = 0
