@@ -45,6 +45,9 @@ from dli_app.mod_reports.forms import EditReportForm
 from dli_app.mod_reports.forms import SearchForm
 
 
+# The maximum number of days for predictions
+MAX_DAYS = 100
+
 # Create a blueprint for this module
 mod_reports = Blueprint('reports', __name__, url_prefix='/reports')
 
@@ -618,6 +621,8 @@ def edit_chart(chart_id):
 @mod_reports.route('/predict/<int:num_days>/', methods=['GET'])
 @login_required
 def predict(num_days=30):
+    """Predict tomorrow's data based on the most recently submitted data"""
+    num_days = min(num_days, MAX_DAYS)
     one_month_ago = datetime.today() - timedelta(days=num_days)
     one_month_ago = one_month_ago.strftime('%Y-%m-%d')
     data_points = {
@@ -628,13 +633,14 @@ def predict(num_days=30):
     }
     predictions = {}
     for field in data_points.keys():
-        values = [pt.value for pt in data_points[field]]
-        if len(values):
-            y = range(0,len(values))
-            try:
-                values = [float(x) for x in values]
-                m, b = numpy.polyfit(values, y, 1)
-                predictions[field] = m * num_days + b
+        try:
+            values = [float(pt.value) for pt in data_points[field]]
+        except:
+            values = []
+
+        if values:
+            m, b = numpy.polyfit(values, y, 1)
+            predictions[field] = max(0, m * num_days + b)
         else:
             predictions[field] = 0
-    return render_template("reports/predict.html", predictions = predictions, num_days = num_days)
+    return render_template("reports/predict.html", predictions=predictions, num_days=num_days)
