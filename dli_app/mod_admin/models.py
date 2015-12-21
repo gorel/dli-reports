@@ -58,13 +58,12 @@ class ErrorReport(db.Model):
         """Send new ErrorReports to the project developers"""
         error_reports = cls.query.filter_by(sent=False).all()
         today = datetime.datetime.today().strftime('%Y-%m-%d')
-        title = 'Bug Reports and Feature Requests {}'.format(today)
-        msg = Message(title, recipients=[os.environ['DLI_REPORTS_DEV_EMAIL']])
+
         if error_reports:
+            title = 'Bug Reports and Feature Requests {}'.format(today)
+            msg = Message(title, recipients=[os.environ['DLI_REPORTS_DEV_EMAIL']])
             msg.body = '\n\n'.join(er.email_format for er in error_reports)
-        else:
-            msg.body = 'No Bug Reports or Feature Requests were submitted today.'
-        mail.send(msg)
-        for er in error_reports:
-            er.sent = True
-        db.session.commit()
+            mail.send(msg)
+            for er in error_reports:
+                er.sent = True
+            db.session.commit()
